@@ -2,7 +2,6 @@ package olilib
 
 import (
         "hash/fnv"
-        "fmt"
         "strconv"
         "math"
 )
@@ -35,13 +34,12 @@ func NewByFailRate(items uint, probability float64) *BloomFilter {
 // AddKey Adds a new key to the bloom filter
 func (bf *BloomFilter) AddKey(key []byte) (bool, []uint64) {
         hasKey, hashIndexes := bf.HasKey(key)
-        if hasKey {
-                return false, hashIndexes
+        if !hasKey {
+                hashIndexes = bf.hashKey(key)
         }
 
         for _, element := range hashIndexes {
                 bf.Filter[element] += 1
-                fmt.Printf("%v", element)
         }
 
         return true, hashIndexes

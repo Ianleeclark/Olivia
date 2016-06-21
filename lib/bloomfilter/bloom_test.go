@@ -40,7 +40,6 @@ func TestAddKey(t *testing.T) {
         bf := NewByFailRate(10000, 0.01)
 
         addKeyRet, addIndexes := bf.AddKey([]byte("TestKey"))
-
         hasKeyRet, hasIndexes := bf.HasKey([]byte("TestKey"))
 
         if !addKeyRet {
@@ -55,5 +54,15 @@ func TestAddKey(t *testing.T) {
                 if hasIndexes[index] != addIndexes[index] {
                         t.Fatalf("Expected indexes %v, got %v", hasIndexes[index], addIndexes[index])
                 }
+        }
+}
+
+func TestHasKeyFailNoKey(t *testing.T) {
+        bf := NewByFailRate(10000, 0.01)
+
+        hasKeyRet, _ := bf.HasKey([]byte("TestKey"))
+
+        if hasKeyRet {
+                t.Fatalf("Somehow it has the key?")
         }
 }
