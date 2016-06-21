@@ -2,6 +2,7 @@ package olilib
 
 import (
         "hash/fnv"
+        "fmt"
         "strconv"
         "math"
 )
@@ -32,35 +33,42 @@ func NewByFailRate(items uint, probability float64) *BloomFilter {
 }
 
 // AddKey Adds a new key to the bloom filter
-func (bf *BloomFilter) AddKey(key []byte) {
-        hashIndexes := bf.hashKey(key)
+func (bf *BloomFilter) AddKey(key []byte) (bool, []uint64) {
+        hasKey, hashIndexes := bf.HasKey(key)
+        if hasKey {
+                return false, hashIndexes
+        }
+
         for _, element := range hashIndexes {
                 bf.Filter[element] += 1
+                fmt.Printf("%v", element)
         }
+
+        return true, hashIndexes
 }
 
 // HasKey verifies if a key is or isn't in the bloom filter.
-func (bf *BloomFilter) HasKey(key []byte) bool {
+func (bf *BloomFilter) HasKey(key []byte) (bool, []uint64) {
         hashIndexes := bf.hashKey(key)
         for _, element := range hashIndexes {
                 if bf.Filter[element] > 0 {
                         continue
                 } else {
-                        return false
+                        return false, nil
                 }
         }
 
-        return true
+        return true, hashIndexes
 }
 
 // estimateBounds Generates the bounds for total hash function calls and for
 // the total bloom filter size
-func estimateBounds(maxSize uint, probability float64) (uint, uint) {
+func estimateBounds(items uint, probability float64) (uint, uint) {
         // TODO(ian): Do we need to actually calculate with expected supported
         // values?
         // https://en.wikipedia.org/wiki/Bloom_filter#Counting_filters
         // See "Optimal number of hash functions section"
-        n := 1
+        n := items
         m := (-1 * float64(n) * math.Log(probability)) / (math.Pow(math.Log(2), 2))
         k := uint((m / float64(n)) * math.Log(2))
 
