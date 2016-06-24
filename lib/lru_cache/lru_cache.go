@@ -5,6 +5,7 @@ import (
         "time"
 )
 
+// MAXINT64 Signifies the maximum value for an int64 in Go
 var MAXINT64 = int64(1 << 63 - 1)
 
 // LRUCache is a simple implementation of an LRU cache which will be used in
@@ -27,6 +28,10 @@ func New(maxEntries int) *LRUCache {
         }
 }
 
+// Add handles adding keys to the cache and verifying that any values already
+// existing in the map are prioritized higher. If too many (max amount) of keys
+// are already in the LRU Cache, we will remove the least high prioritized to
+// make room for a new key.
 func (l *LRUCache) Add(key string, value string) (string, error) {
         value, keyExists := l.Keys[key]
         if keyExists {
@@ -44,6 +49,7 @@ func (l *LRUCache) Add(key string, value string) (string, error) {
         return key, nil
 }
 
+// Get Retrieves a key from the LRU cache and increases its priority.
 func (l *LRUCache) Get(key string) (string, error) {
         value, keyExists := l.Keys[key]
         if keyExists {
@@ -53,6 +59,9 @@ func (l *LRUCache) Get(key string) (string, error) {
         return value, nil
 }
 
+// RemoveLeastUsed removes the least high prioritized key in the LRU cache.
+// Because we use an underlying map of string : int64 (unix timestamp), we also
+// remove any keys from that map, as well.
 func (l *LRUCache) RemoveLeastUsed() {
         var lowest int64
         var lowestKey string
@@ -70,5 +79,6 @@ func (l *LRUCache) RemoveLeastUsed() {
 }
 
 func getCurrentUnixTime() int64 {
+        // TODO(ian): This needs to return time in nano seconds
         return time.Now().Unix()
 }
