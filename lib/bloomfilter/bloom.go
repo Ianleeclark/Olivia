@@ -4,6 +4,7 @@ import (
         "hash/fnv"
         "strconv"
         "math"
+        "github.com/GrappigPanda/Olivia/lib/lru_cache"
 )
 
 type BloomFilter struct {
@@ -12,6 +13,7 @@ type BloomFilter struct {
         // Total number of hashing functions
         HashFunctions uint
         Filter []int
+        HashCache *olilib_lru.LRUCacheInt64Array
 }
 
 // New Returns a pointer to a newly allocated `BloomFilter` object
@@ -20,6 +22,7 @@ func New(maxSize uint, hashFuns uint) *BloomFilter {
                 maxSize,
                 hashFuns,
                 make([]int, maxSize),
+                olilib_lru.NewInt64Array(int((float64(maxSize) * float64(0.1)))),
         }
 }
 
@@ -62,8 +65,6 @@ func (bf *BloomFilter) HasKey(key []byte) (bool, []uint64) {
 // estimateBounds Generates the bounds for total hash function calls and for
 // the total bloom filter size
 func estimateBounds(items uint, probability float64) (uint, uint) {
-        // TODO(ian): Do we need to actually calculate with expected supported
-        // values?
         // https://en.wikipedia.org/wiki/Bloom_filter#Counting_filters
         // See "Optimal number of hash functions section"
         n := items
@@ -83,15 +84,17 @@ func calculateHash(key []byte, offSet int) uint64 {
 
 // hashKey Takes a string in as an argument and hashes it several times to
 // create usable indexes for the bloom filter.
-// TODO(ian): Impelement a LRU cache to speed up hashing lookups.
 func (bf *BloomFilter) hashKey(key []byte) []uint64 {
+        if hashes, ok := bf.HashCache.Get(string(key)); ok {
+                return hashes
+        }
+
         hashes := make([]uint64, bf.HashFunctions)
 
         for index, _ := range hashes {
                 hashes[index] = calculateHash(key, index) % uint64(bf.MaxSize)
         }
 
+        bf.HashCache.Add(string(key), hashes)
         return hashes
 }
-
-

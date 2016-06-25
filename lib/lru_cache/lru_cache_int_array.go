@@ -2,30 +2,26 @@ package olilib_lru
 
 
 import (
-        "time"
         "sync"
 )
 
-// MAXINT64 Signifies the maximum value for an int64 in Go
-var MAXINT64 = int64(1 << 63 - 1)
-
-// LRUCache is a simple implementation of an LRU cache which will be used in
+// LRUCacheInt64Array is a simple implementation of an LRU cache which will be used in
 // the cache based whenever we want to cache values that we don't care too much
 // if they're frequently thrown away, so long as the most frequently sought
 // keys are preserved within the datastructure.
-type LRUCacheString struct {
+type LRUCacheInt64Array struct {
        KeyCount int
-       Keys map[string]string
+       Keys map[string][]uint64
        KeyTimeouts map[string]int64
        Mutex *sync.Mutex
 }
 
 // New simply allocates a new instance of an LRU cache with `maxEntries` total
 // slots.
-func NewString(maxEntries int) *LRUCacheString {
-        return &LRUCacheString{
+func NewInt64Array(maxEntries int) *LRUCacheInt64Array {
+        return &LRUCacheInt64Array{
                 KeyCount: maxEntries,
-                Keys: make(map[string]string),
+                Keys: make(map[string][]uint64),
                 KeyTimeouts: make(map[string]int64),
                 Mutex: &sync.Mutex{},
         }
@@ -38,7 +34,7 @@ func NewString(maxEntries int) *LRUCacheString {
 // If the return value for the `bool` is false, that means the key was added. 
 // If the return value for the `bool` is false, that means the key already
 // existed in the LRU cache.
-func (l *LRUCacheString) Add(key string, value string) (string, bool) {
+func (l *LRUCacheInt64Array) Add(key string, value []uint64) ([]uint64, bool) {
         l.Mutex.Lock()
         defer l.Mutex.Unlock()
 
@@ -55,11 +51,11 @@ func (l *LRUCacheString) Add(key string, value string) (string, bool) {
         l.Keys[key] = value
         l.KeyTimeouts[key] = getCurrentUnixTime()
 
-        return key, false
+        return value, false
 }
 
 // Get Retrieves a key from the LRU cache and increases its priority.
-func (l *LRUCacheString) Get(key string) (string, bool) {
+func (l *LRUCacheInt64Array) Get(key string) ([]uint64, bool) {
         l.Mutex.Lock()
         defer l.Mutex.Unlock()
 
@@ -72,9 +68,9 @@ func (l *LRUCacheString) Get(key string) (string, bool) {
 }
 
 // RemoveLeastUsed removes the least high prioritized key in the LRU cache.
-// Because we use an underlying map of string : int64 (unix timestamp), we also
+// Because we use an underlying map of string : uint64 (unix timestamp), we also
 // remove any keys from that map, as well.
-func (l *LRUCacheString) RemoveLeastUsed() {
+func (l *LRUCacheInt64Array) RemoveLeastUsed() {
         var lowest int64
         var lowestKey string
 
@@ -89,8 +85,4 @@ func (l *LRUCacheString) RemoveLeastUsed() {
 
         delete(l.Keys, lowestKey)
         delete(l.KeyTimeouts, lowestKey)
-}
-
-func getCurrentUnixTime() int64 {
-        return time.Now().UnixNano()
 }

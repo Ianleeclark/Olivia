@@ -6,12 +6,12 @@ import (
         "sync"
 )
 
-var TESTLRU = NewString(10)
+var TESTLRUINT64 = NewInt64Array(10)
 
-func TestNew(t *testing.T) {
-        expectedReturn := &LRUCacheString{
+func TestNewInt64(t *testing.T) {
+        expectedReturn := &LRUCacheInt64Array{
                 10,
-                make(map[string]string, 10),
+                make(map[string][]uint64, 10),
                 make(map[string]int64, 10),
                 &sync.Mutex{},
         }
@@ -23,11 +23,15 @@ func TestNew(t *testing.T) {
         }
 }
 
-func TestAdd(t *testing.T) {
-        key, err := TESTLRU.Add("Key", "Value")
+func TestAddInt64(t *testing.T) {
+        expectedReturn := []uint64{3, 5, 1}
 
-        if key != "Key" {
-                t.Fatalf("Failed adding a key to the LRU cache")
+        value, err := TESTLRUINT64.Add("Key", expectedReturn)
+
+        for i := range value {
+               if value[i] != expectedReturn[i] {
+                        t.Fatalf("Failed adding a key to the LRU cache")
+               }
         }
 
         if err != false {
@@ -35,24 +39,21 @@ func TestAdd(t *testing.T) {
         }
 }
 
-func TestAddPreExistingKey(t *testing.T) {
-        key, err := TESTLRU.Add("Key", "Value")
-
-        if key != "Value" {
-                t.Fatalf("Did not receive the value from the LRU cache.")
-        }
+func TestAddPreExistingKeyInt64(t *testing.T) {
+        expectedReturn := []uint64{4, 7, 9}
+        _, err := TESTLRUINT64.Add("Key", expectedReturn)
 
         if err != true {
                 t.Fatalf("Failed to add pre-existing key.")
         }
 }
 
-func TestAddRemoveOldest(t *testing.T) {
-        testLRU := NewString(3)
-        testLRU.Add("Key1", "value1")
+func TestAddRemoveOldestInt64(t *testing.T) {
+        testLRU := NewInt64Array(10)
+        testLRU.Add("Key1", []uint64{1, 2, 3})
         time.Sleep(time.Nanosecond * 1)
-        testLRU.Add("Key2", "value2")
-        testLRU.Add("Key3", "value3")
+        testLRU.Add("Key2", []uint64{1, 2, 3})
+        testLRU.Add("Key3",  []uint64{1, 2, 3})
 
         expectedKeys := []string{"Key1", "Key2", "Key3"}
 
@@ -66,7 +67,7 @@ func TestAddRemoveOldest(t *testing.T) {
                 }
         }
 
-        testLRU.Add("Key4", "value4")
+        testLRU.Add("Key4", []uint64{12, 13, 14})
 
         expectedKeys = []string{"Key4", "Key2", "Key3"}
 
@@ -83,9 +84,10 @@ func TestAddRemoveOldest(t *testing.T) {
 
 }
 
-func TestGet(t *testing.T) {
-        testLRU := NewString(5)
-        testLRU.Add("Key1", "value1")
+func TestGetInt64(t *testing.T) {
+        expectedReturn := []uint64{5, 7, 9}
+        testLRU := NewInt64Array(5)
+        testLRU.Add("Key1", expectedReturn)
 
         originalTime := testLRU.KeyTimeouts["Key1"]
         value, keyExists := testLRU.Get("Key1")
@@ -94,8 +96,10 @@ func TestGet(t *testing.T) {
                 t.Fatalf("Key doesn't exist in the LRU Cache")
         }
 
-        if "value1" != value {
-                t.Fatalf("Expected value1, got %v", value)
+        for i := range value {
+               if value[i] != expectedReturn[i] {
+                        t.Fatalf("Failed adding a key to the LRU cache")
+               }
         }
 
         if testLRU.KeyTimeouts["Key1"] == originalTime {
@@ -103,12 +107,12 @@ func TestGet(t *testing.T) {
         }
 }
 
+func TestGetDoesntExistInt64(t *testing.T) {
+        testLRU := NewInt64Array(5)
 
-func TestGetDoesntExist(t *testing.T) {
-        testLRU := NewString(5)
-        _, keyExists := testLRU.Get("Key1")
+        _, keyExists := testLRU.Get("Key14")
 
         if keyExists != false {
-                t.Fatalf("For whatever reason, the key exists")
+                t.Fatalf("Key exists somehow in the array")
         }
 }
