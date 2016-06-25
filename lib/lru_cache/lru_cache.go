@@ -3,6 +3,7 @@ package olilib_lru
 
 import (
         "time"
+        "sync"
 )
 
 // MAXINT64 Signifies the maximum value for an int64 in Go
@@ -16,6 +17,7 @@ type LRUCache struct {
        KeyCount int
        Keys map[string]string
        KeyTimeouts map[string]int64
+       Mutex *sync.Mutex
 }
 
 // New simply allocates a new instance of an LRU cache with `maxEntries` total
@@ -25,6 +27,7 @@ func New(maxEntries int) *LRUCache {
                 KeyCount: maxEntries,
                 Keys: make(map[string]string),
                 KeyTimeouts: make(map[string]int64),
+                Mutex: &sync.Mutex{},
         }
 }
 
@@ -32,31 +35,40 @@ func New(maxEntries int) *LRUCache {
 // existing in the map are prioritized higher. If too many (max amount) of keys
 // are already in the LRU Cache, we will remove the least high prioritized to
 // make room for a new key.
-func (l *LRUCache) Add(key string, value string) (string, error) {
-        value, keyExists := l.Keys[key]
+// If the return value for the `bool` is false, that means the key was added. 
+// If the return value for the `bool` is false, that means the key already
+// existed in the LRU cache.
+func (l *LRUCache) Add(key string, value string) (string, bool) {
+        l.Mutex.Lock()
+        defer l.Mutex.Unlock()
+
+        foundValue, keyExists := l.Keys[key]
         if keyExists {
                 l.KeyTimeouts[key] = getCurrentUnixTime()
-                return value, nil
+                return foundValue, true
         }
 
-        if(len(l.Keys) >= l.KeyCount) {
+        if(len(l.Keys) == l.KeyCount) {
                 l.RemoveLeastUsed()
         }
 
         l.Keys[key] = value
         l.KeyTimeouts[key] = getCurrentUnixTime()
 
-        return key, nil
+        return key, false
 }
 
 // Get Retrieves a key from the LRU cache and increases its priority.
-func (l *LRUCache) Get(key string) (string, error) {
+func (l *LRUCache) Get(key string) (string, bool) {
+        l.Mutex.Lock()
+        defer l.Mutex.Unlock()
+
         value, keyExists := l.Keys[key]
         if keyExists {
                 l.KeyTimeouts[key] = getCurrentUnixTime()
         }
 
-        return value, nil
+        return value, keyExists
 }
 
 // RemoveLeastUsed removes the least high prioritized key in the LRU cache.
@@ -71,6 +83,7 @@ func (l *LRUCache) RemoveLeastUsed() {
         for k := range l.KeyTimeouts {
                 if l.KeyTimeouts[k] < lowest {
                         lowestKey = k
+                        lowest = l.KeyTimeouts[k]
                 }
         }
 
@@ -79,6 +92,5 @@ func (l *LRUCache) RemoveLeastUsed() {
 }
 
 func getCurrentUnixTime() int64 {
-        // TODO(ian): This needs to return time in nano seconds
-        return time.Now().Unix()
+        return time.Now().UnixNano()
 }
