@@ -6,9 +6,9 @@ import (
 )
 
 func StartNetworkRouter() {
-        listen, err := net.Listen("tcp",  "5454")
+        listen, err := net.Listen("tcp",  ":5454")
         if err != nil {
-
+                panic(err)
         }
         defer listen.Close()
 
@@ -16,7 +16,7 @@ func StartNetworkRouter() {
                 conn, err := listen.Accept()
                 if err != nil {
                         fmt.Println(err)
-                        // TODO(ian): Handle error
+                        continue
                 }
 
                 go handleConnection(&conn)

@@ -12,4 +12,9 @@ func TestRouteNewConection(t *testing.T) {
         if err != nil {
                 t.Fatalf("Failed to connect to network")
         }
+
+        _, err = net.Dial("tcp", "localhost:5454")
+        if err != nil {
+                t.Fatalf("Failed to connect to network")
+        }
 }
