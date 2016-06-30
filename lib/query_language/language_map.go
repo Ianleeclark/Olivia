@@ -17,4 +17,6 @@ func ExecuteCommand(command string, args map[string]string) string {
                         
                 }
         }
+
+        return ""
 }

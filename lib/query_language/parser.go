@@ -23,20 +23,24 @@ func (p *Parser) Parse(commandString string) (string, error) {
         }
 
         command := splitCommand[0]
+        args := make(map[string]string)
 
-        if command == "SET" {
-                subArgs := strings.Split(splitCommand[1], ":")
-        } else {
-                subArgs := splitCommand[1]
-        }
+        args = parseArgs(splitCommand[1])
 
-        args := parseArgs(subArgs)
+        response := ExecuteCommand(command, args)
 
-        response, err := ExecuteCommand(command, )
-
-        return response, err
+        return response, nil
 }
 
-func parseArgs(string ...args) {
-        
+func parseArgs(args ...string) map[string]string{
+        outMap := make(map[string]string)
+
+        for arg := range args {
+                if strings.Contains(args[arg], ":") {
+                        subCommand := strings.Split(args[arg], ":") 
+                        outMap[subCommand[0]] = subCommand[1]
+                }
+        }
+
+        return outMap
 }
