@@ -6,41 +6,62 @@ import (
         "github.com/GrappigPanda/Olivia/lib/lru_cache"
 )
 
-// TODO(ian): Add a pointer to the cache here.
 type Parser struct {
         LRUCache *olilib_lru.LRUCacheString
 }
 
+// CommandData is a struct representing the command sent in.
 type CommandData struct {
         Command string
-        args []string
+        Args map[string]string
 }
 
-func (p *Parser) Parse(commandString string) (string, error) {
-        splitCommand := strings.SplitN(commandString, " ", 1)
+// NewParser handles creating a new parser (mostly just initializing a new LRU
+// cache).
+func NewParser() *Parser {
+        return &Parser{
+                LRUCache: olilib_lru.NewString(25),
+        }
+}
+
+// Parse handles parsing the grammer into a `CommandData` struct to be later
+// processed.
+func (p *Parser) Parse(commandString string) (*CommandData, error) {
+        splitCommand := strings.SplitN(commandString, " ", 2)
+        fmt.Println(splitCommand[0])
         if len(splitCommand) == 1 {
-                return "", fmt.Errorf("%v is an Invalid command.", commandString)
+                return &CommandData{}, fmt.Errorf("%v is an Invalid command.", commandString)
         }
 
         command := splitCommand[0]
         args := make(map[string]string)
 
-        args = parseArgs(splitCommand[1])
+        args = parseArgs(strings.Split(splitCommand[1], ","))
 
-        response := ExecuteCommand(command, args)
-
-        return response, nil
+        return &CommandData{
+                command,
+                args,
+        }, nil
 }
 
-func parseArgs(args ...string) map[string]string{
+// parseArgs handles filtering commands based on the command grammer.
+// Essentially seperates commands delimited by colons and commands not.
+func parseArgs(args []string) map[string]string{
         outMap := make(map[string]string)
 
         for arg := range args {
                 if strings.Contains(args[arg], ":") {
-                        subCommand := strings.Split(args[arg], ":") 
-                        outMap[subCommand[0]] = subCommand[1]
+                        subCommand := strings.Split(args[arg], ":")
+                        setKeyValue(&outMap, subCommand[0], subCommand[1])
+                } else {
+                        setKeyValue(&outMap, args[arg], "")
                 }
         }
 
         return outMap
+}
+
+// setKeyValue sets a key-value  to a capitalized(key) = value
+func setKeyValue(dict *map[string]string, key string, value string) {
+        (*dict)[strings.ToUpper(key)] = value
 }
