@@ -67,6 +67,7 @@ func createResponse(command string, retVals []string) string {
                         buffer.WriteString(fmt.Sprintf("%s,", retVals[i]))
                 }
         }
+        buffer.WriteString("\n")
 
         return buffer.String()
 }
