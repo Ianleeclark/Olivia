@@ -2,8 +2,15 @@ package olilib_network
 
 import (
         "net"
-        "fmt"
+        "github.com/GrappigPanda/Olivia/lib/query_language"
+        "bufio"
+        "log"
 )
+
+type ConnectionCtx struct {
+        Parser *query_language.Parser
+        Cache *query_language.Cache
+}
 
 func StartNetworkRouter() {
         listen, err := net.Listen("tcp",  ":5454")
@@ -12,35 +19,57 @@ func StartNetworkRouter() {
         }
         defer listen.Close()
 
+        _cache := make(map[string]string)
+        cache := query_language.Cache{
+                &_cache,
+        }
+
+        ctx := &ConnectionCtx{
+                query_language.NewParser(),
+                &cache,
+        }
+
+        log.Println("Starting connection router.")
+
         for {
                 conn, err := listen.Accept()
                 if err != nil {
-                        fmt.Println(err)
+                        log.Println(err)
                         continue
                 }
 
-                go handleConnection(&conn)
+                go ctx.handleConnection(&conn)
         }
 }
 
-func handleConnection(conn *net.Conn) {
-       defer (*conn).Close()
-       // TODO(ian): Implement authentication (new issue).
-       conn_proc := NewProcessorFSM(PROCESSING)
+func (ctx *ConnectionCtx) handleConnection(conn *net.Conn) {
+        defer (*conn).Close()
+        // TODO(ian): Implement authentication (new issue).
+        conn_proc := NewProcessorFSM(PROCESSING)
+        reader := bufio.NewReader(*conn)
 
-       for {
-               // TODO(ian): Replace this with a new language processor for incoming
-               // commands
-               password := "TestBcryptPassword"
+        for {
+                // TODO(ian): Replace this with a new language processor for incoming
+                // commands
+                password := "TestBcryptPassword"
+                line, err := reader.ReadString('\n')
+                if err != nil {
+                        log.Println("Connection %v failed to readline, closing connection.", *conn)
+                        break
+                }
 
+                switch conn_proc.State {
+                         case UNAUTHENTICATED:
+                                 conn_proc.Authenticate(password)
+                                 break
+                         case PROCESSING:
+                                 command, err := ctx.Parser.Parse(line)
+                                 if err != nil {
 
-               switch conn_proc.State {
-                        case UNAUTHENTICATED:
-                                conn_proc.Authenticate(password)
-                                break
-                        case PROCESSING:
-                                break
-               }
-       }
-
+                                 }
+                                 response := ctx.Cache.ExecuteCommand(command.Command, command.Args)
+                                 (*conn).Write([]byte(response))
+                                 break
+                }
+        }
 }

@@ -49,7 +49,7 @@ func (c *Cache) ExecuteCommand(command string, args map[string]string) string {
                 }
         }
 
-        return "Invalid command sent in."
+        return "Invalid command sent in.\n"
 }
 
 func createResponse(command string, retVals []string) string {
@@ -67,6 +67,7 @@ func createResponse(command string, retVals []string) string {
                         buffer.WriteString(fmt.Sprintf("%s,", retVals[i]))
                 }
         }
+        buffer.WriteString("\n")
 
         return buffer.String()
 }
