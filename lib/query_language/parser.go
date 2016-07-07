@@ -28,7 +28,6 @@ func NewParser() *Parser {
 // processed.
 func (p *Parser) Parse(commandString string) (*CommandData, error) {
         splitCommand := strings.SplitN(commandString, " ", 2)
-        fmt.Println(splitCommand[0])
         if len(splitCommand) == 1 {
                 return &CommandData{}, fmt.Errorf("%v is an Invalid command.", commandString)
         }
@@ -63,5 +62,8 @@ func parseArgs(args []string) map[string]string{
 
 // setKeyValue sets a key-value  to a capitalized(key) = value
 func setKeyValue(dict *map[string]string, key string, value string) {
+        key = strings.Replace(key, "\n", "", -1)
+        value = strings.Replace(value, "\n", "", -1)
+
         (*dict)[strings.ToUpper(key)] = value
 }

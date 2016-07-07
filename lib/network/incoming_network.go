@@ -63,7 +63,12 @@ func (ctx *ConnectionCtx) handleConnection(conn *net.Conn) {
                                  conn_proc.Authenticate(password)
                                  break
                          case PROCESSING:
-                                 ctx.Parser.Parse(line)
+                                 command, err := ctx.Parser.Parse(line)
+                                 if err != nil {
+
+                                 }
+                                 response := ctx.Cache.ExecuteCommand(command.Command, command.Args)
+                                 (*conn).Write([]byte(response))
                                  break
                 }
         }
