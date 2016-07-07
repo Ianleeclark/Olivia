@@ -49,7 +49,7 @@ func (c *Cache) ExecuteCommand(command string, args map[string]string) string {
                 }
         }
 
-        return "Invalid command sent in."
+        return "Invalid command sent in.\n"
 }
 
 func createResponse(command string, retVals []string) string {
