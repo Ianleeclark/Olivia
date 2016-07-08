@@ -48,9 +48,7 @@ func (ctx *ConnectionCtx) ExecuteCommand(command string, args map[string]string)
                         return createResponse(command, retVals)
                 }
                 case "REQUEST": {
-                        x := ctx.handleRequest(command, args)
-                        fmt.Println(x)
-                        return x
+                        return ctx.handleRequest(command, args)
                 }
         }
 
