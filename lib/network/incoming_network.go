@@ -3,13 +3,15 @@ package olilib_network
 import (
         "net"
         "github.com/GrappigPanda/Olivia/lib/query_language"
+        "github.com/GrappigPanda/Olivia/lib/bloomfilter"
         "bufio"
         "log"
 )
 
 type ConnectionCtx struct {
         Parser *query_language.Parser
-        Cache *query_language.Cache
+        Cache *Cache
+        Bloomfilter *olilib.BloomFilter
 }
 
 func StartNetworkRouter() {
@@ -20,13 +22,16 @@ func StartNetworkRouter() {
         defer listen.Close()
 
         _cache := make(map[string]string)
-        cache := query_language.Cache{
+        cache := Cache{
                 &_cache,
         }
+
+        bf := olilib.NewByFailRate(10000, 0.01)
 
         ctx := &ConnectionCtx{
                 query_language.NewParser(),
                 &cache,
+                bf,
         }
 
         log.Println("Starting connection router.")
@@ -67,7 +72,7 @@ func (ctx *ConnectionCtx) handleConnection(conn *net.Conn) {
                                  if err != nil {
 
                                  }
-                                 response := ctx.Cache.ExecuteCommand(command.Command, command.Args)
+                                 response := ctx.ExecuteCommand(command.Command, command.Args)
                                  (*conn).Write([]byte(response))
                                  break
                 }
