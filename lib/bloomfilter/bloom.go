@@ -1,6 +1,8 @@
 package olilib
 
 import (
+        "bytes"
+        "fmt"
         "hash/fnv"
         "strconv"
         "math"
@@ -60,6 +62,35 @@ func (bf *BloomFilter) HasKey(key []byte) (bool, []uint64) {
         }
 
         return true, hashIndexes
+}
+
+// ConvertToString handles conversion of a bloom filter to a string.
+func (bf *BloomFilter) ConvertToString() string {
+        var buffer bytes.Buffer
+
+        for i := range bf.Filter {
+                buffer.WriteString(fmt.Sprintf("%v", bf.Filter[i]))
+        }
+
+        return buffer.String()
+}
+
+func ConvertStringtoBF(inputString string) (*BloomFilter, error) {
+        // TODO(ian): Remove this magic number.
+        bf := NewByFailRate(10000, 0.01)
+
+        index := 0
+        for i, _ := range inputString {
+                number, err := strconv.ParseInt(string(inputString[i]), 10, 0)
+                if err != nil {
+                        return nil, err
+                }
+
+                bf.Filter[index] = int(number)
+                index++
+        }
+
+        return bf, nil
 }
 
 // estimateBounds Generates the bounds for total hash function calls and for
