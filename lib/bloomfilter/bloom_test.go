@@ -66,3 +66,49 @@ func TestHasKeyFailNoKey(t *testing.T) {
                 t.Fatalf("Somehow it has the key?")
         }
 }
+
+func TestConvertToString(t *testing.T) {
+        bf := NewByFailRate(10000, 0.01)
+
+        new_bf_str := bf.ConvertToString()
+
+        new_bf, err := ConvertStringtoBF(new_bf_str)
+        if err != nil {
+                t.Fatalf("%v", err)
+        }
+
+        for i := range bf.Filter {
+                if bf.Filter[i] != new_bf.Filter[i] {
+                        t.Fatalf("Two bfs are not equal")
+                }
+        }
+}
+
+func TestConvertWithContainedValues(t *testing.T) {
+        bf := NewByFailRate(10000, 0.01)
+
+        bf.AddKey([]byte("keyalksdjfl"))
+        bf.AddKey([]byte("key1"))
+        bf.AddKey([]byte("key2"))
+        bf.AddKey([]byte("key3"))
+        bf.AddKey([]byte("key4"))
+
+        new_bf_str := bf.ConvertToString()
+
+        new_bf, err := ConvertStringtoBF(new_bf_str)
+        if err != nil {
+                t.Fatalf("%v", err)
+        }
+
+        val, _ := new_bf.HasKey([]byte("key1"))
+        if !val {
+                t.Fatalf("new_bf doesnt have key1!")
+        }
+
+        for i := range bf.Filter {
+                if bf.Filter[i] != new_bf.Filter[i] {
+                        t.Fatalf("Two bfs are not equal")
+                }
+        }
+}
+
