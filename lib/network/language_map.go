@@ -1,4 +1,4 @@
-package query_language
+package olilib_network
 
 import (
         "strings"
@@ -13,7 +13,7 @@ type Cache struct {
 
 // ExecuteCommandStringList Is a function that makes me terribly sad, as
 // generics here would make a world of difference.
-func (c *Cache) ExecuteCommand(command string, args map[string]string) string {
+func (ctx *ConnectionCtx) ExecuteCommand(command string, args map[string]string) string {
         switch strings.ToUpper(command) {
                 case "GET": {
                         // TODO(ian): This should call a function and if err,
@@ -25,7 +25,7 @@ func (c *Cache) ExecuteCommand(command string, args map[string]string) string {
 
                         index := 0
                         for k, _ := range args {
-                                val, ok := (*c.Cache)[k]
+                                val, ok := (*ctx.Cache.Cache)[k]
                                 if ok {
                                         retVals[index] = fmt.Sprintf("%s:%s", k, val)
                                         index++
@@ -39,13 +39,18 @@ func (c *Cache) ExecuteCommand(command string, args map[string]string) string {
 
                         index := 0
                         for k, v := range args {
-                                (*c.Cache)[k] = v
+                                (*ctx.Cache.Cache)[k] = v
 
                                 retVals[index] = fmt.Sprintf("%s:%s", k, v)
                                 index++
                         }
 
                         return createResponse(command, retVals)
+                }
+                case "REQUEST": {
+                        x := ctx.handleRequest(command, args)
+                        fmt.Println(x)
+                        return x
                 }
         }
 
@@ -70,4 +75,22 @@ func createResponse(command string, retVals []string) string {
         buffer.WriteString("\n")
 
         return buffer.String()
+}
+
+func (ctx *ConnectionCtx) handleRequest(command string, args map[string]string) string {
+        var requestItem string
+        // TODO(ian): Support multiple actions per REQUEST in the future.
+        for k, _ := range args {
+                requestItem = k
+                break
+        }
+
+        fmt.Println("->", requestItem)
+        switch(strings.ToUpper(requestItem)) {
+                case "BLOOMFILTER": {
+                        return (*ctx.Bloomfilter).ConvertToString()
+                }
+        }
+
+        return "Invalid command sent in.\n"
 }
