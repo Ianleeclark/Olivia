@@ -16,6 +16,11 @@ type Receiver struct {
         Listener *net.Listener
 }
 
+func NewChannelMap() *map[string]RequesterResponseChannel {
+        channelMap := make(map[string]RequesterResponseChannel)
+        return &channelMap
+}
+
 func NewReceiver(messageStore *map[string]RequesterResponseChannel) *Receiver {
         ln, err := openListeningConnection()
         if err != nil {
