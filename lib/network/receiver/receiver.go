@@ -5,23 +5,31 @@ import (
         "bufio"
         "net"
         "log"
+        "sync"
 )
 
 type IncomingChannel chan string
 type RequesterResponseChannel chan string
 
+type ChannelMap struct {
+        HashLookup *map[string]RequesterResponseChannel
+        sync.Mutex
+}
+
 type Receiver struct {
         ReceiverChannel IncomingChannel
-        MessageStore *map[string]RequesterResponseChannel
+        MessageStore *ChannelMap
         Listener *net.Listener
 }
 
-func NewChannelMap() *map[string]RequesterResponseChannel {
+func NewChannelMap() *ChannelMap {
         channelMap := make(map[string]RequesterResponseChannel)
-        return &channelMap
+        return &ChannelMap{
+                HashLookup: &channelMap,
+        }
 }
 
-func NewReceiver(messageStore *map[string]RequesterResponseChannel) *Receiver {
+func NewReceiver(messageStore *ChannelMap) *Receiver {
         ln, err := openListeningConnection()
         if err != nil {
                 // TODO(ian): Handle this at a supervisor level.
@@ -72,12 +80,15 @@ func (r* Receiver) processIncomingString(incomingString string) {
                 return
         }
 
-        requesterChannel, hashExists := (*r.MessageStore)[hash]
+        requesterChannel, hashExists := (*r.MessageStore.HashLookup)[hash]
         if !hashExists {
                 return
         }
 
+        r.MessageStore.Lock()
         requesterChannel <- splitString[1]
+        delete((*r.MessageStore.HashLookup), hash)
+        r.MessageStore.Unlock()
 }
 
 func openListeningConnection() (*net.Listener, error) {
