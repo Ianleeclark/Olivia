@@ -1,25 +1,54 @@
 package message_handler
 
 import (
-        "sync"
         "fmt"
+        "sync"
 )
 
 type MessageHandler struct {
-        sync.RWMutex
         AddKeyChannel chan *KeyValPair
-        RemoveKeyChannel chan string
+        RemoveKeyChannel chan *KeyValPair
         MessageResponseStore *map[string]chan string
+        sync.RWMutex
 }
 
 type KeyValPair struct {
         Key string
         Value chan string
+        ResponseChannel chan (chan string)
+}
+
+func NewMessageHandler() *MessageHandler {
+        addKeyChan := make(chan *KeyValPair)
+        removeKeyChan := make(chan *KeyValPair)
+        messageStore := make(map[string]chan string)
+
+        msgHandler := MessageHandler{
+                AddKeyChannel: addKeyChan,
+                RemoveKeyChannel: removeKeyChan,
+                MessageResponseStore: &messageStore,
+        }
+
+        // We want to make sure the processes for adding/deleting keys are
+        // running right after creation
+        go msgHandler.handleKeyAdds()
+        go msgHandler.handleKeyDeletions()
+
+        return &msgHandler
+}
+
+// NewKeyValPair Handles initialization of a new KeyValPair object.
+func NewKeyValPair(key string, value chan string, callerResponseChan chan chan string) *KeyValPair {
+        return &KeyValPair{
+                key,
+                value,
+                callerResponseChan,
+        }
 }
 
 // HandleKeyAdds Manages adding keys to the internal message response store
 // between the receiver processes and the sender processes.
-func (m *MessageHandler) HandleKeyAdds() {
+func (m *MessageHandler) handleKeyAdds() {
         var kvPair *KeyValPair
 
         for {
@@ -36,27 +65,32 @@ func (m *MessageHandler) HandleKeyAdds() {
 
 // HandleKeyDeletions Handles everything associated with having to delete a
 // key.
-func (m *MessageHandler) HandleKeyDeletions() {
-        var key string
+func (m *MessageHandler) handleKeyDeletions() {
+        var kvPair *KeyValPair
 
         for {
-                key = <-m.RemoveKeyChannel
+                kvPair = <-m.RemoveKeyChannel
 
                 m.Lock()
-                if _, keyExists := (*m.MessageResponseStore)[key]; keyExists {
-                        delete((*m.MessageResponseStore), key)
+                value, keyExists := (*m.MessageResponseStore)[kvPair.Key]
+                if keyExists {
+                        delete((*m.MessageResponseStore), kvPair.Key)
+                } else {
+                        if kvPair.ResponseChannel != nil {
+                                kvPair.ResponseChannel <- nil
+                        }
                 }
 
                 m.Unlock()
-        }
-}
 
-func (m *MessageHandler) GetKey(key string) (chan string, error) {
-        if value, keyExists := (*m.MessageResponseStore)[key]; keyExists {
-                return value, nil
+                // If the KeyValPair was created with a ResponseChannel in
+                // mind, we kno the caller wants a response in the form of the
+                // value previously stored for the key.
+                if kvPair.ResponseChannel != nil {
+                        fmt.Println("Sending to responding channel!")
+                        kvPair.ResponseChannel <- value
+                }
         }
-
-        return nil, fmt.Errorf("No key (%v) found.", key)
 }
 
 // handleKeyConflicts maintains the incredibly fun role of deciding what to do
