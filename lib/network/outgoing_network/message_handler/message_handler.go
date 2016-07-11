@@ -8,7 +8,7 @@ import (
 type MessageHandler struct {
         AddKeyChannel chan *KeyValPair
         RemoveKeyChannel chan *KeyValPair
-        MessageResponseStore *map[string]chan string
+        messageResponseStore *map[string]chan string
         sync.RWMutex
 }
 
@@ -26,7 +26,7 @@ func NewMessageHandler() *MessageHandler {
         msgHandler := MessageHandler{
                 AddKeyChannel: addKeyChan,
                 RemoveKeyChannel: removeKeyChan,
-                MessageResponseStore: &messageStore,
+                messageResponseStore: &messageStore,
         }
 
         // We want to make sure the processes for adding/deleting keys are
@@ -55,12 +55,15 @@ func (m *MessageHandler) handleKeyAdds() {
                 kvPair = <-m.AddKeyChannel
 
                 m.Lock()
-                if _, keyExists := (*m.MessageResponseStore)[kvPair.Key]; keyExists {
-                        go m.handleKeyConflict(kvPair)
+                if _, keyExists := (*m.messageResponseStore)[kvPair.Key]; keyExists {
+                        m.handleKeyConflict(kvPair)
+                } else {
+                        (*m.messageResponseStore)[kvPair.Key] = kvPair.Value
                 }
-
                 m.Unlock()
         }
+
+        close(m.AddKeyChannel)
 }
 
 // HandleKeyDeletions Handles everything associated with having to delete a
@@ -72,24 +75,27 @@ func (m *MessageHandler) handleKeyDeletions() {
                 kvPair = <-m.RemoveKeyChannel
 
                 m.Lock()
-                value, keyExists := (*m.MessageResponseStore)[kvPair.Key]
+                value, keyExists := (*m.messageResponseStore)[kvPair.Key]
                 if keyExists {
-                        delete((*m.MessageResponseStore), kvPair.Key)
+                        delete((*m.messageResponseStore), kvPair.Key)
                 } else {
                         if kvPair.ResponseChannel != nil {
                                 kvPair.ResponseChannel <- nil
                         }
                 }
 
-                m.Unlock()
-
                 // If the KeyValPair was created with a ResponseChannel in
                 // mind, we kno the caller wants a response in the form of the
                 // value previously stored for the key.
                 if kvPair.ResponseChannel != nil {
                         fmt.Println("Sending to responding channel!")
-                        kvPair.ResponseChannel <- value
+                        go func() {
+                                kvPair.ResponseChannel <- value
+                        }()
                 }
+
+                m.Unlock()
+
         }
 }
 
@@ -102,8 +108,7 @@ func (m *MessageHandler) handleKeyDeletions() {
 // TODO(ian): Figure out a better way for handling this, it's technical debt
 // and not yet fully implemented.
 func (m *MessageHandler) handleKeyConflict(kvPair *KeyValPair) {
-        m.Lock()
-        (*m.MessageResponseStore)[kvPair.Key] = kvPair.Value
-        m.Unlock()
+        (*m.messageResponseStore)[kvPair.Key] = kvPair.Value
+        return
 }
 

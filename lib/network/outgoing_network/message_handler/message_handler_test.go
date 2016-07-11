@@ -1,6 +1,8 @@
 package message_handler
 
 import (
+        "fmt"
+        "time"
         "testing"
 )
 
@@ -13,46 +15,84 @@ func TestAddKey(t *testing.T) {
         keyNoResponseChan := NewKeyValPair("key2", RESPONSECHANNEL, nil)
         key1repeat := NewKeyValPair("key1", RESPONSECHANNEL, CALLERRESPONSECHAN)
 
-        go func() {
-                MESSAGEHANDLER.AddKeyChannel <- key1
-        }()
+        MESSAGEHANDLER.AddKeyChannel <- key1
+        MESSAGEHANDLER.AddKeyChannel <- keyNoResponseChan
+        MESSAGEHANDLER.AddKeyChannel <- key1repeat
 
-        go func() {
-                MESSAGEHANDLER.AddKeyChannel <- keyNoResponseChan
-        }()
+        time.Sleep(1 * time.Second)
 
-        go func() {
-                MESSAGEHANDLER.AddKeyChannel <- key1repeat
-        }()
+        if _, keyExists := (*MESSAGEHANDLER.messageResponseStore)["key1"]; !keyExists {
+                t.Fatalf("Expected to find key key1, no key exists!")
+                fmt.Println(*MESSAGEHANDLER.messageResponseStore)
+        }
+
+        if _, keyExists := (*MESSAGEHANDLER.messageResponseStore)["key2"]; !keyExists {
+                t.Fatalf("Expected to find key key2, no key exists!")
+                fmt.Println(*MESSAGEHANDLER.messageResponseStore)
+        }
 }
 
 func TestRemoveKey(t *testing.T) {
         keyToDelete := NewKeyValPair("keyToDelete", RESPONSECHANNEL, nil)
         MESSAGEHANDLER.AddKeyChannel <- keyToDelete
-        keyToDelete2 := NewKeyValPair("keyToDelete", RESPONSECHANNEL, CALLERRESPONSECHAN)
+
+        keyToDelete2 := NewKeyValPair("keyToDelete2", RESPONSECHANNEL, CALLERRESPONSECHAN)
         MESSAGEHANDLER.AddKeyChannel <- keyToDelete2
+
+        time.Sleep(1 * time.Second)
+
+        if _, keyExists := (*MESSAGEHANDLER.messageResponseStore)["keyToDelete"]; !keyExists {
+                t.Fatalf("Expected to find key keyToDelete, no key exists!")
+                fmt.Println(*MESSAGEHANDLER.messageResponseStore)
+        }
+
+        if _, keyExists := (*MESSAGEHANDLER.messageResponseStore)["keyToDelete2"]; !keyExists {
+                t.Fatalf("Expected to find key keyToDelete2, no key exists!")
+                fmt.Println(*MESSAGEHANDLER.messageResponseStore)
+        }
+
 
         MESSAGEHANDLER.RemoveKeyChannel <- keyToDelete
         MESSAGEHANDLER.RemoveKeyChannel <- keyToDelete2
+
+        time.Sleep(1 * time.Second)
+
+        if _, keyExists := (*MESSAGEHANDLER.messageResponseStore)["keyToDelete"]; keyExists {
+                t.Fatalf("Expected to not find key keyToDelete, no key exists!")
+                fmt.Println(*MESSAGEHANDLER.messageResponseStore)
+        }
+
+        if _, keyExists := (*MESSAGEHANDLER.messageResponseStore)["keyToDelete2"]; keyExists {
+                t.Fatalf("Expected to not find key keyToDelete2, no key exists!")
+                fmt.Println(*MESSAGEHANDLER.messageResponseStore)
+        }
 }
 
 func TestRemoveKeyAssertCallerResponse(t *testing.T) {
-        responseKey := NewKeyValPair("keyToRespondTo", RESPONSECHANNEL, CALLERRESPONSECHAN)
-        MESSAGEHANDLER.AddKeyChannel <- responseKey
+        keyToDelete := NewKeyValPair("keyToRespondTo", RESPONSECHANNEL, nil)
+        MESSAGEHANDLER.AddKeyChannel <- keyToDelete
 
+        time.Sleep(1 * time.Second)
+
+        if _, keyExists := (*MESSAGEHANDLER.messageResponseStore)["keyToRespondTo"]; !keyExists {
+                t.Fatalf("Expected to find key keyToRespondTo, no key exists!")
+                fmt.Println(*MESSAGEHANDLER.messageResponseStore)
+        }
+
+        responseChannel := make(chan chan string)
+        endChannel := make(chan string)
+        responseKey := NewKeyValPair("keyToRespondTo", endChannel, responseChannel)
+
+        time.Sleep(1 * time.Second)
         go func() {
                 MESSAGEHANDLER.RemoveKeyChannel <- responseKey
         }()
 
-        callerResponse := <-CALLERRESPONSECHAN
-
-        callerResponse <- "testString"
-
-        responseChannelResponse := <-RESPONSECHANNEL
-
-        if responseChannelResponse != "testString" {
-                t.Fatalf("expected testString, got %v", responseChannelResponse)
+        middleChannel := <-responseChannel
+        if middleChannel == nil {
+                t.Fatalf("Expected a channel, got nil")
         }
+        middleChannel <- "testString"
 }
 
 func TestRemoveKeyKeyNoExists(t *testing.T) {
