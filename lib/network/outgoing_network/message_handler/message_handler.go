@@ -1,99 +1,98 @@
 package message_handler
 
 import (
-        "fmt"
-        "sync"
+	"sync"
 )
 
 type MessageHandler struct {
-        AddKeyChannel chan *KeyValPair
-        RemoveKeyChannel chan *KeyValPair
-        messageResponseStore *map[string]chan string
-        sync.RWMutex
+	AddKeyChannel        chan *KeyValPair
+	RemoveKeyChannel     chan *KeyValPair
+	messageResponseStore *map[string]chan string
+	sync.RWMutex
 }
 
 type KeyValPair struct {
-        Key string
-        Value chan string
-        ResponseChannel chan (chan string)
-        sync.RWMutex
+	Key             string
+	Value           chan string
+	ResponseChannel chan (chan string)
+	sync.RWMutex
 }
 
 func NewMessageHandler() *MessageHandler {
-        addKeyChan := make(chan *KeyValPair)
-        removeKeyChan := make(chan *KeyValPair)
-        messageStore := make(map[string]chan string)
+	addKeyChan := make(chan *KeyValPair)
+	removeKeyChan := make(chan *KeyValPair)
+	messageStore := make(map[string]chan string)
 
-        msgHandler := MessageHandler{
-                AddKeyChannel: addKeyChan,
-                RemoveKeyChannel: removeKeyChan,
-                messageResponseStore: &messageStore,
-        }
+	msgHandler := MessageHandler{
+		AddKeyChannel:        addKeyChan,
+		RemoveKeyChannel:     removeKeyChan,
+		messageResponseStore: &messageStore,
+	}
 
-        // We want to make sure the processes for adding/deleting keys are
-        // running right after creation
-        go msgHandler.handleKeyAdds()
-        go msgHandler.handleKeyDeletions()
+	// We want to make sure the processes for adding/deleting keys are
+	// running right after creation
+	go msgHandler.handleKeyAdds()
+	go msgHandler.handleKeyDeletions()
 
-        return &msgHandler
+	return &msgHandler
 }
 
 // NewKeyValPair Handles initialization of a new KeyValPair object.
 func NewKeyValPair(key string, value chan string, callerResponseChan chan chan string) *KeyValPair {
-        return &KeyValPair{
-                Key: key,
-                Value: value,
-                ResponseChannel: callerResponseChan,
-        }
+	return &KeyValPair{
+		Key:             key,
+		Value:           value,
+		ResponseChannel: callerResponseChan,
+	}
 }
 
 // HandleKeyAdds Manages adding keys to the internal message response store
 // between the receiver processes and the sender processes.
 func (m *MessageHandler) handleKeyAdds() {
-        var kvPair *KeyValPair
+	var kvPair *KeyValPair
 
-        for {
-                kvPair = <-m.AddKeyChannel
+	for {
+		kvPair = <-m.AddKeyChannel
 
-                m.Lock()
-                if _, keyExists := (*m.messageResponseStore)[kvPair.Key]; keyExists {
-                        m.Unlock()
-                        m.handleKeyConflict(kvPair)
-                        continue
-                } else {
-                        (*m.messageResponseStore)[kvPair.Key] = kvPair.Value
-                }
-                m.Unlock()
+		m.Lock()
+		if _, keyExists := (*m.messageResponseStore)[kvPair.Key]; keyExists {
+			m.Unlock()
+			m.handleKeyConflict(kvPair)
+			continue
+		} else {
+			(*m.messageResponseStore)[kvPair.Key] = kvPair.Value
+		}
+		m.Unlock()
 
-        }
+	}
 }
 
 // HandleKeyDeletions Handles everything associated with having to delete a
 // key.
 func (m *MessageHandler) handleKeyDeletions() {
-        var kvPair *KeyValPair
+	var kvPair *KeyValPair
 
-        for {
-                kvPair = <-m.RemoveKeyChannel
+	for {
+		kvPair = <-m.RemoveKeyChannel
 
-                m.Lock()
-                value, keyExists := (*m.messageResponseStore)[kvPair.Key]
-                if keyExists {
-                        delete((*m.messageResponseStore), kvPair.Key)
-                }
-                m.Unlock()
-
-                go kvPair.sendResponse(value)
-        }
+		m.Lock()
+		endResponseChannel, keyExists := (*m.messageResponseStore)[kvPair.Key]
+		if keyExists {
+			delete((*m.messageResponseStore), kvPair.Key)
+			go kvPair.sendResponse(endResponseChannel)
+		} else {
+			go kvPair.sendResponse(nil)
+		}
+		m.Unlock()
+	}
 }
 
-func (kvPair *KeyValPair) sendResponse(value chan string) {
-        kvPair.Lock()
-        if kvPair.ResponseChannel != nil {
-                fmt.Println("Sending to responding channel!")
-                kvPair.ResponseChannel <- value
-                kvPair.Unlock()
-        }
+func (kvPair *KeyValPair) sendResponse(endResponse chan string) {
+	kvPair.Lock()
+	if kvPair.ResponseChannel != nil {
+		kvPair.ResponseChannel <- endResponse
+		kvPair.Unlock()
+	}
 }
 
 // handleKeyConflicts maintains the incredibly fun role of deciding what to do
@@ -105,9 +104,8 @@ func (kvPair *KeyValPair) sendResponse(value chan string) {
 // TODO(ian): Figure out a better way for handling this, it's technical debt
 // and not yet fully implemented.
 func (m *MessageHandler) handleKeyConflict(kvPair *KeyValPair) {
-        m.Lock()
-        (*m.messageResponseStore)[kvPair.Key] = kvPair.Value
-        m.Unlock()
-        return
+	m.Lock()
+	(*m.messageResponseStore)[kvPair.Key] = kvPair.Value
+	m.Unlock()
+	return
 }
-
