@@ -56,11 +56,14 @@ func (m *MessageHandler) handleKeyAdds() {
 
                 m.Lock()
                 if _, keyExists := (*m.messageResponseStore)[kvPair.Key]; keyExists {
+                        m.Unlock()
                         m.handleKeyConflict(kvPair)
+                        continue
                 } else {
                         (*m.messageResponseStore)[kvPair.Key] = kvPair.Value
                 }
                 m.Unlock()
+
         }
 
         close(m.AddKeyChannel)
@@ -78,22 +81,20 @@ func (m *MessageHandler) handleKeyDeletions() {
                 value, keyExists := (*m.messageResponseStore)[kvPair.Key]
                 if keyExists {
                         delete((*m.messageResponseStore), kvPair.Key)
+
+                        // If the KeyValPair was created with a ResponseChannel in
+                        // mind, we kno the caller wants a response in the form of the
+                        // value previously stored for the key.
+                        if kvPair.ResponseChannel != nil {
+                                fmt.Println("Sending to responding channel!")
+                                kvPair.ResponseChannel <- value
+                        }
                 } else {
                         if kvPair.ResponseChannel != nil {
                                 kvPair.ResponseChannel <- nil
+                                continue
                         }
                 }
-
-                // If the KeyValPair was created with a ResponseChannel in
-                // mind, we kno the caller wants a response in the form of the
-                // value previously stored for the key.
-                if kvPair.ResponseChannel != nil {
-                        fmt.Println("Sending to responding channel!")
-                        go func() {
-                                kvPair.ResponseChannel <- value
-                        }()
-                }
-
                 m.Unlock()
 
         }
@@ -108,7 +109,9 @@ func (m *MessageHandler) handleKeyDeletions() {
 // TODO(ian): Figure out a better way for handling this, it's technical debt
 // and not yet fully implemented.
 func (m *MessageHandler) handleKeyConflict(kvPair *KeyValPair) {
+        m.Lock()
         (*m.messageResponseStore)[kvPair.Key] = kvPair.Value
+        m.Unlock()
         return
 }
 

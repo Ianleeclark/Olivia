@@ -21,6 +21,7 @@ func TestAddKey(t *testing.T) {
 
         time.Sleep(1 * time.Second)
 
+        MESSAGEHANDLER.Lock()
         if _, keyExists := (*MESSAGEHANDLER.messageResponseStore)["key1"]; !keyExists {
                 t.Fatalf("Expected to find key key1, no key exists!")
                 fmt.Println(*MESSAGEHANDLER.messageResponseStore)
@@ -30,6 +31,7 @@ func TestAddKey(t *testing.T) {
                 t.Fatalf("Expected to find key key2, no key exists!")
                 fmt.Println(*MESSAGEHANDLER.messageResponseStore)
         }
+        MESSAGEHANDLER.Unlock()
 }
 
 func TestRemoveKey(t *testing.T) {
@@ -41,6 +43,7 @@ func TestRemoveKey(t *testing.T) {
 
         time.Sleep(1 * time.Second)
 
+        MESSAGEHANDLER.Lock()
         if _, keyExists := (*MESSAGEHANDLER.messageResponseStore)["keyToDelete"]; !keyExists {
                 t.Fatalf("Expected to find key keyToDelete, no key exists!")
                 fmt.Println(*MESSAGEHANDLER.messageResponseStore)
@@ -50,13 +53,14 @@ func TestRemoveKey(t *testing.T) {
                 t.Fatalf("Expected to find key keyToDelete2, no key exists!")
                 fmt.Println(*MESSAGEHANDLER.messageResponseStore)
         }
-
+        MESSAGEHANDLER.Unlock()
 
         MESSAGEHANDLER.RemoveKeyChannel <- keyToDelete
         MESSAGEHANDLER.RemoveKeyChannel <- keyToDelete2
 
         time.Sleep(1 * time.Second)
 
+        MESSAGEHANDLER.Lock()
         if _, keyExists := (*MESSAGEHANDLER.messageResponseStore)["keyToDelete"]; keyExists {
                 t.Fatalf("Expected to not find key keyToDelete, no key exists!")
                 fmt.Println(*MESSAGEHANDLER.messageResponseStore)
@@ -66,6 +70,7 @@ func TestRemoveKey(t *testing.T) {
                 t.Fatalf("Expected to not find key keyToDelete2, no key exists!")
                 fmt.Println(*MESSAGEHANDLER.messageResponseStore)
         }
+        MESSAGEHANDLER.Unlock()
 }
 
 func TestRemoveKeyAssertCallerResponse(t *testing.T) {
