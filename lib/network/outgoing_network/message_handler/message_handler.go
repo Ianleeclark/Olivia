@@ -16,6 +16,7 @@ type KeyValPair struct {
         Key string
         Value chan string
         ResponseChannel chan (chan string)
+        sync.RWMutex
 }
 
 func NewMessageHandler() *MessageHandler {
@@ -40,9 +41,9 @@ func NewMessageHandler() *MessageHandler {
 // NewKeyValPair Handles initialization of a new KeyValPair object.
 func NewKeyValPair(key string, value chan string, callerResponseChan chan chan string) *KeyValPair {
         return &KeyValPair{
-                key,
-                value,
-                callerResponseChan,
+                Key: key,
+                Value: value,
+                ResponseChannel: callerResponseChan,
         }
 }
 
@@ -65,8 +66,6 @@ func (m *MessageHandler) handleKeyAdds() {
                 m.Unlock()
 
         }
-
-        close(m.AddKeyChannel)
 }
 
 // HandleKeyDeletions Handles everything associated with having to delete a
@@ -81,22 +80,19 @@ func (m *MessageHandler) handleKeyDeletions() {
                 value, keyExists := (*m.messageResponseStore)[kvPair.Key]
                 if keyExists {
                         delete((*m.messageResponseStore), kvPair.Key)
-
-                        // If the KeyValPair was created with a ResponseChannel in
-                        // mind, we kno the caller wants a response in the form of the
-                        // value previously stored for the key.
-                        if kvPair.ResponseChannel != nil {
-                                fmt.Println("Sending to responding channel!")
-                                kvPair.ResponseChannel <- value
-                        }
-                } else {
-                        if kvPair.ResponseChannel != nil {
-                                kvPair.ResponseChannel <- nil
-                                continue
-                        }
                 }
                 m.Unlock()
 
+                go kvPair.sendResponse(value)
+        }
+}
+
+func (kvPair *KeyValPair) sendResponse(value chan string) {
+        kvPair.Lock()
+        if kvPair.ResponseChannel != nil {
+                fmt.Println("Sending to responding channel!")
+                kvPair.ResponseChannel <- value
+                kvPair.Unlock()
         }
 }
 

@@ -58,7 +58,7 @@ func TestRemoveKey(t *testing.T) {
         MESSAGEHANDLER.RemoveKeyChannel <- keyToDelete
         MESSAGEHANDLER.RemoveKeyChannel <- keyToDelete2
 
-        time.Sleep(1 * time.Second)
+        time.Sleep(2 * time.Second)
 
         MESSAGEHANDLER.Lock()
         if _, keyExists := (*MESSAGEHANDLER.messageResponseStore)["keyToDelete"]; keyExists {
@@ -79,10 +79,12 @@ func TestRemoveKeyAssertCallerResponse(t *testing.T) {
 
         time.Sleep(1 * time.Second)
 
+        MESSAGEHANDLER.Lock()
         if _, keyExists := (*MESSAGEHANDLER.messageResponseStore)["keyToRespondTo"]; !keyExists {
                 t.Fatalf("Expected to find key keyToRespondTo, no key exists!")
                 fmt.Println(*MESSAGEHANDLER.messageResponseStore)
         }
+        MESSAGEHANDLER.Unlock()
 
         responseChannel := make(chan chan string)
         endChannel := make(chan string)
@@ -97,7 +99,6 @@ func TestRemoveKeyAssertCallerResponse(t *testing.T) {
         if middleChannel == nil {
                 t.Fatalf("Expected a channel, got nil")
         }
-        middleChannel <- "testString"
 }
 
 func TestRemoveKeyKeyNoExists(t *testing.T) {
