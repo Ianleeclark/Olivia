@@ -1,7 +1,7 @@
 package main
 
 import (
-        "github.com/GrappigPanda/Olivia/lib/network"
+	"github.com/GrappigPanda/Olivia/lib/network"
 )
 
 func Init() {
@@ -9,5 +9,5 @@ func Init() {
 }
 
 func main() {
-        olilib_network.StartNetworkRouter()
+	olilib_network.StartNetworkRouter()
 }
