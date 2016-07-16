@@ -50,3 +50,9 @@ func (p *Peer) RefreshConnection() {
 	p.Disconnect()
 	p.Connect()
 }
+
+// SendCommand Handles sending a command to a remote node. Command is like this
+// "hash:Command"
+func (p *Peer) SendCommand(Command string) {
+	(*p.Conn).Write([]byte(Command))
+}
