@@ -3,6 +3,7 @@ package requester
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
 	"github.com/GrappigPanda/Olivia/lib/network/outgoing"
 	. "github.com/GrappigPanda/Olivia/lib/network/outgoing/message_handler"
 	"github.com/GrappigPanda/Olivia/lib/network/outgoing/receiver"
@@ -14,11 +15,14 @@ import (
 func SendRequest(peer *peer.Peer, Command string, responseChannel chan string, mh *MessageHandler) {
 	receiver := network_receiver.NewReceiver(mh, peer.Conn)
 
-	addCommandToMessageHandler(hashRequest(Command), responseChannel, mh)
+	hash := hashRequest(Command)
+	addCommandToMessageHandler(hash, responseChannel, mh)
 
 	go func() {
 		receiver.Run()
 	}()
+
+	(*peer.Conn).Write([]byte(fmt.Sprintf("%s:%s", hash, Command)))
 }
 
 // addCommandToMessageHandler send a command to the message container to store
