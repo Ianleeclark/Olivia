@@ -1,4 +1,4 @@
-package olilib_network
+package incomingNetwork
 
 import (
 	"testing"

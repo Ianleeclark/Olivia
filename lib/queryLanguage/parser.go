@@ -1,24 +1,27 @@
-package query_language
+package queryLanguage
 
 import (
 	"fmt"
 	"github.com/GrappigPanda/Olivia/lib/lru_cache"
+	"github.com/GrappigPanda/Olivia/lib/network/message_handler"
 	"strings"
 )
 
 type Parser struct {
-	LRUCache *olilib_lru.LRUCacheString
+	LRUCache     *olilib_lru.LRUCacheString
+	MessageStore *message_handler.MessageHandler
 }
 
 // CommandData is a struct representing the command sent in.
 type CommandData struct {
+	Hash    string
 	Command string
 	Args    map[string]string
 }
 
 // NewParser handles creating a new parser (mostly just initializing a new LRU
 // cache).
-func NewParser() *Parser {
+func NewParser(mh *message_handler.MessageHandler) *Parser {
 	return &Parser{
 		LRUCache: olilib_lru.NewString(25),
 	}
@@ -32,12 +35,19 @@ func (p *Parser) Parse(commandString string) (*CommandData, error) {
 		return &CommandData{}, fmt.Errorf("%v is an Invalid command.", commandString)
 	}
 
+	var hash string
+	hashCommand := strings.SplitN(splitCommand[0], ":", 2)
+	if len(hashCommand) == 1 {
+		hash = ""
+	}
+
 	command := splitCommand[0]
 	args := make(map[string]string)
 
 	args = parseArgs(strings.Split(splitCommand[1], ","))
 
 	return &CommandData{
+		hash,
 		command,
 		args,
 	}, nil

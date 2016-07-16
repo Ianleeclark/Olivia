@@ -1,19 +1,18 @@
-package olilib_network
+package incomingNetwork
 
 import (
 	"bytes"
 	"fmt"
+	"github.com/GrappigPanda/Olivia/lib/queryLanguage"
 	"strings"
 )
 
-// TODO(ian): Replace this with something else
-type Cache struct {
-	Cache *map[string]string
-}
-
-// ExecuteCommandStringList Is a function that makes me terribly sad, as
+// ExecuteCommand Is a function that makes me terribly sad, as
 // generics here would make a world of difference.
-func (ctx *ConnectionCtx) ExecuteCommand(command string, args map[string]string) string {
+func (ctx *ConnectionCtx) ExecuteCommand(requestData queryLanguage.CommandData) string {
+	command := requestData.Command
+	args := requestData.Args
+
 	switch strings.ToUpper(command) {
 	case "GET":
 		{
@@ -25,7 +24,7 @@ func (ctx *ConnectionCtx) ExecuteCommand(command string, args map[string]string)
 			retVals := make([]string, len(args))
 
 			index := 0
-			for k, _ := range args {
+			for k := range args {
 				val, ok := (*ctx.Cache.Cache)[k]
 				if ok {
 					retVals[index] = fmt.Sprintf("%s:%s", k, val)
@@ -33,7 +32,7 @@ func (ctx *ConnectionCtx) ExecuteCommand(command string, args map[string]string)
 				}
 			}
 
-			return createResponse(command, retVals[0:index])
+			return createResponse(command, retVals[0:index], requestData.Hash)
 		}
 	case "SET":
 		{
@@ -47,7 +46,7 @@ func (ctx *ConnectionCtx) ExecuteCommand(command string, args map[string]string)
 				index++
 			}
 
-			return createResponse(command, retVals)
+			return createResponse(command, retVals, requestData.Hash)
 		}
 	case "REQUEST":
 		{
@@ -58,12 +57,14 @@ func (ctx *ConnectionCtx) ExecuteCommand(command string, args map[string]string)
 	return "Invalid command sent in.\n"
 }
 
-func createResponse(command string, retVals []string) string {
+func createResponse(command string, retVals []string, hash string) string {
 	CommandMap := make(map[string]string)
 	CommandMap["GET"] = "GOT "
 	CommandMap["SET"] = "SAT "
 
 	var buffer bytes.Buffer
+	buffer.WriteString(hash)
+	buffer.WriteString(":")
 	buffer.WriteString(CommandMap[command])
 
 	for i := range retVals {
@@ -81,7 +82,7 @@ func createResponse(command string, retVals []string) string {
 func (ctx *ConnectionCtx) handleRequest(command string, args map[string]string) string {
 	var requestItem string
 	// TODO(ian): Support multiple actions per REQUEST in the future.
-	for k, _ := range args {
+	for k := range args {
 		requestItem = k
 		break
 	}
