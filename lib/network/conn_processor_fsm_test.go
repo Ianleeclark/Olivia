@@ -1,27 +1,27 @@
 package olilib_network
 
 import (
-        "testing"
+	"testing"
 )
 
 func TestNewCPFSM(t *testing.T) {
-        csfsm := NewProcessorFSM(UNAUTHENTICATED)
+	csfsm := NewProcessorFSM(UNAUTHENTICATED)
 
-        if csfsm.State != UNAUTHENTICATED {
-                t.Fatalf("Failed create a new Connection Processor")
-        }
+	if csfsm.State != UNAUTHENTICATED {
+		t.Fatalf("Failed create a new Connection Processor")
+	}
 }
 
 func TestChangeState(t *testing.T) {
-        csfsm := NewProcessorFSM(UNAUTHENTICATED)
-        csfsm.ChangeState(PROCESSING)
+	csfsm := NewProcessorFSM(UNAUTHENTICATED)
+	csfsm.ChangeState(PROCESSING)
 }
 
 func TestAuthenticate(t *testing.T) {
-        csfsm := NewProcessorFSM(UNAUTHENTICATED)
-        csfsm.Authenticate("TestBcryptPassword")
+	csfsm := NewProcessorFSM(UNAUTHENTICATED)
+	csfsm.Authenticate("TestBcryptPassword")
 
-        if csfsm.State != PROCESSING {
-                t.Fatalf("Failed to authenticate connection.")
-        }
+	if csfsm.State != PROCESSING {
+		t.Fatalf("Failed to authenticate connection.")
+	}
 }
