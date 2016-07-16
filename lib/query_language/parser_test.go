@@ -1,68 +1,68 @@
 package query_language
 
 import (
-        "testing"
+	"testing"
 )
 
 func TestParseFailInvalidCommand(t *testing.T) {
-        parser := NewParser()
+	parser := NewParser()
 
-        _, err := parser.Parse("XYZalsdkj")
-        if err == nil {
-                t.Fatalf("Command was somehow parsed as correct.")
-        }
+	_, err := parser.Parse("XYZalsdkj")
+	if err == nil {
+		t.Fatalf("Command was somehow parsed as correct.")
+	}
 }
 
 func TestParseStringOfCommas(t *testing.T) {
-        args := make(map[string]string)
-        args["key1"] = ""
-        args["key2"] = ""
-        args["key3"] = ""
+	args := make(map[string]string)
+	args["key1"] = ""
+	args["key2"] = ""
+	args["key3"] = ""
 
-        expectedReturn := &CommandData{
-                "GET",
-                args,
-        }
+	expectedReturn := &CommandData{
+		"GET",
+		args,
+	}
 
-        parser := NewParser()
+	parser := NewParser()
 
-        retval, err := parser.Parse("GET key1,key2,key3")
-        if err != nil {
-                t.Fatalf("Failed to parse string `GET key1, key2, key3` with error: %v", err)
-        }
+	retval, err := parser.Parse("GET key1,key2,key3")
+	if err != nil {
+		t.Fatalf("Failed to parse string `GET key1, key2, key3` with error: %v", err)
+	}
 
-        if (*retval).Command != (*expectedReturn).Command {
-                t.Fatalf("Expected command %v, got %v", (*retval).Command, (*expectedReturn).Command)
-        }
+	if (*retval).Command != (*expectedReturn).Command {
+		t.Fatalf("Expected command %v, got %v", (*retval).Command, (*expectedReturn).Command)
+	}
 
-        for key := range expectedReturn.Args {
-                if (*retval).Args[key] != (*expectedReturn).Args[key] {
-                        t.Fatalf("Expected %v, got %v", expectedReturn, retval)
-                }
-        }
+	for key := range expectedReturn.Args {
+		if (*retval).Args[key] != (*expectedReturn).Args[key] {
+			t.Fatalf("Expected %v, got %v", expectedReturn, retval)
+		}
+	}
 }
 
 func TestParseSetKeysWithColon(t *testing.T) {
-        args := make(map[string]string)
-        args["key1"] = ""
-        args["key2"] = ""
-        args["key3"] = ""
+	args := make(map[string]string)
+	args["key1"] = ""
+	args["key2"] = ""
+	args["key3"] = ""
 
-        expectedReturn := &CommandData{
-                "SET",
-                args,
-        }
+	expectedReturn := &CommandData{
+		"SET",
+		args,
+	}
 
-        parser := NewParser()
+	parser := NewParser()
 
-        retval, err := parser.Parse("GET key1,key2,key3")
-        if err != nil {
-                t.Fatalf("Failed to parse string `GET key1, key2, key3` with error: %v", err)
-        }
+	retval, err := parser.Parse("GET key1,key2,key3")
+	if err != nil {
+		t.Fatalf("Failed to parse string `GET key1, key2, key3` with error: %v", err)
+	}
 
-        for key := range expectedReturn.Args {
-                if (*retval).Args[key] != (*expectedReturn).Args[key] {
-                        t.Fatalf("Expected %v, got %v", expectedReturn, retval)
-                }
-        }
+	for key := range expectedReturn.Args {
+		if (*retval).Args[key] != (*expectedReturn).Args[key] {
+			t.Fatalf("Expected %v, got %v", expectedReturn, retval)
+		}
+	}
 }
