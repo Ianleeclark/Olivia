@@ -22,7 +22,7 @@ func SendRequest(peer *peer.Peer, Command string, responseChannel chan string, m
 		receiver.Run()
 	}()
 
-	(*peer.Conn).Write([]byte(fmt.Sprintf("%s:%s", hash, Command)))
+	peer.SendCommand(fmt.Sprintf("%s:%s", hash, Command))
 }
 
 // addCommandToMessageHandler send a command to the message container to store
