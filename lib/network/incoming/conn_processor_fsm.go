@@ -1,4 +1,4 @@
-package olilib_network
+package incomingNetwork
 
 // FSMState represents The different states the conn processor will be at
 // during a network transaction.

@@ -1,7 +1,9 @@
-package olilib_network
+package incomingNetwork
 
 import (
+	"github.com/GrappigPanda/Olivia/cache"
 	"github.com/GrappigPanda/Olivia/lib/bloomfilter"
+	"github.com/GrappigPanda/Olivia/lib/queryLanguage"
 	"testing"
 )
 
@@ -9,20 +11,21 @@ var CACHE = make(map[string]string)
 
 var CTX = &ConnectionCtx{
 	nil,
-	&Cache{
+	&cache.Cache{
 		&CACHE,
 	},
 	nil,
 }
 
 func TestExecuteGetAllSucceed(t *testing.T) {
-	expectedReturn := "GOT key1:test1,key2:test14\n"
-	expectedReturn2 := "GOT key2:test14,key1:test1\n"
+	expectedReturn := "hash:GOT key1:test1,key2:test14\n"
+	expectedReturn2 := "hash:GOT key2:test14,key1:test1\n"
 
 	CACHE["key1"] = "test1"
 	CACHE["key2"] = "test14"
 
-	result := CTX.ExecuteCommand("GET", map[string]string{"key1": "", "key2": ""})
+	command := queryLanguage.CommandData{"hash", "GET", map[string]string{"key1": "", "key2": ""}}
+	result := CTX.ExecuteCommand(command)
 
 	if expectedReturn != result {
 		if result != expectedReturn2 {
@@ -32,13 +35,14 @@ func TestExecuteGetAllSucceed(t *testing.T) {
 }
 
 func TestExecuteGetAllSkipNonexistingKey(t *testing.T) {
-	expectedReturn := "GOT key1:test1,key2:test14\n"
-	expectedReturn2 := "GOT key2:test14,key1:test1\n"
+	expectedReturn := "hash:GOT key1:test1,key2:test14\n"
+	expectedReturn2 := "hash:GOT key2:test14,key1:test1\n"
 
 	CACHE["key1"] = "test1"
 	CACHE["key2"] = "test14"
 
-	result := CTX.ExecuteCommand("GET", map[string]string{"key1": "", "key3": "", "key2": ""})
+	command := queryLanguage.CommandData{"hash", "GET", map[string]string{"key1": "", "key3": "", "key2": ""}}
+	result := CTX.ExecuteCommand(command)
 
 	if expectedReturn != result {
 		if result != expectedReturn2 {
@@ -48,10 +52,11 @@ func TestExecuteGetAllSkipNonexistingKey(t *testing.T) {
 }
 
 func TestExecuteSetKey(t *testing.T) {
-	expectedReturn := "SAT key4:test4,key7:test126654\n"
-	expectedReturn2 := "SAT key7:test126654,key4:test4\n"
+	expectedReturn := "hash:SAT key4:test4,key7:test126654\n"
+	expectedReturn2 := "hash:SAT key7:test126654,key4:test4\n"
 
-	result := CTX.ExecuteCommand("SET", map[string]string{"key4": "test4", "key7": "test126654"})
+	command := queryLanguage.CommandData{"hash", "SET", map[string]string{"key4": "test4", "key7": "test126654"}}
+	result := CTX.ExecuteCommand(command)
 
 	if expectedReturn != result {
 		if result != expectedReturn2 {
@@ -75,23 +80,24 @@ func TestRequestBloomFilter(t *testing.T) {
 		bf,
 	}
 
-	new_bf_str := ctx.ExecuteCommand("REQUEST", map[string]string{"bloomfilter": ""})
-	if new_bf_str == "Invalid command sent in.\n" {
+	command := queryLanguage.CommandData{"hash", "REQUEST", map[string]string{"bloomfilter": ""}}
+	newBfStr := ctx.ExecuteCommand(command)
+	if newBfStr == "Invalid command sent in.\n" {
 		t.Fatalf("Sending in a bad command :(")
 	}
 
-	new_bf, err := olilib.ConvertStringtoBF(new_bf_str)
+	newBloomfilter, err := olilib.ConvertStringtoBF(newBfStr)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
 
-	val, _ := new_bf.HasKey([]byte("key1"))
+	val, _ := newBloomfilter.HasKey([]byte("key1"))
 	if !val {
-		t.Fatalf("new_bf doesnt have key1!")
+		t.Fatalf("newBloomfilter doesnt have key1!")
 	}
 
 	for i := range bf.Filter {
-		if bf.Filter[i] != new_bf.Filter[i] {
+		if bf.Filter[i] != newBloomfilter.Filter[i] {
 			t.Fatalf("Two bfs are not equal")
 		}
 	}

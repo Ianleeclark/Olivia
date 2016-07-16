@@ -1,3 +1,3 @@
-package query_language
+package queryLanguage
 
 var GET_REMOTE_BLOOMFILTER = "REQUEST Bloomfilter"
