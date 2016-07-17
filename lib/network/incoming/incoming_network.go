@@ -20,23 +20,18 @@ type ConnectionCtx struct {
 
 // StartNetworkRouter initializes everything necessary for our incoming network
 // router to process and begins our network router.
-func StartNetworkRouter(mh *message_handler.MessageHandler) {
+func StartNetworkRouter(mh *message_handler.MessageHandler, cache *cache.Cache) {
 	listen, err := net.Listen("tcp", ":5454")
 	if err != nil {
 		panic(err)
 	}
 	defer listen.Close()
 
-	_cache := make(map[string]string)
-	cache := cache.Cache{
-		&_cache,
-	}
-
 	bf := olilib.NewByFailRate(10000, 0.01)
 
 	ctx := &ConnectionCtx{
 		queryLanguage.NewParser(mh),
-		&cache,
+		cache,
 		bf,
 	}
 
