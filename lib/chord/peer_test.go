@@ -1,4 +1,4 @@
-package requester
+package chord
 
 import (
 	"github.com/GrappigPanda/Olivia/lib/network/outgoing/message_handler"
