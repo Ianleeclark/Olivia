@@ -1,2 +1,5 @@
 *.swp
 Olivia
+.idea*
+.idea
+.idea/*
