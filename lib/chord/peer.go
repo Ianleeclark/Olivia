@@ -6,7 +6,7 @@ import (
 	"time"
 	"github.com/GrappigPanda/Olivia/lib/bloomfilter"
 	"github.com/GrappigPanda/Olivia/lib/queryLanguage"
-	"github.com/GrappigPanda/Olivia/lib/network/outgoing/message_handler"
+	"github.com/GrappigPanda/Olivia/lib/network/message_handler"
 	"github.com/GrappigPanda/Olivia/lib/network/outgoing/receiver"
 	"crypto/md5"
 	"encoding/hex"
@@ -32,10 +32,25 @@ type Peer struct {
 	Conn   *net.Conn
 	ipPort string
 	BloomFilter *olilib.BloomFilter
+	MessageBus *message_handler.MessageHandler
+}
+
+type PeerList struct {
+	Peers []*Peer
+}
+
+func NewPeer(conn *net.Conn, mh *message_handler.MessageHandler) *Peer {
+	return &Peer{
+		Disconnected,
+		conn,
+		(*conn).RemoteAddr().String(),
+		nil,
+		mh,
+	}
 }
 
 // Connect opens a connection to a remote peer
-func (p *Peer) Connect(mh *message_handler.MessageHandler) {
+func (p *Peer) Connect() {
 	conn, err := net.DialTimeout("tcp", p.ipPort, 5*time.Second)
 	if err != nil {
 		if err, ok := err.(net.Error); ok && err.Timeout() {
@@ -46,7 +61,7 @@ func (p *Peer) Connect(mh *message_handler.MessageHandler) {
 
 	p.Conn = &conn
 	p.Status = Connected
-	p.getBloomFilter(mh)
+	p.GetBloomFilter()
 }
 
 // Disconnect closes a connection to a remote peer.
@@ -76,14 +91,14 @@ func (p *Peer) SendRequest(Command string, responseChannel chan string, mh *mess
 	p.SendCommand(fmt.Sprintf("%s:%s", hash, Command))
 }
 
-// getBloomFilter handles retrieving a remote node's bloom filter.
-func (p *Peer) getBloomFilter(mh *message_handler.MessageHandler) {
+// GetBloomFilter handles retrieving a remote node's bloom filter.
+func (p *Peer) GetBloomFilter() {
 	responseChannel := make(chan string)
 
 	p.SendRequest(
 		queryLanguage.GET_REMOTE_BLOOMFILTER,
 		responseChannel,
-		mh,
+		p.MessageBus,
 	)
 
 	bloomfilter := <-responseChannel

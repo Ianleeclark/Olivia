@@ -10,7 +10,7 @@ var MESSAGEHANDLER = message_handler.NewMessageHandler()
 func TestParseFailInvalidCommand(t *testing.T) {
 	parser := NewParser(MESSAGEHANDLER)
 
-	_, err := parser.Parse("XYZalsdkj")
+	_, err := parser.Parse("XYZalsdkj", nil)
 	if err == nil {
 		t.Fatalf("Command was somehow parsed as correct.")
 	}
@@ -26,11 +26,12 @@ func TestParseStringOfCommas(t *testing.T) {
 		"",
 		"GET",
 		args,
+		nil,
 	}
 
 	parser := NewParser(MESSAGEHANDLER)
 
-	retval, err := parser.Parse("GET key1,key2,key3")
+	retval, err := parser.Parse("GET key1,key2,key3", nil)
 	if err != nil {
 		t.Fatalf("Failed to parse string `GET key1, key2, key3` with error: %v", err)
 	}
@@ -56,11 +57,12 @@ func TestParseSetKeysWithColon(t *testing.T) {
 		"",
 		"SET",
 		args,
+		nil,
 	}
 
 	parser := NewParser(MESSAGEHANDLER)
 
-	retval, err := parser.Parse("GET key1,key2,key3")
+	retval, err := parser.Parse("GET key1,key2,key3", nil)
 	if err != nil {
 		t.Fatalf("Failed to parse string `GET key1, key2, key3` with error: %v", err)
 	}
@@ -82,11 +84,12 @@ func TestParseCommandWithHash(t *testing.T) {
 		"",
 		"SET",
 		args,
+		nil,
 	}
 
 	parser := NewParser(MESSAGEHANDLER)
 
-	retval, err := parser.Parse("GET key1,key2,key3")
+	retval, err := parser.Parse("GET key1,key2,key3", nil)
 	if err != nil {
 		t.Fatalf("Failed to parse string `GET key1, key2, key3` with error: %v", err)
 	}

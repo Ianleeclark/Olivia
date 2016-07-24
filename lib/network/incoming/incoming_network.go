@@ -16,6 +16,7 @@ type ConnectionCtx struct {
 	Parser      *queryLanguage.Parser
 	Cache       *cache.Cache
 	Bloomfilter *olilib.BloomFilter
+	MessageBus  *message_handler.MessageHandler
 }
 
 // StartNetworkRouter initializes everything necessary for our incoming network
@@ -33,6 +34,7 @@ func StartNetworkRouter(mh *message_handler.MessageHandler, cache *cache.Cache) 
 		queryLanguage.NewParser(mh),
 		cache,
 		bf,
+		mh,
 	}
 
 	log.Println("Starting connection router.")
@@ -71,7 +73,7 @@ func (ctx *ConnectionCtx) handleConnection(conn *net.Conn) {
 			connProc.Authenticate(password)
 			break
 		case PROCESSING:
-			command, err := ctx.Parser.Parse(line)
+			command, err := ctx.Parser.Parse(line, conn)
 			if err != nil {
 
 			}
