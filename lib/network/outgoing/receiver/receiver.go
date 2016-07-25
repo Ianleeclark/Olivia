@@ -2,7 +2,7 @@ package network_receiver
 
 import (
 	"bufio"
-	. "github.com/GrappigPanda/Olivia/lib/network/outgoing/message_handler"
+	. "github.com/GrappigPanda/Olivia/lib/network/message_handler"
 	"net"
 	"strings"
 )

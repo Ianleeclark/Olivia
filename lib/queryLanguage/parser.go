@@ -5,6 +5,7 @@ import (
 	"github.com/GrappigPanda/Olivia/lib/lru_cache"
 	"github.com/GrappigPanda/Olivia/lib/network/message_handler"
 	"strings"
+	"net"
 )
 
 type Parser struct {
@@ -17,6 +18,7 @@ type CommandData struct {
 	Hash    string
 	Command string
 	Args    map[string]string
+	Conn *net.Conn
 }
 
 // NewParser handles creating a new parser (mostly just initializing a new LRU
@@ -29,7 +31,7 @@ func NewParser(mh *message_handler.MessageHandler) *Parser {
 
 // Parse handles parsing the grammer into a `CommandData` struct to be later
 // processed.
-func (p *Parser) Parse(commandString string) (*CommandData, error) {
+func (p *Parser) Parse(commandString string, conn *net.Conn) (*CommandData, error) {
 	splitCommand := strings.SplitN(commandString, " ", 2)
 	if len(splitCommand) == 1 {
 		return &CommandData{}, fmt.Errorf("%v is an Invalid command.", commandString)
@@ -50,6 +52,7 @@ func (p *Parser) Parse(commandString string) (*CommandData, error) {
 		hash,
 		command,
 		args,
+		conn,
 	}, nil
 }
 

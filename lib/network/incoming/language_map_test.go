@@ -14,6 +14,8 @@ var CTX = &ConnectionCtx{
 	&cache.Cache{
 		&CACHE,
 	},
+	olilib.NewByFailRate(10000, 0.01),
+	nil,
 	nil,
 }
 
@@ -24,7 +26,7 @@ func TestExecuteGetAllSucceed(t *testing.T) {
 	CACHE["key1"] = "test1"
 	CACHE["key2"] = "test14"
 
-	command := queryLanguage.CommandData{"hash", "GET", map[string]string{"key1": "", "key2": ""}}
+	command := queryLanguage.CommandData{"hash", "GET", map[string]string{"key1": "", "key2": ""}, nil}
 	result := CTX.ExecuteCommand(command)
 
 	if expectedReturn != result {
@@ -41,7 +43,7 @@ func TestExecuteGetAllSkipNonexistingKey(t *testing.T) {
 	CACHE["key1"] = "test1"
 	CACHE["key2"] = "test14"
 
-	command := queryLanguage.CommandData{"hash", "GET", map[string]string{"key1": "", "key3": "", "key2": ""}}
+	command := queryLanguage.CommandData{"hash", "GET", map[string]string{"key1": "", "key3": "", "key2": ""}, nil}
 	result := CTX.ExecuteCommand(command)
 
 	if expectedReturn != result {
@@ -55,7 +57,7 @@ func TestExecuteSetKey(t *testing.T) {
 	expectedReturn := "hash:SAT key4:test4,key7:test126654\n"
 	expectedReturn2 := "hash:SAT key7:test126654,key4:test4\n"
 
-	command := queryLanguage.CommandData{"hash", "SET", map[string]string{"key4": "test4", "key7": "test126654"}}
+	command := queryLanguage.CommandData{"hash", "SET", map[string]string{"key4": "test4", "key7": "test126654"}, nil}
 	result := CTX.ExecuteCommand(command)
 
 	if expectedReturn != result {
@@ -78,9 +80,11 @@ func TestRequestBloomFilter(t *testing.T) {
 		nil,
 		nil,
 		bf,
+		nil,
+		nil,
 	}
 
-	command := queryLanguage.CommandData{"hash", "REQUEST", map[string]string{"bloomfilter": ""}}
+	command := queryLanguage.CommandData{"hash", "REQUEST", map[string]string{"bloomfilter": ""}, nil}
 	newBfStr := ctx.ExecuteCommand(command)
 	if newBfStr == "Invalid command sent in.\n" {
 		t.Fatalf("Sending in a bad command :(")

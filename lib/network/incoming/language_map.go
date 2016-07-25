@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/GrappigPanda/Olivia/lib/queryLanguage"
 	"strings"
+	"github.com/GrappigPanda/Olivia/lib/chord"
 )
 
 // ExecuteCommand Is a function that makes me terribly sad, as
@@ -44,13 +45,14 @@ func (ctx *ConnectionCtx) ExecuteCommand(requestData queryLanguage.CommandData) 
 
 				retVals[index] = fmt.Sprintf("%s:%s", k, v)
 				index++
+				(*ctx.Bloomfilter).AddKey([]byte(k))
 			}
 
 			return createResponse(command, retVals, requestData.Hash)
 		}
 	case "REQUEST":
 		{
-			return ctx.handleRequest(command, args)
+			return ctx.handleRequest(requestData)
 		}
 	}
 
@@ -79,10 +81,10 @@ func createResponse(command string, retVals []string, hash string) string {
 	return buffer.String()
 }
 
-func (ctx *ConnectionCtx) handleRequest(command string, args map[string]string) string {
+func (ctx *ConnectionCtx) handleRequest(requestData queryLanguage.CommandData) string {
 	var requestItem string
 	// TODO(ian): Support multiple actions per REQUEST in the future.
-	for k := range args {
+	for k := range requestData.Args {
 		requestItem = k
 		break
 	}
@@ -92,6 +94,11 @@ func (ctx *ConnectionCtx) handleRequest(command string, args map[string]string) 
 	case "BLOOMFILTER":
 		{
 			return (*ctx.Bloomfilter).ConvertToString()
+		}
+	case "CONNECT":
+		{
+			peer := chord.NewPeer(requestData.Conn, ctx.MessageBus)
+			(*peer).GetBloomFilter()
 		}
 	}
 

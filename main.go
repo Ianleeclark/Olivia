@@ -10,7 +10,7 @@ func Init() {
 	internalCache := cache.NewCache()
 
 	messageHandler := message_handler.NewMessageHandler()
-	networkHandler.StartIncomingNetwork(messageHandler, internalCache)
+	go networkHandler.StartIncomingNetwork(messageHandler, internalCache)
 }
 
 func main() {

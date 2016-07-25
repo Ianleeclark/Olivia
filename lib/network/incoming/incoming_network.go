@@ -8,6 +8,7 @@ import (
 	"github.com/GrappigPanda/Olivia/lib/queryLanguage"
 	"log"
 	"net"
+	"github.com/GrappigPanda/Olivia/lib/chord"
 )
 
 // ConnectionCtx handles maintaining a persistent state per incoming
@@ -16,11 +17,18 @@ type ConnectionCtx struct {
 	Parser      *queryLanguage.Parser
 	Cache       *cache.Cache
 	Bloomfilter *olilib.BloomFilter
+	MessageBus  *message_handler.MessageHandler
+	PeerList *chord.PeerList
 }
 
 // StartNetworkRouter initializes everything necessary for our incoming network
 // router to process and begins our network router.
-func StartNetworkRouter(mh *message_handler.MessageHandler, cache *cache.Cache) {
+func StartNetworkRouter(
+	mh *message_handler.MessageHandler,
+	cache *cache.Cache,
+	peerList *chord.PeerList,
+) {
+
 	listen, err := net.Listen("tcp", ":5454")
 	if err != nil {
 		panic(err)
@@ -33,6 +41,8 @@ func StartNetworkRouter(mh *message_handler.MessageHandler, cache *cache.Cache) 
 		queryLanguage.NewParser(mh),
 		cache,
 		bf,
+		mh,
+		peerList,
 	}
 
 	log.Println("Starting connection router.")
@@ -71,9 +81,9 @@ func (ctx *ConnectionCtx) handleConnection(conn *net.Conn) {
 			connProc.Authenticate(password)
 			break
 		case PROCESSING:
-			command, err := ctx.Parser.Parse(line)
+			command, err := ctx.Parser.Parse(line, conn)
 			if err != nil {
-
+				log.Println(err)
 			}
 			response := ctx.ExecuteCommand(*command)
 			(*conn).Write([]byte(response))
