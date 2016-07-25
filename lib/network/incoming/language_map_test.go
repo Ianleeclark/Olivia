@@ -16,6 +16,7 @@ var CTX = &ConnectionCtx{
 	},
 	olilib.NewByFailRate(10000, 0.01),
 	nil,
+	nil,
 }
 
 func TestExecuteGetAllSucceed(t *testing.T) {
@@ -79,6 +80,7 @@ func TestRequestBloomFilter(t *testing.T) {
 		nil,
 		nil,
 		bf,
+		nil,
 		nil,
 	}
 

@@ -35,10 +35,6 @@ type Peer struct {
 	MessageBus *message_handler.MessageHandler
 }
 
-type PeerList struct {
-	Peers []*Peer
-}
-
 func NewPeer(conn *net.Conn, mh *message_handler.MessageHandler) *Peer {
 	return &Peer{
 		Disconnected,
@@ -50,18 +46,20 @@ func NewPeer(conn *net.Conn, mh *message_handler.MessageHandler) *Peer {
 }
 
 // Connect opens a connection to a remote peer
-func (p *Peer) Connect() {
+func (p *Peer) Connect() error {
 	conn, err := net.DialTimeout("tcp", p.ipPort, 5*time.Second)
 	if err != nil {
 		if err, ok := err.(net.Error); ok && err.Timeout() {
 			p.Status = Timeout
 		}
-		return
+		return err
 	}
 
 	p.Conn = &conn
 	p.Status = Connected
 	p.GetBloomFilter()
+
+	return nil
 }
 
 // Disconnect closes a connection to a remote peer.
