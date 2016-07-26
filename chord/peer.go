@@ -30,7 +30,7 @@ const (
 type Peer struct {
 	Status      State
 	Conn        *net.Conn
-	ipPort      string
+	IPPort      string
 	BloomFilter *olilib.BloomFilter
 	MessageBus  *message_handler.MessageHandler
 }
@@ -47,7 +47,7 @@ func NewPeer(conn *net.Conn, mh *message_handler.MessageHandler) *Peer {
 
 // Connect opens a connection to a remote peer
 func (p *Peer) Connect() error {
-	conn, err := net.DialTimeout("tcp", p.ipPort, 5*time.Second)
+	conn, err := net.DialTimeout("tcp", p.IPPort, 5*time.Second)
 	if err != nil {
 		if err, _ := err.(net.Error); err.Timeout() {
 			p.Status = Timeout

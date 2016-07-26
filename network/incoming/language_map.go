@@ -121,6 +121,19 @@ func (ctx *ConnectionCtx) handleRequest(requestData queryLanguage.CommandData) s
 			peer := chord.NewPeer(requestData.Conn, ctx.MessageBus)
 			(*peer).GetBloomFilter()
 		}
+	case "PEERS":
+		{
+			outString := ""
+			for _, peer := range ctx.PeerList.Peers {
+				if peer == nil || peer.Status == chord.Timeout  || peer.Status == chord.Disconnected {
+					continue
+				}
+
+				fmt.Sprintf("%s %s", outString, peer.IPPort)
+			}
+
+			return outString
+		}
 	}
 
 	return "Invalid command sent in.\n"
