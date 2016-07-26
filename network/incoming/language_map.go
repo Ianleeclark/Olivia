@@ -25,11 +25,33 @@ func (ctx *ConnectionCtx) ExecuteCommand(requestData queryLanguage.CommandData) 
 			retVals := make([]string, len(args))
 
 			index := 0
+			responseChannel := make(chan string)
 			for k := range args {
 				val, ok := (*ctx.Cache.Cache)[k]
 				if ok {
 					retVals[index] = fmt.Sprintf("%s:%s", k, val)
 					index++
+				} else {
+					fmt.Printf("%v\n\n\n\n\n", ctx.PeerList)
+					for _, peer := range ctx.PeerList.Peers {
+						if peer == nil || peer.Status == chord.Timeout  || peer.Status == chord.Disconnected {
+							continue
+						}
+
+						if ok, _ := peer.BloomFilter.HasKey([]byte(k)); ok {
+							peer.SendRequest(
+								fmt.Sprintf("GET %s", k),
+								responseChannel,
+								ctx.MessageBus,
+							)
+
+							value := <-responseChannel
+							if value != "" {
+								retVals[index] = fmt.Sprintf("%s:%s", k, value)
+								index++
+							}
+						}
+					}
 				}
 			}
 
@@ -89,7 +111,6 @@ func (ctx *ConnectionCtx) handleRequest(requestData queryLanguage.CommandData) s
 		break
 	}
 
-	fmt.Println("->", requestItem)
 	switch strings.ToUpper(requestItem) {
 	case "BLOOMFILTER":
 		{
