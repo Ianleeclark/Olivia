@@ -49,7 +49,7 @@ func NewPeer(conn *net.Conn, mh *message_handler.MessageHandler) *Peer {
 func (p *Peer) Connect() error {
 	conn, err := net.DialTimeout("tcp", p.ipPort, 5*time.Second)
 	if err != nil {
-		if err, ok := err.(net.Error); ok && err.Timeout() {
+		if err, _ := err.(net.Error); err.Timeout() {
 			p.Status = Timeout
 		}
 		return err

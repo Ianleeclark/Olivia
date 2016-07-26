@@ -1,6 +1,7 @@
 package chord
 
 import (
+	"fmt"
 	"log"
 )
 
@@ -20,12 +21,21 @@ func NewPeerList() *PeerList {
 }
 
 // ConnectAllPeers connects all peers (or at least attempts to)
-func (p *PeerList) ConnectAllPeers() {
+func (p *PeerList) ConnectAllPeers() error {
+	failureCount := 0
 	for x := range p.Peers {
 		if err := p.Peers[x].Connect(); err != nil {
 			log.Println(err)
+			failureCount++
 		}
 	}
+
+	if failureCount == len(p.Peers) {
+		log.Println("Failed to connect to any nodes.")
+		return fmt.Errorf("No connectable nodes.")
+	}
+
+	return nil
 }
 
 // DisconnectAllPeers disconnects all peers
