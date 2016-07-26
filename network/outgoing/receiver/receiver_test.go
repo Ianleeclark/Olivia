@@ -4,7 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
-	. "github.com/GrappigPanda/Olivia/lib/network/message_handler"
+	. "github.com/GrappigPanda/Olivia/network/message_handler"
 	"testing"
 )
 

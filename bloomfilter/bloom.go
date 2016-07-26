@@ -3,7 +3,7 @@ package olilib
 import (
 	"bytes"
 	"fmt"
-	"github.com/GrappigPanda/Olivia/lib/lru_cache"
+	"github.com/GrappigPanda/Olivia/lru_cache"
 	"hash/fnv"
 	"math"
 	"strconv"

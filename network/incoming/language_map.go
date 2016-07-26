@@ -3,9 +3,9 @@ package incomingNetwork
 import (
 	"bytes"
 	"fmt"
-	"github.com/GrappigPanda/Olivia/lib/queryLanguage"
+	"github.com/GrappigPanda/Olivia/queryLanguage"
 	"strings"
-	"github.com/GrappigPanda/Olivia/lib/chord"
+	"github.com/GrappigPanda/Olivia/chord"
 )
 
 // ExecuteCommand Is a function that makes me terribly sad, as

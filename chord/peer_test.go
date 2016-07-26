@@ -1,7 +1,7 @@
 package chord
 
 import (
-	"github.com/GrappigPanda/Olivia/lib/network/message_handler"
+	"github.com/GrappigPanda/Olivia/network/message_handler"
 	"testing"
 )
 

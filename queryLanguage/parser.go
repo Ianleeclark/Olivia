@@ -2,8 +2,8 @@ package queryLanguage
 
 import (
 	"fmt"
-	"github.com/GrappigPanda/Olivia/lib/lru_cache"
-	"github.com/GrappigPanda/Olivia/lib/network/message_handler"
+	"github.com/GrappigPanda/Olivia/lru_cache"
+	"github.com/GrappigPanda/Olivia/network/message_handler"
 	"strings"
 	"net"
 )
