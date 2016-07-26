@@ -6,7 +6,7 @@ import (
 	"github.com/GrappigPanda/Olivia/cache"
 	"github.com/GrappigPanda/Olivia/chord"
 	"github.com/GrappigPanda/Olivia/network/message_handler"
-	"github.com/GrappigPanda/Olivia/queryLanguage"
+	"github.com/GrappigPanda/Olivia/parser"
 	"log"
 	"net"
 )
@@ -14,7 +14,7 @@ import (
 // ConnectionCtx handles maintaining a persistent state per incoming
 // connection.
 type ConnectionCtx struct {
-	Parser      *queryLanguage.Parser
+	Parser      *parser.Parser
 	Cache       *cache.Cache
 	Bloomfilter *olilib.BloomFilter
 	MessageBus  *message_handler.MessageHandler
@@ -38,7 +38,7 @@ func StartNetworkRouter(
 	bf := olilib.NewByFailRate(10000, 0.01)
 
 	ctx := &ConnectionCtx{
-		queryLanguage.NewParser(mh),
+		parser.NewParser(mh),
 		cache,
 		bf,
 		mh,

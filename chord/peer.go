@@ -7,7 +7,7 @@ import (
 	"github.com/GrappigPanda/Olivia/bloomfilter"
 	"github.com/GrappigPanda/Olivia/network/message_handler"
 	"github.com/GrappigPanda/Olivia/network/outgoing/receiver"
-	"github.com/GrappigPanda/Olivia/queryLanguage"
+	"github.com/GrappigPanda/Olivia/parser"
 	"net"
 	"time"
 )
@@ -94,7 +94,7 @@ func (p *Peer) GetBloomFilter() {
 	responseChannel := make(chan string)
 
 	p.SendRequest(
-		queryLanguage.GET_REMOTE_BLOOMFILTER,
+		parser.GET_REMOTE_BLOOMFILTER,
 		responseChannel,
 		p.MessageBus,
 	)
