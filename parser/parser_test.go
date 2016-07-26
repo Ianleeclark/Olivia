@@ -1,4 +1,4 @@
-package queryLanguage
+package parser
 
 import (
 	"github.com/GrappigPanda/Olivia/network/message_handler"

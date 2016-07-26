@@ -1,4 +1,4 @@
-package queryLanguage
+package parser
 
 import (
 	"fmt"

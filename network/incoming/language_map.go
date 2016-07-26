@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/GrappigPanda/Olivia/chord"
-	"github.com/GrappigPanda/Olivia/queryLanguage"
+	"github.com/GrappigPanda/Olivia/parser"
 	"strings"
 )
 
 // ExecuteCommand Is a function that makes me terribly sad, as
 // generics here would make a world of difference.
-func (ctx *ConnectionCtx) ExecuteCommand(requestData queryLanguage.CommandData) string {
+func (ctx *ConnectionCtx) ExecuteCommand(requestData parser.CommandData) string {
 	command := requestData.Command
 	args := requestData.Args
 
@@ -103,7 +103,7 @@ func createResponse(command string, retVals []string, hash string) string {
 	return buffer.String()
 }
 
-func (ctx *ConnectionCtx) handleRequest(requestData queryLanguage.CommandData) string {
+func (ctx *ConnectionCtx) handleRequest(requestData parser.CommandData) string {
 	var requestItem string
 	// TODO(ian): Support multiple actions per REQUEST in the future.
 	for k := range requestData.Args {
