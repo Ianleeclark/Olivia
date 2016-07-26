@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/GrappigPanda/Olivia/lru_cache"
 	"github.com/GrappigPanda/Olivia/network/message_handler"
-	"strings"
 	"net"
+	"strings"
 )
 
 type Parser struct {
@@ -18,7 +18,7 @@ type CommandData struct {
 	Hash    string
 	Command string
 	Args    map[string]string
-	Conn *net.Conn
+	Conn    *net.Conn
 }
 
 // NewParser handles creating a new parser (mostly just initializing a new LRU

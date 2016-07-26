@@ -3,9 +3,9 @@ package incomingNetwork
 import (
 	"bytes"
 	"fmt"
+	"github.com/GrappigPanda/Olivia/chord"
 	"github.com/GrappigPanda/Olivia/queryLanguage"
 	"strings"
-	"github.com/GrappigPanda/Olivia/chord"
 )
 
 // ExecuteCommand Is a function that makes me terribly sad, as
@@ -25,11 +25,33 @@ func (ctx *ConnectionCtx) ExecuteCommand(requestData queryLanguage.CommandData) 
 			retVals := make([]string, len(args))
 
 			index := 0
+			responseChannel := make(chan string)
 			for k := range args {
 				val, ok := (*ctx.Cache.Cache)[k]
 				if ok {
 					retVals[index] = fmt.Sprintf("%s:%s", k, val)
 					index++
+				} else {
+					fmt.Printf("%v\n\n\n\n\n", ctx.PeerList)
+					for _, peer := range ctx.PeerList.Peers {
+						if peer == nil || peer.Status == chord.Timeout || peer.Status == chord.Disconnected {
+							continue
+						}
+
+						if ok, _ := peer.BloomFilter.HasKey([]byte(k)); ok {
+							peer.SendRequest(
+								fmt.Sprintf("GET %s", k),
+								responseChannel,
+								ctx.MessageBus,
+							)
+
+							value := <-responseChannel
+							if value != "" {
+								retVals[index] = fmt.Sprintf("%s:%s", k, value)
+								index++
+							}
+						}
+					}
 				}
 			}
 
@@ -89,7 +111,6 @@ func (ctx *ConnectionCtx) handleRequest(requestData queryLanguage.CommandData) s
 		break
 	}
 
-	fmt.Println("->", requestItem)
 	switch strings.ToUpper(requestItem) {
 	case "BLOOMFILTER":
 		{
@@ -99,6 +120,37 @@ func (ctx *ConnectionCtx) handleRequest(requestData queryLanguage.CommandData) s
 		{
 			peer := chord.NewPeer(requestData.Conn, ctx.MessageBus)
 			(*peer).GetBloomFilter()
+		}
+	case "PEERS":
+		{
+			outString := ""
+			for _, peer := range ctx.PeerList.Peers {
+				if peer == nil || peer.Status == chord.Timeout || peer.Status == chord.Disconnected {
+					continue
+				}
+
+				fmt.Sprintf("%s %s", outString, peer.IPPort)
+			}
+
+			return outString
+		}
+	case "DISCONNECT":
+		{
+			outString := "Peer not found in peer list."
+			for _, peer := range ctx.PeerList.Peers {
+				if peer.IPPort != (*requestData.Conn).RemoteAddr().String() {
+					continue
+				}
+
+				if peer != nil && peer.Status == chord.Connected {
+					peer.Disconnect()
+					outString = "Peer has been disconnected."
+				}
+
+				// TODO(ian): Connect a backup node after one node has forced itself to be evicted.
+			}
+
+			return outString
 		}
 	}
 

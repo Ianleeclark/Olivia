@@ -1,8 +1,10 @@
 package incomingNetwork
 
 import (
-	"github.com/GrappigPanda/Olivia/cache"
 	"github.com/GrappigPanda/Olivia/bloomfilter"
+	"github.com/GrappigPanda/Olivia/cache"
+	"github.com/GrappigPanda/Olivia/chord"
+	"github.com/GrappigPanda/Olivia/network/message_handler"
 	"github.com/GrappigPanda/Olivia/queryLanguage"
 	"testing"
 )
@@ -15,8 +17,8 @@ var CTX = &ConnectionCtx{
 		&CACHE,
 	},
 	olilib.NewByFailRate(10000, 0.01),
-	nil,
-	nil,
+	message_handler.NewMessageHandler(),
+	chord.NewPeerList(),
 }
 
 func TestExecuteGetAllSucceed(t *testing.T) {
