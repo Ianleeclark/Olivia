@@ -1,8 +1,8 @@
 package incomingNetwork
 
 import (
-	"github.com/GrappigPanda/Olivia/cache"
 	"github.com/GrappigPanda/Olivia/bloomfilter"
+	"github.com/GrappigPanda/Olivia/cache"
 	"github.com/GrappigPanda/Olivia/queryLanguage"
 	"testing"
 )

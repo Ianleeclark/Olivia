@@ -1,15 +1,15 @@
 package chord
 
 import (
-	"fmt"
-	"net"
-	"time"
-	"github.com/GrappigPanda/Olivia/bloomfilter"
-	"github.com/GrappigPanda/Olivia/queryLanguage"
-	"github.com/GrappigPanda/Olivia/network/message_handler"
-	"github.com/GrappigPanda/Olivia/network/outgoing/receiver"
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
+	"github.com/GrappigPanda/Olivia/bloomfilter"
+	"github.com/GrappigPanda/Olivia/network/message_handler"
+	"github.com/GrappigPanda/Olivia/network/outgoing/receiver"
+	"github.com/GrappigPanda/Olivia/queryLanguage"
+	"net"
+	"time"
 )
 
 // State represents the state that the remote peer is in.
@@ -28,11 +28,11 @@ const (
 
 // Peer Houses the state for remote Peers
 type Peer struct {
-	Status State
-	Conn   *net.Conn
-	ipPort string
+	Status      State
+	Conn        *net.Conn
+	ipPort      string
 	BloomFilter *olilib.BloomFilter
-	MessageBus *message_handler.MessageHandler
+	MessageBus  *message_handler.MessageHandler
 }
 
 func NewPeer(conn *net.Conn, mh *message_handler.MessageHandler) *Peer {

@@ -1,12 +1,12 @@
 package networkHandler
 
 import (
-	"log"
-	"time"
 	"github.com/GrappigPanda/Olivia/cache"
+	"github.com/GrappigPanda/Olivia/chord"
 	"github.com/GrappigPanda/Olivia/network/incoming"
 	"github.com/GrappigPanda/Olivia/network/message_handler"
-	"github.com/GrappigPanda/Olivia/chord"
+	"log"
+	"time"
 )
 
 // StartIncomingNetwork handles spinning up an incoming network router and
