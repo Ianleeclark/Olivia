@@ -134,6 +134,24 @@ func (ctx *ConnectionCtx) handleRequest(requestData queryLanguage.CommandData) s
 
 			return outString
 		}
+	case "DISCONNECT":
+		{
+			outString := "Peer not found in peer list."
+			for _, peer := range ctx.PeerList.Peers {
+				if peer.IPPort != (*requestData.Conn).RemoteAddr().String() {
+					continue
+				}
+
+				if peer != nil && peer.Status == chord.Connected {
+					peer.Disconnect()
+					outString = "Peer has been disconnected."
+				}
+
+				// TODO(ian): Connect a backup node after one node has forced itself to be evicted.
+			}
+
+			return outString
+		}
 	}
 
 	return "Invalid command sent in.\n"
