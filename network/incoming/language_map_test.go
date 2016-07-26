@@ -3,10 +3,10 @@ package incomingNetwork
 import (
 	"github.com/GrappigPanda/Olivia/bloomfilter"
 	"github.com/GrappigPanda/Olivia/cache"
+	"github.com/GrappigPanda/Olivia/chord"
+	"github.com/GrappigPanda/Olivia/network/message_handler"
 	"github.com/GrappigPanda/Olivia/queryLanguage"
 	"testing"
-	"github.com/GrappigPanda/Olivia/network/message_handler"
-	"github.com/GrappigPanda/Olivia/chord"
 )
 
 var CACHE = make(map[string]string)

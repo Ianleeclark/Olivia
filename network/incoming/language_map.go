@@ -34,7 +34,7 @@ func (ctx *ConnectionCtx) ExecuteCommand(requestData queryLanguage.CommandData) 
 				} else {
 					fmt.Printf("%v\n\n\n\n\n", ctx.PeerList)
 					for _, peer := range ctx.PeerList.Peers {
-						if peer == nil || peer.Status == chord.Timeout  || peer.Status == chord.Disconnected {
+						if peer == nil || peer.Status == chord.Timeout || peer.Status == chord.Disconnected {
 							continue
 						}
 
@@ -125,7 +125,7 @@ func (ctx *ConnectionCtx) handleRequest(requestData queryLanguage.CommandData) s
 		{
 			outString := ""
 			for _, peer := range ctx.PeerList.Peers {
-				if peer == nil || peer.Status == chord.Timeout  || peer.Status == chord.Disconnected {
+				if peer == nil || peer.Status == chord.Timeout || peer.Status == chord.Disconnected {
 					continue
 				}
 
