@@ -3,12 +3,12 @@ package incomingNetwork
 import (
 	"bufio"
 	"github.com/GrappigPanda/Olivia/cache"
-	"github.com/GrappigPanda/Olivia/lib/bloomfilter"
-	"github.com/GrappigPanda/Olivia/lib/network/message_handler"
-	"github.com/GrappigPanda/Olivia/lib/queryLanguage"
+	"github.com/GrappigPanda/Olivia/bloomfilter"
+	"github.com/GrappigPanda/Olivia/network/message_handler"
+	"github.com/GrappigPanda/Olivia/queryLanguage"
 	"log"
 	"net"
-	"github.com/GrappigPanda/Olivia/lib/chord"
+	"github.com/GrappigPanda/Olivia/chord"
 )
 
 // ConnectionCtx handles maintaining a persistent state per incoming

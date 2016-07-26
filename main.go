@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/GrappigPanda/Olivia/cache"
-	"github.com/GrappigPanda/Olivia/lib/network"
-	"github.com/GrappigPanda/Olivia/lib/network/message_handler"
+	"github.com/GrappigPanda/Olivia/network"
+	"github.com/GrappigPanda/Olivia/network/message_handler"
 )
 
 func Init() {
