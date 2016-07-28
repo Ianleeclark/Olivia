@@ -1,0 +1,1 @@
+go test ./... -cover -race -timeout 10s

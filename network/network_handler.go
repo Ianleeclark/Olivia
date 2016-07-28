@@ -17,10 +17,14 @@ func StartIncomingNetwork(
 	cache *cache.Cache,
 ) {
 	peerList := chord.NewPeerList()
-	if err := peerList.ConnectAllPeers(); err != nil {
-		log.Println("Sleeping for 60 seconds and attempting to reconnect")
-		time.Sleep(time.Second * 60)
+	err := peerList.ConnectAllPeers()
+	if err != nil {
+		for err != nil {
+			log.Println("Sleeping for 60 seconds and attempting to reconnect")
+			time.Sleep(time.Second * 60)
+			err = peerList.ConnectAllPeers()
+		}
 	}
 
-	go incomingNetwork.StartNetworkRouter(mh, cache, peerList)
+	incomingNetwork.StartNetworkRouter(mh, cache, peerList)
 }
