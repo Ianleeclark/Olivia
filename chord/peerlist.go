@@ -24,6 +24,11 @@ func NewPeerList() *PeerList {
 func (p *PeerList) ConnectAllPeers() error {
 	failureCount := 0
 	for x := range p.Peers {
+		if p.Peers[x] == nil {
+			failureCount++
+			continue
+		}
+
 		if err := p.Peers[x].Connect(); err != nil {
 			log.Println(err)
 			failureCount++

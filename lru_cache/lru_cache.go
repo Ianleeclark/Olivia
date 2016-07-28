@@ -15,7 +15,7 @@ var MAXINT64 = int64(1<<63 - 1)
 type LRUCacheString struct {
 	KeyCount    int
 	Keys        map[string]string
-	KeyTimeouts map[string]int64
+	KeyTimeouts *Heap
 	Mutex       *sync.Mutex
 }
 
@@ -25,7 +25,7 @@ func NewString(maxEntries int) *LRUCacheString {
 	return &LRUCacheString{
 		KeyCount:    maxEntries,
 		Keys:        make(map[string]string),
-		KeyTimeouts: make(map[string]int64),
+		KeyTimeouts: NewHeap(maxEntries),
 		Mutex:       &sync.Mutex{},
 	}
 }
@@ -43,7 +43,7 @@ func (l *LRUCacheString) Add(key string, value string) (string, bool) {
 
 	foundValue, keyExists := l.Keys[key]
 	if keyExists {
-		l.KeyTimeouts[key] = getCurrentUnixTime()
+		l.KeyTimeouts.UpdateNodeTimeout(key)
 		return foundValue, true
 	}
 
@@ -52,9 +52,15 @@ func (l *LRUCacheString) Add(key string, value string) (string, bool) {
 	}
 
 	l.Keys[key] = value
-	l.KeyTimeouts[key] = getCurrentUnixTime()
+	l.addNewKeyTimeout(key)
 
 	return key, false
+}
+
+// addNewKeyTimeout handles adding a key into our priority queue for later
+// eviction.
+func (l *LRUCacheString) addNewKeyTimeout(key string) {
+	l.KeyTimeouts.Insert(NewNode(key, getCurrentUnixTime()))
 }
 
 // Get Retrieves a key from the LRU cache and increases its priority.
@@ -64,7 +70,7 @@ func (l *LRUCacheString) Get(key string) (string, bool) {
 
 	value, keyExists := l.Keys[key]
 	if keyExists {
-		l.KeyTimeouts[key] = getCurrentUnixTime()
+		l.KeyTimeouts.UpdateNodeTimeout(key)
 	}
 
 	return value, keyExists
@@ -74,22 +80,10 @@ func (l *LRUCacheString) Get(key string) (string, bool) {
 // Because we use an underlying map of string : int64 (unix timestamp), we also
 // remove any keys from that map, as well.
 func (l *LRUCacheString) RemoveLeastUsed() {
-	var lowest int64
-	var lowestKey string
-
-	lowest = MAXINT64
-
-	for k := range l.KeyTimeouts {
-		if l.KeyTimeouts[k] < lowest {
-			lowestKey = k
-			lowest = l.KeyTimeouts[k]
-		}
-	}
-
-	delete(l.Keys, lowestKey)
-	delete(l.KeyTimeouts, lowestKey)
+	deletedNode := l.KeyTimeouts.EvictMinNode()
+	delete(l.Keys, deletedNode.Key)
 }
 
-func getCurrentUnixTime() int64 {
-	return time.Now().UnixNano()
+func getCurrentUnixTime() time.Time {
+	return time.Now().UTC()
 }

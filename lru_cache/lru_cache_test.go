@@ -12,7 +12,7 @@ func TestNew(t *testing.T) {
 	expectedReturn := &LRUCacheString{
 		10,
 		make(map[string]string, 10),
-		make(map[string]int64, 10),
+		NewHeap(10),
 		&sync.Mutex{},
 	}
 
@@ -61,7 +61,7 @@ func TestAddRemoveOldest(t *testing.T) {
 			t.Fatalf("Key %v not found in the test LRU (Keys)", expectedKeys[i])
 		}
 
-		if _, ok := testLRU.KeyTimeouts[expectedKeys[i]]; !ok {
+		if _, ok := testLRU.KeyTimeouts.Get(expectedKeys[i]); !ok {
 			t.Fatalf("Key %v not found in the test LRU (KeyTimeouts)", expectedKeys[i])
 		}
 	}
@@ -75,7 +75,7 @@ func TestAddRemoveOldest(t *testing.T) {
 			t.Fatalf("Key %v not found in the test LRU (Keys)", expectedKeys[i])
 		}
 
-		if _, ok := testLRU.KeyTimeouts[expectedKeys[i]]; !ok {
+		if _, ok := testLRU.KeyTimeouts.Get(expectedKeys[i]); !ok {
 			t.Fatalf("Key %v not found in the test LRU (KeyTimeouts)", expectedKeys[i])
 		}
 	}
@@ -86,7 +86,8 @@ func TestGet(t *testing.T) {
 	testLRU := NewString(5)
 	testLRU.Add("Key1", "value1")
 
-	originalTime := testLRU.KeyTimeouts["Key1"]
+	node, _ := testLRU.KeyTimeouts.Get("Key1")
+	originalTime := node.timeout
 	value, keyExists := testLRU.Get("Key1")
 
 	if keyExists != true {
@@ -97,7 +98,7 @@ func TestGet(t *testing.T) {
 		t.Fatalf("Expected value1, got %v", value)
 	}
 
-	if testLRU.KeyTimeouts["Key1"] == originalTime {
+	if node.timeout == originalTime {
 		t.Fatalf("Time for retrieving a key didnt update, please fix.")
 	}
 }
