@@ -25,7 +25,11 @@ type Heap struct {
 	currentSize   int
 	index         int
 	allocStrategy HeapAllocationStrategy
+	keyLookup     map[string]int
 }
+
+// keyLookup helps our LRU cache find nodes quicker than traversing the
+// entire binary heap. Allows o(1) lookup rather than o(n)
 
 // NewNode Allocates a new Node. It is not placed in the binary heap at
 // allocation. Rather, the caller is expected to later Insert the newly created
@@ -43,8 +47,9 @@ func NewNode(key string, timeout time.Time) *Node {
 // heap.
 func NewHeap(maxSize int) *Heap {
 	return &Heap{
-		index: 0,
-		Tree:  make([]*Node, maxSize),
+		index:     0,
+		Tree:      make([]*Node, maxSize),
+		keyLookup: make(map[string]int),
 	}
 }
 
@@ -56,6 +61,7 @@ func NewHeapReallocate(maxSize int) *Heap {
 		Tree:          make([]*Node, maxSize),
 		currentSize:   0,
 		allocStrategy: Realloc,
+		keyLookup:     make(map[string]int),
 	}
 }
 
@@ -90,6 +96,7 @@ func (h *Heap) Insert(node *Node) *Node {
 	}
 
 	h.Tree[h.index] = node
+	h.keyLookup[node.Key] = h.index
 	// It's unlikely that percolating up is ever necessary, as we don't
 	// typically insert nodes with an expiration time sooner than nodes already
 	// living in the binary heap, but it's important to have, regardless.
@@ -118,6 +125,7 @@ func (h *Heap) EvictMinNode() *Node {
 	h.currentSize--
 	h.index--
 	h.percolateDown(0)
+	delete(h.keyLookup, retVal.Key)
 
 	return retVal
 }
@@ -130,6 +138,24 @@ func (h *Heap) IsEmpty() bool {
 // ReAllocate Handles increasing the size of the underlying binary heap.
 func (h *Heap) ReAllocate(maxSize int) {
 	h.Tree = append(h.Tree, make([]*Node, maxSize)...)
+}
+
+// UpdateNodeTimeout allows changing of the keys timeout in the
+func (h *Heap) UpdateNodeTimeout(key string) *Node {
+	nodeIndex, ok := h.keyLookup[key]
+	if !ok {
+		return nil
+	}
+
+	h.Tree[nodeIndex].timeout = time.Now().UTC()
+
+	if h.compareTwoTimes(nodeIndex, nodeIndex+1) {
+		h.percolateDown(nodeIndex)
+	} else if h.compareTwoTimes(nodeIndex-1, nodeIndex) {
+		h.percolateUp(nodeIndex)
+	}
+
+	return h.Tree[h.keyLookup[key]]
 }
 
 // percolateUp handles sorting a newly inserted node into its correct position.
@@ -154,7 +180,7 @@ func (h *Heap) percolateUp(newNodeIndex int) {
 // percolateDown handles moving a node starting at index `fromIndex` down into
 // its correct spot in the binary heap.
 func (h *Heap) percolateDown(fromIndex int) {
-	if fromIndex == h.currentSize {
+	if fromIndex == len(h.Tree)-1 {
 		return
 	}
 
@@ -163,6 +189,9 @@ func (h *Heap) percolateDown(fromIndex int) {
 	trackerNode := h.Tree[fromIndex]
 	// preExistingNode is _any_ node which we're not currently tracking.
 	preExistingNode := h.Tree[fromIndex+1]
+	// NOTE: I'm not using `compareTwoTimes` here because I think it makes it
+	// more readable. I know this is an aggregious abuse of intermediary state
+	// or some other nonsense, but it makes it easier for me to read.
 
 	// If our tracker node is nil (meaning it was the slot of the recently
 	// evited min node) we want to automatically percolate it to the bottom of
@@ -173,14 +202,37 @@ func (h *Heap) percolateDown(fromIndex int) {
 		return
 	}
 
-	// Unlikely to ever do anything.
+	// Unlikely to ever do anything. But it asserts that the minimum
 	if trackerNode.timeout.Nanosecond() > preExistingNode.timeout.Nanosecond() {
 		h.swapTwoNodes(fromIndex, fromIndex+1)
 		h.percolateDown(fromIndex + 1)
 	}
 }
 
-// swapTwoNodes swaps j into i and vice versa
+// swapTwoNodes swaps j into i and vice versa. Moreover, it handles updating
+// the keyLookup field in the heap so that we can continue to quickly retrieve
+// key timeouts.
 func (h *Heap) swapTwoNodes(i int, j int) {
+	// If we find a value at Tree[i], we can update it in the keylookup,
+	// otherwise disregard, as it's a recently evicted node.
+	if h.Tree[i] != nil {
+		h.keyLookup[h.Tree[i].Key] = j
+	}
+	if h.Tree[j] != nil {
+		h.keyLookup[h.Tree[j].Key] = i
+	}
+
 	h.Tree[j], h.Tree[i] = h.Tree[i], h.Tree[j]
+}
+
+// compareTwoTimes takes two indexes and compares the `.Nanosecond()` value of
+// each in the tree. If the left (i) has an expiration time _after_ the right
+// (j), then we return True. Otherwise, if the left (i) has an expiration time
+// _before_ the right (j) we return a False.
+func (h *Heap) compareTwoTimes(i int, j int) bool {
+	if h.Tree[i].timeout.Nanosecond() > h.Tree[j].timeout.Nanosecond() {
+		return true
+	} else {
+		return false
+	}
 }
