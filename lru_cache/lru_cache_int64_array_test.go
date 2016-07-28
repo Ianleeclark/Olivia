@@ -12,7 +12,7 @@ func TestNewInt64(t *testing.T) {
 	expectedReturn := &LRUCacheInt64Array{
 		10,
 		make(map[string][]uint64, 10),
-		make(map[string]int64, 10),
+		NewHeap(10),
 		&sync.Mutex{},
 	}
 
@@ -41,10 +41,12 @@ func TestAddInt64(t *testing.T) {
 
 func TestAddPreExistingKeyInt64(t *testing.T) {
 	expectedReturn := []uint64{4, 7, 9}
-	_, err := TESTLRUINT64.Add("Key", expectedReturn)
+	_, ok := TESTLRUINT64.Add("Key", expectedReturn)
 
-	if err != true {
-		t.Fatalf("Failed to add pre-existing key.")
+	if ok != true {
+		t.Fatalf("Failed to add pre-existing key. Keys: %v",
+			TESTLRUINT64.Keys,
+		)
 	}
 }
 
@@ -59,10 +61,13 @@ func TestAddRemoveOldestInt64(t *testing.T) {
 
 	for i := range expectedKeys {
 		if _, ok := testLRU.Keys[expectedKeys[i]]; !ok {
-			t.Fatalf("Key %v not found in the test LRU (Keys)", expectedKeys[i])
+			t.Fatalf("Key %v not found in the test LRU (%v)",
+				expectedKeys[i],
+				testLRU.Keys,
+			)
 		}
 
-		if _, ok := testLRU.KeyTimeouts[expectedKeys[i]]; !ok {
+		if _, ok := testLRU.KeyTimeouts.Get(expectedKeys[i]); !ok {
 			t.Fatalf("Key %v not found in the test LRU (KeyTimeouts)", expectedKeys[i])
 		}
 	}
@@ -76,7 +81,7 @@ func TestAddRemoveOldestInt64(t *testing.T) {
 			t.Fatalf("Key %v not found in the test LRU (Keys)", expectedKeys[i])
 		}
 
-		if _, ok := testLRU.KeyTimeouts[expectedKeys[i]]; !ok {
+		if _, ok := testLRU.KeyTimeouts.Get(expectedKeys[i]); !ok {
 			t.Fatalf("Key %v not found in the test LRU (KeyTimeouts)", expectedKeys[i])
 		}
 	}
@@ -88,7 +93,8 @@ func TestGetInt64(t *testing.T) {
 	testLRU := NewInt64Array(5)
 	testLRU.Add("Key1", expectedReturn)
 
-	originalTime := testLRU.KeyTimeouts["Key1"]
+	node, _ := testLRU.KeyTimeouts.Get("Key1")
+	originalTime := node.timeout
 	value, keyExists := testLRU.Get("Key1")
 
 	if keyExists != true {
@@ -101,7 +107,7 @@ func TestGetInt64(t *testing.T) {
 		}
 	}
 
-	if testLRU.KeyTimeouts["Key1"] == originalTime {
+	if node.timeout == originalTime {
 		t.Fatalf("Time for retrieving a key didnt update, please fix.")
 	}
 }

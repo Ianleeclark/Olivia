@@ -2,6 +2,7 @@ package olilib_lru
 
 import (
 	"sync"
+	"time"
 )
 
 // LRUCacheInt64Array is a simple implementation of an LRU cache which will be used in
@@ -11,7 +12,7 @@ import (
 type LRUCacheInt64Array struct {
 	KeyCount    int
 	Keys        map[string][]uint64
-	KeyTimeouts map[string]int64
+	KeyTimeouts *Heap
 	Mutex       *sync.Mutex
 }
 
@@ -21,7 +22,7 @@ func NewInt64Array(maxEntries int) *LRUCacheInt64Array {
 	return &LRUCacheInt64Array{
 		KeyCount:    maxEntries,
 		Keys:        make(map[string][]uint64),
-		KeyTimeouts: make(map[string]int64),
+		KeyTimeouts: NewHeap(maxEntries),
 		Mutex:       &sync.Mutex{},
 	}
 }
@@ -39,8 +40,8 @@ func (l *LRUCacheInt64Array) Add(key string, value []uint64) ([]uint64, bool) {
 
 	foundValue, keyExists := l.Keys[key]
 	if keyExists {
-		l.KeyTimeouts[key] = getCurrentUnixTime()
-		return foundValue, true
+		l.KeyTimeouts.UpdateNodeTimeout(key)
+		return foundValue, keyExists
 	}
 
 	if len(l.Keys) == l.KeyCount {
@@ -48,7 +49,7 @@ func (l *LRUCacheInt64Array) Add(key string, value []uint64) ([]uint64, bool) {
 	}
 
 	l.Keys[key] = value
-	l.KeyTimeouts[key] = getCurrentUnixTime()
+	l.KeyTimeouts.Insert(NewNode(key, time.Now().UTC()))
 
 	return value, false
 }
@@ -60,7 +61,7 @@ func (l *LRUCacheInt64Array) Get(key string) ([]uint64, bool) {
 
 	value, keyExists := l.Keys[key]
 	if keyExists {
-		l.KeyTimeouts[key] = getCurrentUnixTime()
+		l.KeyTimeouts.UpdateNodeTimeout(key)
 	}
 
 	return value, keyExists
@@ -70,18 +71,6 @@ func (l *LRUCacheInt64Array) Get(key string) ([]uint64, bool) {
 // Because we use an underlying map of string : uint64 (unix timestamp), we also
 // remove any keys from that map, as well.
 func (l *LRUCacheInt64Array) RemoveLeastUsed() {
-	var lowest int64
-	var lowestKey string
-
-	lowest = MAXINT64
-
-	for k := range l.KeyTimeouts {
-		if l.KeyTimeouts[k] < lowest {
-			lowestKey = k
-			lowest = l.KeyTimeouts[k]
-		}
-	}
-
-	delete(l.Keys, lowestKey)
-	delete(l.KeyTimeouts, lowestKey)
+	deletedNode := l.KeyTimeouts.EvictMinNode()
+	delete(l.Keys, deletedNode.Key)
 }

@@ -149,13 +149,25 @@ func (h *Heap) UpdateNodeTimeout(key string) *Node {
 
 	h.Tree[nodeIndex].timeout = time.Now().UTC()
 
-	if h.compareTwoTimes(nodeIndex, nodeIndex+1) {
-		h.percolateDown(nodeIndex)
-	} else if h.compareTwoTimes(nodeIndex-1, nodeIndex) {
-		h.percolateUp(nodeIndex)
+	if nodeIndex+1 < h.currentSize {
+		if h.compareTwoTimes(nodeIndex, nodeIndex+1) {
+			h.percolateDown(nodeIndex)
+		} else if h.compareTwoTimes(nodeIndex-1, nodeIndex) {
+			h.percolateUp(nodeIndex)
+		}
 	}
 
 	return h.Tree[h.keyLookup[key]]
+}
+
+// Get handles retrieving a Node by its key. Not extensively used, but it was a
+// nice-to-have.
+func (h *Heap) Get(key string) (*Node, bool) {
+	if index, ok := h.keyLookup[key]; ok {
+		return h.Tree[index], ok
+	} else {
+		return nil, ok
+	}
 }
 
 // percolateUp handles sorting a newly inserted node into its correct position.
