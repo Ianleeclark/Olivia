@@ -14,7 +14,10 @@ var READCACHE = make(map[string]string)
 
 var CTX = &ConnectionCtx{
 	nil,
-	cache.NewCache(),
+	&cache.Cache{
+		Cache: &CACHE,
+		ReadCache: &READCACHE,
+	},
 	olilib.NewByFailRate(10000, 0.01),
 	message_handler.NewMessageHandler(),
 	chord.NewPeerList(),
@@ -32,7 +35,7 @@ func TestExecuteGetAllSucceed(t *testing.T) {
 
 	if expectedReturn != result {
 		if result != expectedReturn2 {
-			t.Fatalf("Expected <%s> or <%s>, got <%s>", expectedReturn, expectedReturn2, result)
+			t.Fatalf("Expected <%v> or <%v>, got <%v>", expectedReturn, expectedReturn2, result)
 		}
 	}
 }
