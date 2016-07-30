@@ -3,7 +3,7 @@ package incomingNetwork
 import (
 	"github.com/GrappigPanda/Olivia/bloomfilter"
 	"github.com/GrappigPanda/Olivia/cache"
-	"github.com/GrappigPanda/Olivia/chord"
+	"github.com/GrappigPanda/Olivia/dht"
 	"github.com/GrappigPanda/Olivia/network/message_handler"
 	"github.com/GrappigPanda/Olivia/parser"
 	"testing"
@@ -20,7 +20,7 @@ var CTX = &ConnectionCtx{
 	},
 	olilib.NewByFailRate(10000, 0.01),
 	message_handler.NewMessageHandler(),
-	chord.NewPeerList(),
+	dht.NewPeerList(),
 }
 
 func TestExecuteGetAllSucceed(t *testing.T) {

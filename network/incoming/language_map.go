@@ -3,7 +3,7 @@ package incomingNetwork
 import (
 	"bytes"
 	"fmt"
-	"github.com/GrappigPanda/Olivia/chord"
+	"github.com/GrappigPanda/Olivia/dht"
 	"github.com/GrappigPanda/Olivia/parser"
 	"strings"
 )
@@ -34,7 +34,7 @@ func (ctx *ConnectionCtx) ExecuteCommand(requestData parser.CommandData) string 
 				} else {
 					fmt.Printf("%v\n\n\n\n\n", ctx.PeerList)
 					for _, peer := range ctx.PeerList.Peers {
-						if peer == nil || peer.Status == chord.Timeout || peer.Status == chord.Disconnected {
+						if peer == nil || peer.Status == dht.Timeout || peer.Status == dht.Disconnected {
 							continue
 						}
 
@@ -118,14 +118,14 @@ func (ctx *ConnectionCtx) handleRequest(requestData parser.CommandData) string {
 		}
 	case "CONNECT":
 		{
-			peer := chord.NewPeer(requestData.Conn, ctx.MessageBus)
+			peer := dht.NewPeer(requestData.Conn, ctx.MessageBus)
 			(*peer).GetBloomFilter()
 		}
 	case "PEERS":
 		{
 			outString := ""
 			for _, peer := range ctx.PeerList.Peers {
-				if peer == nil || peer.Status == chord.Timeout || peer.Status == chord.Disconnected {
+				if peer == nil || peer.Status == dht.Timeout || peer.Status == dht.Disconnected {
 					continue
 				}
 
@@ -142,7 +142,7 @@ func (ctx *ConnectionCtx) handleRequest(requestData parser.CommandData) string {
 					continue
 				}
 
-				if peer != nil && peer.Status == chord.Connected {
+				if peer != nil && peer.Status == dht.Connected {
 					peer.Disconnect()
 					outString = "Peer has been disconnected."
 				}
