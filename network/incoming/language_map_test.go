@@ -10,12 +10,11 @@ import (
 )
 
 var CACHE = make(map[string]string)
+var READCACHE = make(map[string]string)
 
 var CTX = &ConnectionCtx{
 	nil,
-	&cache.Cache{
-		&CACHE,
-	},
+	cache.NewCache(),
 	olilib.NewByFailRate(10000, 0.01),
 	message_handler.NewMessageHandler(),
 	chord.NewPeerList(),
