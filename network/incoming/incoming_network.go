@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"github.com/GrappigPanda/Olivia/bloomfilter"
 	"github.com/GrappigPanda/Olivia/cache"
-	"github.com/GrappigPanda/Olivia/chord"
+	"github.com/GrappigPanda/Olivia/dht"
 	"github.com/GrappigPanda/Olivia/network/message_handler"
 	"github.com/GrappigPanda/Olivia/parser"
 	"log"
@@ -18,7 +18,7 @@ type ConnectionCtx struct {
 	Cache       *cache.Cache
 	Bloomfilter *olilib.BloomFilter
 	MessageBus  *message_handler.MessageHandler
-	PeerList    *chord.PeerList
+	PeerList    *dht.PeerList
 }
 
 // StartNetworkRouter initializes everything necessary for our incoming network
@@ -26,7 +26,7 @@ type ConnectionCtx struct {
 func StartNetworkRouter(
 	mh *message_handler.MessageHandler,
 	cache *cache.Cache,
-	peerList *chord.PeerList,
+	peerList *dht.PeerList,
 ) {
 
 	listen, err := net.Listen("tcp", ":5454")

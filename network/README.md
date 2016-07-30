@@ -13,4 +13,6 @@ allowing varying states and processing paths in each goroutine.
 
 # How the Network Layer works for outgoing connections.
 
-Heh. TBD
+There's two ways. We have the ability to just send a normal command through
+a peer connection, or we can use the message_handler + receiver to send a
+non-blocking request.

@@ -1,4 +1,4 @@
-package chord
+package dht
 
 import (
 	"github.com/GrappigPanda/Olivia/network/message_handler"

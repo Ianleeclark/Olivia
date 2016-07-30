@@ -1,4 +1,4 @@
-package chord
+package dht
 
 import (
 	"crypto/md5"
@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/GrappigPanda/Olivia/bloomfilter"
 	"github.com/GrappigPanda/Olivia/network/message_handler"
-	"github.com/GrappigPanda/Olivia/network/outgoing/receiver"
+	"github.com/GrappigPanda/Olivia/network/receiver"
 	"github.com/GrappigPanda/Olivia/parser"
 	"net"
 	"time"
@@ -35,6 +35,7 @@ type Peer struct {
 	MessageBus  *message_handler.MessageHandler
 }
 
+// NewPeer handles creating a new peer to be used in communicating between nodes
 func NewPeer(conn *net.Conn, mh *message_handler.MessageHandler) *Peer {
 	return &Peer{
 		Disconnected,

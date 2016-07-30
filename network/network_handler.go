@@ -2,7 +2,7 @@ package networkHandler
 
 import (
 	"github.com/GrappigPanda/Olivia/cache"
-	"github.com/GrappigPanda/Olivia/chord"
+	"github.com/GrappigPanda/Olivia/dht"
 	"github.com/GrappigPanda/Olivia/network/incoming"
 	"github.com/GrappigPanda/Olivia/network/message_handler"
 	"log"
@@ -16,7 +16,7 @@ func StartIncomingNetwork(
 	mh *message_handler.MessageHandler,
 	cache *cache.Cache,
 ) {
-	peerList := chord.NewPeerList()
+	peerList := dht.NewPeerList()
 	err := peerList.ConnectAllPeers()
 	if err != nil {
 		for err != nil {

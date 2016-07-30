@@ -9,6 +9,6 @@ As of the current time in writing this, LRU Caches are used solely to memoize
 key hashes so that every insertion/retrieval of a key from the bloom filters
 don't need to always hash the key `x` times.
 
+The backbone of the LRU cache is a min binary heap ordering by unix nano
+timestamps.
 
-Moreover, the LRU Cache is also used to cache incoming commands so that the
-parser needn't run on every incoming command.
