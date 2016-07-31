@@ -1,7 +1,6 @@
 package olilib
 
 import (
-	"log"
 	"bytes"
 	"fmt"
 	"github.com/GrappigPanda/Olivia/lru_cache"
