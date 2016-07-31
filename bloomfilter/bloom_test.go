@@ -6,12 +6,12 @@ import (
 
 func TestNewBloomFilter(t *testing.T) {
 	expectedReturn := BloomFilter{
-		MaxSize:       10000,
+		MaxSize:       1000,
 		HashFunctions: 3,
-		Filter:        make([]int, 10000),
+		Filter:        make([]int, 1000),
 	}
 
-	result := New(10000, 3)
+	result := New(1000, 3)
 
 	if expectedReturn.MaxSize != result.MaxSize {
 		t.Fatalf("Expected %v got %v", expectedReturn.MaxSize, result.MaxSize)
@@ -24,12 +24,12 @@ func TestNewBloomFilter(t *testing.T) {
 
 func TestNewBloomFilterByFailRate(t *testing.T) {
 	expectedReturn := BloomFilter{
-		MaxSize:       95850,
+		MaxSize:       9585,
 		HashFunctions: 3,
-		Filter:        make([]int, 10000),
+		Filter:        make([]int, 1000),
 	}
 
-	result := NewByFailRate(10000, 0.01)
+	result := NewByFailRate(1000, 0.01)
 
 	if expectedReturn.MaxSize != result.MaxSize {
 		t.Fatalf("Expected %v got %v", expectedReturn.MaxSize, result.MaxSize)
@@ -37,7 +37,7 @@ func TestNewBloomFilterByFailRate(t *testing.T) {
 }
 
 func TestAddKey(t *testing.T) {
-	bf := NewByFailRate(10000, 0.01)
+	bf := NewByFailRate(1000, 0.01)
 
 	addKeyRet, addIndexes := bf.AddKey([]byte("TestKey"))
 	hasKeyRet, hasIndexes := bf.HasKey([]byte("TestKey"))
@@ -58,7 +58,7 @@ func TestAddKey(t *testing.T) {
 }
 
 func TestHasKeyFailNoKey(t *testing.T) {
-	bf := NewByFailRate(10000, 0.01)
+	bf := NewByFailRate(1000, 0.01)
 
 	hasKeyRet, _ := bf.HasKey([]byte("TestKey"))
 
@@ -68,7 +68,7 @@ func TestHasKeyFailNoKey(t *testing.T) {
 }
 
 func TestConvertToString(t *testing.T) {
-	bf := NewByFailRate(10000, 0.01)
+	bf := NewByFailRate(1000, 0.01)
 
 	new_bf_str := bf.ConvertToString()
 
@@ -85,7 +85,7 @@ func TestConvertToString(t *testing.T) {
 }
 
 func TestConvertWithContainedValues(t *testing.T) {
-	bf := NewByFailRate(10000, 0.01)
+	bf := NewByFailRate(1000, 0.01)
 
 	bf.AddKey([]byte("keyalksdjfl"))
 	bf.AddKey([]byte("key1"))

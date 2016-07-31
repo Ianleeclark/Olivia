@@ -95,6 +95,7 @@ func TestGetInt64(t *testing.T) {
 
 	node, _ := testLRU.KeyTimeouts.Get("Key1")
 	originalTime := node.timeout
+	time.Sleep(5 * time.Millisecond)
 	value, keyExists := testLRU.Get("Key1")
 
 	if keyExists != true {

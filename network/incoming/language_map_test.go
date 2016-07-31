@@ -18,7 +18,7 @@ var CTX = &ConnectionCtx{
 		Cache: &CACHE,
 		ReadCache: &READCACHE,
 	},
-	olilib.NewByFailRate(10000, 0.01),
+	olilib.NewByFailRate(1000, 0.01),
 	message_handler.NewMessageHandler(),
 	dht.NewPeerList(),
 }
@@ -72,7 +72,7 @@ func TestExecuteSetKey(t *testing.T) {
 }
 
 func TestRequestBloomFilter(t *testing.T) {
-	bf := olilib.NewByFailRate(10000, 0.01)
+	bf := olilib.NewByFailRate(1000, 0.01)
 
 	bf.AddKey([]byte("keyalksdjfl"))
 	bf.AddKey([]byte("key1"))

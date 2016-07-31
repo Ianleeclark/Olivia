@@ -64,7 +64,8 @@ func (bf *BloomFilter) HasKey(key []byte) (bool, []uint64) {
 	return true, hashIndexes
 }
 
-// ConvertToString handles conversion of a bloom filter to a string.
+// ConvertToString handles conversion of a bloom filter to a string. Moreover,
+// it enforces RLE encoding, so that fewer bytes are transferred per request.
 func (bf *BloomFilter) ConvertToString() string {
 	var buffer bytes.Buffer
 
@@ -72,16 +73,20 @@ func (bf *BloomFilter) ConvertToString() string {
 		buffer.WriteString(fmt.Sprintf("%v", bf.Filter[i]))
 	}
 
-	return buffer.String()
+	return Encode(buffer.String())
 }
 
+// ConvertStringToBF Decodes the RLE'd bloom filter and then converts it to
+// an actual bloom filter in-memory.
 func ConvertStringtoBF(inputString string) (*BloomFilter, error) {
 	// TODO(ian): Remove this magic number.
-	bf := NewByFailRate(10000, 0.01)
+	bf := NewByFailRate(1000, 0.01)
+
+	decodedString := Decode(inputString)
 
 	index := 0
-	for i, _ := range inputString {
-		number, err := strconv.ParseInt(string(inputString[i]), 10, 0)
+	for i, _ := range decodedString {
+		number, err := strconv.ParseInt(string(decodedString[i]), 10, 0)
 		if err != nil {
 			return nil, err
 		}
