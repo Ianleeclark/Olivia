@@ -32,7 +32,6 @@ func (ctx *ConnectionCtx) ExecuteCommand(requestData parser.CommandData) string 
 					retVals[index] = fmt.Sprintf("%s:%s", k, val)
 					index++
 				} else {
-					fmt.Printf("%v\n\n\n\n\n", ctx.PeerList)
 					for _, peer := range ctx.PeerList.Peers {
 						if peer == nil || peer.Status == dht.Timeout || peer.Status == dht.Disconnected {
 							continue
@@ -85,6 +84,7 @@ func createResponse(command string, retVals []string, hash string) string {
 	CommandMap := make(map[string]string)
 	CommandMap["GET"] = "GOT "
 	CommandMap["SET"] = "SAT "
+	CommandMap["REQUEST"] = "FULFILLED "
 
 	var buffer bytes.Buffer
 	buffer.WriteString(hash)
@@ -114,7 +114,12 @@ func (ctx *ConnectionCtx) handleRequest(requestData parser.CommandData) string {
 	switch strings.ToUpper(requestItem) {
 	case "BLOOMFILTER":
 		{
-			return (*ctx.Bloomfilter).ConvertToString()
+			bfString := (*ctx.Bloomfilter).ConvertToString()
+			return createResponse(
+				requestData.Command,
+				[]string{bfString},
+				requestData.Hash,
+			)
 		}
 	case "CONNECT":
 		{

@@ -1,6 +1,7 @@
 package network_receiver
 
 import (
+	"log"
 	"bufio"
 	. "github.com/GrappigPanda/Olivia/network/message_handler"
 	"net"
@@ -27,13 +28,13 @@ func NewReceiver(messageStore *MessageHandler, conn *net.Conn) *Receiver {
 func (r *Receiver) Run() {
 	reader := bufio.NewReader(*r.conn)
 	for {
-		buffer, err := reader.ReadString('\n')
+		buffer, _, err := reader.ReadLine()
 		if err != nil {
 			(*r.conn).Write([]byte("Invalid Command"))
 			continue
 		}
 
-		go r.processIncomingString(buffer)
+		go r.processIncomingString(string(buffer))
 	}
 }
 
@@ -42,7 +43,10 @@ func (r *Receiver) processIncomingString(incomingString string) {
 	if len(splitString) != 2 {
 		// TODO(ian): Should we have a reference to the conn object and
 		// respond on failures to split?
+		log.Print("Invalid received command, no hash found")
 		return
+	} else {
+		log.Println(splitString)
 	}
 
 	hash := splitString[0]

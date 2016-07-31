@@ -1,6 +1,7 @@
 package dht
 
 import (
+	"log"
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
@@ -37,13 +38,29 @@ type Peer struct {
 
 // NewPeer handles creating a new peer to be used in communicating between nodes
 func NewPeer(conn *net.Conn, mh *message_handler.MessageHandler) *Peer {
+	ipPort := (*conn).RemoteAddr().String()
+	log.Println("New peer connected: %v", ipPort)
+
 	return &Peer{
 		Disconnected,
 		conn,
-		(*conn).RemoteAddr().String(),
+		ipPort,
 		nil,
 		mh,
 	}
+}
+
+// NewPeerByIP handles creating a peer by its ip, opening a connection, &c.
+func NewPeerByIP(ipPort string, mh *message_handler.MessageHandler) *Peer {
+	newPeer := &Peer{
+		Disconnected,
+		nil,
+		ipPort,
+		nil,
+		mh,
+	}
+
+	return newPeer
 }
 
 // Connect opens a connection to a remote peer
@@ -87,28 +104,37 @@ func (p *Peer) SendRequest(Command string, responseChannel chan string, mh *mess
 		receiver.Run()
 	}()
 
-	p.SendCommand(fmt.Sprintf("%s:%s", hash, Command))
+	p.SendCommand(fmt.Sprintf("%s:%s\n", hash, Command))
 }
 
 // GetBloomFilter handles retrieving a remote node's bloom filter.
 func (p *Peer) GetBloomFilter() {
 	responseChannel := make(chan string)
 
-	p.SendRequest(
+	go p.SendRequest(
 		parser.GET_REMOTE_BLOOMFILTER,
 		responseChannel,
 		p.MessageBus,
 	)
 
-	bloomfilter := <-responseChannel
+	go func() {
+		bloomfilter := <-responseChannel
 
-	bf, err := olilib.ConvertStringtoBF(bloomfilter)
-	if err != nil {
-		p.BloomFilter = nil
-	}
+		bf, err := olilib.ConvertStringtoBF(bloomfilter)
+		if err != nil {
+			p.BloomFilter = nil
+		}
+		log.Println(bf)
 
-	p.BloomFilter = bf
+		p.BloomFilter = bf
+	}()
 }
+
+// GetPeerListAsync handles retrieving all known peers from a remote node.
+func (p *Peer) GetPeerList(responseChannel chan string) {
+	p.SendRequest(parser.GET_REMOTE_PEERLIST, responseChannel, p.MessageBus)
+}
+
 
 // addCommandToMessageHandler send a command to the message container to store
 // the callback channel.

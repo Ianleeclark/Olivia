@@ -17,6 +17,9 @@ func StartIncomingNetwork(
 	cache *cache.Cache,
 ) {
 	peerList := dht.NewPeerList()
+	peer := dht.NewPeerByIP("127.0.0.1:5454", mh)
+	peerList.Peers[0] = peer
+
 	err := peerList.ConnectAllPeers()
 	if err != nil {
 		for err != nil {
