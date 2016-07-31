@@ -73,7 +73,7 @@ func (bf *BloomFilter) ConvertToString() string {
 		buffer.WriteString(fmt.Sprintf("%v", bf.Filter[i]))
 	}
 
-	return buffer.String()
+	return Encode(buffer.String())
 }
 
 // ConvertStringToBF Decodes the RLE'd bloom filter and then converts it to
@@ -82,7 +82,7 @@ func ConvertStringtoBF(inputString string) (*BloomFilter, error) {
 	// TODO(ian): Remove this magic number.
 	bf := NewByFailRate(1000, 0.01)
 
-	decodedString := inputString
+	decodedString := Decode(inputString)
 
 	index := 0
 	for i, _ := range decodedString {

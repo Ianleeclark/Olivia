@@ -67,28 +67,27 @@ func Decode(encodedString string) string {
 	}
 
 	var output string
+	var increment bool
 
 	for i := 0; i < len(encodedString) - 1; {
 		repeatCount, err := strconv.Atoi(string(encodedString[i + 1]))
 		if err != nil {
 			repeatCount = 1
+			increment = true
 		}
 
 		output = writeRepeat(output, encodedString[i], repeatCount)
 
-		if repeatCount == 1 {
+		if increment {
 			i++
 		} else {
 			i += 2
 		}
+
+		increment = false
 	}
 
 	return output
-}
-
-// Handles decoding run length encoded integers. Huge pain in the ass overall.
-func DecodeInteger(encodedString string) string {
-	return ""
 }
 
 // writeOutput is just a simple helper method for Encode which sprintfs the
@@ -104,11 +103,12 @@ func writeOutput(outputString string, char byte, count int) string {
 		)
 	} else if count > 9 {
 		number := "9"
+		retVal = outputString
 		for x := 0; x <= count / 9; x++ {
 			if x == count / 9  && count % 9 != 0{
 				number = strconv.Itoa(count % 9)
 			} else if x == count / 9 {
-				break
+				continue
 			}
 			retVal = fmt.Sprintf(
 				"%s%s%s",
