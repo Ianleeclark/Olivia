@@ -12,6 +12,8 @@ import (
 var CACHE = make(map[string]string)
 var READCACHE = make(map[string]string)
 
+var MESSAGEBUS = message_handler.NewMessageHandler()
+
 var CTX = &ConnectionCtx{
 	nil,
 	&cache.Cache{
@@ -19,8 +21,8 @@ var CTX = &ConnectionCtx{
 		ReadCache: &READCACHE,
 	},
 	olilib.NewByFailRate(1000, 0.01),
-	message_handler.NewMessageHandler(),
-	dht.NewPeerList(),
+	MESSAGEBUS,
+	dht.NewPeerList(MESSAGEBUS),
 }
 
 func TestExecuteGetAllSucceed(t *testing.T) {
@@ -94,7 +96,15 @@ func TestRequestBloomFilter(t *testing.T) {
 		t.Fatalf("Sending in a bad command :(")
 	}
 
-	newBloomfilter, err := olilib.ConvertStringtoBF(newBfStr)
+	requestData, _ := parser.NewParser(nil).Parse(newBfStr, nil)
+
+	var bfToParse string
+	for k, _ := range requestData.Args {
+		bfToParse = k
+		break
+	}
+
+	newBloomfilter, err := olilib.ConvertStringtoBF(bfToParse)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}

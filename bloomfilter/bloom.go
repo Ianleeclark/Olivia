@@ -86,7 +86,7 @@ func ConvertStringtoBF(inputString string) (*BloomFilter, error) {
 
 	index := 0
 	for i, _ := range decodedString {
-		number, err := strconv.ParseInt(string(decodedString[i]), 10, 0)
+		number, err := strconv.Atoi(string(decodedString[i]))
 		if err != nil {
 			return nil, err
 		}

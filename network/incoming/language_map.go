@@ -1,6 +1,7 @@
 package incomingNetwork
 
 import (
+	"log"
 	"bytes"
 	"fmt"
 	"github.com/GrappigPanda/Olivia/dht"
@@ -32,7 +33,6 @@ func (ctx *ConnectionCtx) ExecuteCommand(requestData parser.CommandData) string 
 					retVals[index] = fmt.Sprintf("%s:%s", k, val)
 					index++
 				} else {
-					fmt.Printf("%v\n\n\n\n\n", ctx.PeerList)
 					for _, peer := range ctx.PeerList.Peers {
 						if peer == nil || peer.Status == dht.Timeout || peer.Status == dht.Disconnected {
 							continue
@@ -85,6 +85,7 @@ func createResponse(command string, retVals []string, hash string) string {
 	CommandMap := make(map[string]string)
 	CommandMap["GET"] = "GOT "
 	CommandMap["SET"] = "SAT "
+	CommandMap["REQUEST"] = "FULFILLED "
 
 	var buffer bytes.Buffer
 	buffer.WriteString(hash)
@@ -114,7 +115,13 @@ func (ctx *ConnectionCtx) handleRequest(requestData parser.CommandData) string {
 	switch strings.ToUpper(requestItem) {
 	case "BLOOMFILTER":
 		{
-			return (*ctx.Bloomfilter).ConvertToString()
+			bfString := (*ctx.Bloomfilter).ConvertToString()
+			log.Println(bfString)
+			return createResponse(
+				requestData.Command,
+				[]string{bfString},
+				requestData.Hash,
+			)
 		}
 	case "CONNECT":
 		{
@@ -123,14 +130,47 @@ func (ctx *ConnectionCtx) handleRequest(requestData parser.CommandData) string {
 		}
 	case "PEERS":
 		{
-			outString := ""
+			count := 0
+			outString := fmt.Sprintf("%s:FULFILLED ", requestData.Hash)
+
 			for _, peer := range ctx.PeerList.Peers {
-				if peer == nil || peer.Status == dht.Timeout || peer.Status == dht.Disconnected {
+				if peer == nil {
 					continue
 				}
 
-				fmt.Sprintf("%s %s", outString, peer.IPPort)
+				if count == 0 {
+					outString = fmt.Sprintf(
+						"%s%s",
+						outString,
+						peer.IPPort,
+					)
+
+				} else {
+					outString = fmt.Sprintf(
+						"%s,%s",
+						outString,
+						peer.IPPort,
+					)
+
+				}
 			}
+
+			for _, peer := range ctx.PeerList.BackupPeers {
+				if peer == nil {
+					continue
+				}
+
+				outString = fmt.Sprintf(
+					"%s,%s",
+					outString,
+					peer.IPPort,
+				)
+			}
+
+			outString = fmt.Sprintf(
+				"%s\n",
+				outString,
+			)
 
 			return outString
 		}

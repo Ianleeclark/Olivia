@@ -29,7 +29,7 @@ func StartNetworkRouter(
 	peerList *dht.PeerList,
 ) {
 
-	listen, err := net.Listen("tcp", ":5454")
+	listen, err := net.Listen("tcp", ":5455")
 	if err != nil {
 		panic(err)
 	}
@@ -53,6 +53,9 @@ func StartNetworkRouter(
 			log.Println(err)
 			continue
 		}
+		log.Println("Incoming connection detected from ",
+			conn.RemoteAddr().String(),
+		)
 
 		go ctx.handleConnection(&conn)
 	}
@@ -66,11 +69,14 @@ func (ctx *ConnectionCtx) handleConnection(conn *net.Conn) {
 	connProc := NewProcessorFSM(PROCESSING)
 	reader := bufio.NewReader(*conn)
 
+	// Place the remote peer into our peer list.
+	(*ctx.PeerList).AddPeer((*conn).RemoteAddr().String())
+
 	for {
 		// TODO(ian): Replace this with a new language processor for incoming
 		// commands
 		password := "TestBcryptPassword"
-		line, err := reader.ReadString('\n')
+		line, _, err := reader.ReadLine()
 		if err != nil {
 			log.Printf("Connection %v failed to readline, closing connection.", *conn)
 			break
@@ -81,11 +87,31 @@ func (ctx *ConnectionCtx) handleConnection(conn *net.Conn) {
 			connProc.Authenticate(password)
 			break
 		case PROCESSING:
-			command, err := ctx.Parser.Parse(line, conn)
+			command, err := ctx.Parser.Parse(string(line), conn)
 			if err != nil {
 				log.Println(err)
 			}
+
+			if _, ok := command.Args["BLOOMFILTER"]; !ok {
+				log.Printf("Received %v from %v", string(line),
+					(*conn).RemoteAddr().String(),
+				)
+			}
+
 			response := ctx.ExecuteCommand(*command)
+
+			if _, ok := command.Args["BLOOMFILTER"]; !ok {
+				log.Printf("Responding to %v %v with %v",
+					command.Command,
+					command.Args,
+					response,
+				)
+			} else {
+				log.Printf("Responding to %v with bloomfilter",
+					(*conn).RemoteAddr().String(),
+				)
+
+			}
 			(*conn).Write([]byte(response))
 			break
 		}

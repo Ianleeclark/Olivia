@@ -78,3 +78,34 @@ func TestEncodeDecodeIntegers(t *testing.T) {
 		t.Errorf("Expected %v, got %v", expectedReturn, retVal)
 	}
 }
+
+func TestEncodeLongString(t *testing.T) {
+	expectedReturn := "09150909090335524"
+	retVal := Encode("0000000001111100000000000000000000000000000033333554")
+
+	if expectedReturn != retVal {
+		t.Errorf("Expected %v, got %v", expectedReturn, retVal)
+	}
+}
+
+func TestDecodeLongString(t *testing.T) {
+	expectedReturn := "0000000001111100000000000000000000000000000033333554"
+	retVal := Decode("09150909090335524")
+
+	if expectedReturn != retVal {
+		t.Errorf("Expected %v, got %v", expectedReturn, retVal)
+	}
+}
+
+func TestDecodeLongStringLongStringAtEnd(t *testing.T) {
+	expectedReturn := "000000000111110000000000000000000000000000004444444"
+	retVal := Decode("09150909090347")
+
+	if expectedReturn != retVal {
+		t.Errorf("Expected %v, got %v", expectedReturn, retVal)
+	}
+}
+
+func TestEncodeDecodeLongString(t *testing.T) {
+
+}

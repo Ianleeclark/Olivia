@@ -38,12 +38,16 @@ func (p *Parser) Parse(commandString string, conn *net.Conn) (*CommandData, erro
 	}
 
 	var hash string
-	hashCommand := strings.SplitN(splitCommand[0], ":", 2)
-	if len(hashCommand) == 1 {
+	var command string
+	hashAndCommand := strings.Split(splitCommand[0], ":")
+	if len(hashAndCommand) == 2 {
+		hash = hashAndCommand[0]
+		command = hashAndCommand[1]
+	} else if len(hashAndCommand) == 1 {
 		hash = ""
+		command = hashAndCommand[0]
 	}
 
-	command := splitCommand[0]
 	args := make(map[string]string)
 
 	args = parseArgs(strings.Split(splitCommand[1], ","))
