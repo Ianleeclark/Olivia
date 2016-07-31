@@ -96,7 +96,16 @@ func TestRequestBloomFilter(t *testing.T) {
 		t.Fatalf("Sending in a bad command :(")
 	}
 
-	newBloomfilter, err := olilib.ConvertStringtoBF(newBfStr)
+	requestData, _ := parser.NewParser(nil).Parse(newBfStr, nil)
+
+	var bfToParse string
+	for k, _ := range requestData.Args {
+		bfToParse = requestData.Args[k]
+		break
+	}
+
+	newBloomfilter, err := olilib.ConvertStringtoBF(bfToParse)
+	t.Errorf("%v", len(newBloomfilter.Filter))
 	if err != nil {
 		t.Fatalf("%v", err)
 	}

@@ -1,6 +1,7 @@
 package incomingNetwork
 
 import (
+	"log"
 	"bytes"
 	"fmt"
 	"github.com/GrappigPanda/Olivia/dht"
@@ -115,6 +116,7 @@ func (ctx *ConnectionCtx) handleRequest(requestData parser.CommandData) string {
 	case "BLOOMFILTER":
 		{
 			bfString := (*ctx.Bloomfilter).ConvertToString()
+			log.Println(bfString)
 			return createResponse(
 				requestData.Command,
 				[]string{bfString},

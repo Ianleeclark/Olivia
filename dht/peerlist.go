@@ -11,6 +11,7 @@ import (
 type PeerList struct {
 	Peers []*Peer
 	BackupPeers []*Peer
+	PeerMap *map[string]bool
 	MessageBus *message_handler.MessageHandler
 }
 
@@ -21,9 +22,12 @@ func NewPeerList(mh *message_handler.MessageHandler) *PeerList {
 	// we readjust whenever we request peers from a new node.
 	backupList := make([]*Peer, 10)
 
+	peerMap := make(map[string]bool)
+
 	return &PeerList{
 		peerlist,
 		backupList,
+		&peerMap,
 		mh,
 	}
 }
@@ -31,6 +35,12 @@ func NewPeerList(mh *message_handler.MessageHandler) *PeerList {
 // AddPeer handles intelligently putting a peer into our peer list. Priority
 // of insertion is towards Peers first and then BackupPeers.
 func (p *PeerList) AddPeer(ipPort string) {
+	if _, ok := (*p.PeerMap)[ipPort]; ok {
+		// If we already have the peer stored, we don't need to
+		// add it again.
+		return
+	}
+
 	newPeer := NewPeerByIP(ipPort, p.MessageBus)
 
 	if len(p.Peers) + 1 <= 3 {
@@ -107,13 +117,11 @@ func (p *PeerList) handlePeerQueries(responseChannel chan string) {
 	for response := range responseChannel {
 		splitResponse := strings.SplitN(response, " ", 2)
 		if len(splitResponse) != 2 {
-			log.Println(response)
 			continue
 		}
 
 
 		peers := strings.Split(splitResponse[1], ",")
-		log.Println(peers)
 
 		for i := range peers {
 			p.AddPeer(peers[i])

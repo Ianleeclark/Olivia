@@ -69,16 +69,21 @@ func Decode(encodedString string) string {
 	var output string
 	var increment bool
 
-	for i := 0; i < len(encodedString) - 1; {
-		repeatCount, err := strconv.Atoi(string(encodedString[i + 1]))
-		if err != nil {
-			repeatCount = 1
-			increment = true
+	var i int = 0
+	encodedStringLength := len(encodedString) - 1
+	for i = 0; i <= encodedStringLength; {
+		if i + 1 <= encodedStringLength {
+			repeatCount, err := strconv.Atoi(string(encodedString[i + 1]))
+			if err != nil {
+				repeatCount = 1
+				increment = true
+			}
+			output = writeRepeat(output, encodedString[i], repeatCount)
+		} else {
+			output = writeRepeat(output, encodedString[i], 1)
 		}
 
-		output = writeRepeat(output, encodedString[i], repeatCount)
-
-		if increment {
+		if increment || i + 2 > encodedStringLength + 1 {
 			i++
 		} else {
 			i += 2
@@ -125,6 +130,7 @@ func writeOutput(outputString string, char byte, count int) string {
 			count,
 		)
 	}
+
 
 	return retVal
 }

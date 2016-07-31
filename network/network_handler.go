@@ -19,6 +19,7 @@ func StartIncomingNetwork(
 	peerList := dht.NewPeerList(mh)
 	peer := dht.NewPeerByIP("127.0.0.1:5454", mh)
 	peerList.Peers[0] = peer
+	(*peerList.PeerMap)["127.0.0.1:5454"] = true
 
 	err := peerList.ConnectAllPeers()
 	if err != nil {

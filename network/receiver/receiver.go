@@ -54,7 +54,6 @@ func (r *Receiver) processIncomingString(incomingString string) {
 
 	callbackChan := make(chan chan string)
 	(*r.MessageStore).RemoveKeyChannel <- NewKeyValPair(hash, nil, callbackChan)
-	log.Println(splitString)
 
 	requesterChannel := <-callbackChan
 
