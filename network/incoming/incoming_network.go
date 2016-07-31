@@ -69,6 +69,9 @@ func (ctx *ConnectionCtx) handleConnection(conn *net.Conn) {
 	connProc := NewProcessorFSM(PROCESSING)
 	reader := bufio.NewReader(*conn)
 
+	// Place the remote peer into our peer list.
+	(*ctx.PeerList).AddPeer((*conn).RemoteAddr().String())
+
 	for {
 		// TODO(ian): Replace this with a new language processor for incoming
 		// commands

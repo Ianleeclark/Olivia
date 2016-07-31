@@ -6,5 +6,5 @@ import (
 
 // This is just to ensure that nothing blows up.
 func TestNewPeerList(t *testing.T) {
-	NewPeerList()
+	NewPeerList(nil)
 }

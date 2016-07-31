@@ -39,8 +39,8 @@ func (r *Receiver) Run() {
 }
 
 func (r *Receiver) processIncomingString(incomingString string) {
-	splitString := strings.Split(incomingString, ":")
-	if len(splitString) != 2 {
+	splitString := strings.SplitN(incomingString, ":", 2)
+	if len(splitString) <= 1 {
 		// TODO(ian): Should we have a reference to the conn object and
 		// respond on failures to split?
 		log.Print("Invalid received command, no hash found")
@@ -54,6 +54,7 @@ func (r *Receiver) processIncomingString(incomingString string) {
 
 	callbackChan := make(chan chan string)
 	(*r.MessageStore).RemoveKeyChannel <- NewKeyValPair(hash, nil, callbackChan)
+	log.Println(splitString)
 
 	requesterChannel := <-callbackChan
 

@@ -128,14 +128,47 @@ func (ctx *ConnectionCtx) handleRequest(requestData parser.CommandData) string {
 		}
 	case "PEERS":
 		{
-			outString := ""
+			count := 0
+			outString := fmt.Sprintf("%s:FULFILLED ", requestData.Hash)
+
 			for _, peer := range ctx.PeerList.Peers {
-				if peer == nil || peer.Status == dht.Timeout || peer.Status == dht.Disconnected {
+				if peer == nil {
 					continue
 				}
 
-				fmt.Sprintf("%s %s", outString, peer.IPPort)
+				if count == 0 {
+					outString = fmt.Sprintf(
+						"%s%s",
+						outString,
+						peer.IPPort,
+					)
+
+				} else {
+					outString = fmt.Sprintf(
+						"%s,%s",
+						outString,
+						peer.IPPort,
+					)
+
+				}
 			}
+
+			for _, peer := range ctx.PeerList.BackupPeers {
+				if peer == nil {
+					continue
+				}
+
+				outString = fmt.Sprintf(
+					"%s,%s",
+					outString,
+					peer.IPPort,
+				)
+			}
+
+			outString = fmt.Sprintf(
+				"%s\n",
+				outString,
+			)
 
 			return outString
 		}
