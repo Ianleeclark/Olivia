@@ -35,7 +35,7 @@ func StartNetworkRouter(
 	}
 	defer listen.Close()
 
-	bf := olilib.NewByFailRate(10000, 0.01)
+	bf := olilib.NewByFailRate(1000, 0.01)
 
 	ctx := &ConnectionCtx{
 		parser.NewParser(mh),

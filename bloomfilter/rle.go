@@ -59,17 +59,6 @@ func Encode(inputString string) string {
 	return output
 }
 
-// writeOutput is just a simple helper method for Encode which sprintfs the
-// output string
-func writeOutput(outputString string, char byte, count int) string {
-	return fmt.Sprintf(
-		"%s%s%d",
-		outputString,
-		string(char),
-		count,
-	)
-}
-
 // Decode essentially works opposite of Encode and turns and encoded string
 // into a normal, usable string.
 func Decode(encodedString string) string {
@@ -79,23 +68,88 @@ func Decode(encodedString string) string {
 
 	var output string
 
-	for i := 0; i < len(encodedString); i += 2 {
+	for i := 0; i < len(encodedString) - 1; {
 		repeatCount, err := strconv.Atoi(string(encodedString[i + 1]))
 		if err != nil {
-			// If we encounter an error, say screw it and skip the
-			// character and its count.
-			continue
+			repeatCount = 1
 		}
 
-		output = fmt.Sprintf(
-			"%s%s",
-			output,
-			strings.Repeat(
-				string(encodedString[i]),
-				repeatCount,
-			),
-		)
+		output = writeRepeat(output, encodedString[i], repeatCount)
+
+		if repeatCount == 1 {
+			i++
+		} else {
+			i += 2
+		}
 	}
 
 	return output
+}
+
+// Handles decoding run length encoded integers. Huge pain in the ass overall.
+func DecodeInteger(encodedString string) string {
+	return ""
+}
+
+// writeOutput is just a simple helper method for Encode which sprintfs the
+// output string
+func writeOutput(outputString string, char byte, count int) string {
+	var retVal string
+
+	if count == 1 {
+		return fmt.Sprintf(
+			"%s%s",
+			outputString,
+			string(char),
+		)
+	} else if count > 9 {
+		number := "9"
+		for x := 0; x <= count / 9; x++ {
+			if x == count / 9  && count % 9 != 0{
+				number = strconv.Itoa(count % 9)
+			} else if x == count / 9 {
+				break
+			}
+			retVal = fmt.Sprintf(
+				"%s%s%s",
+				retVal,
+				string(char),
+				number,
+			)
+		}
+	} else {
+		retVal = fmt.Sprintf(
+			"%s%s%d",
+			outputString,
+			string(char),
+			count,
+		)
+	}
+
+	return retVal
+}
+
+// writeRepeat handles writing repeating characters intelligently
+func writeRepeat(output string, char byte, repeat int) string {
+	var retVal string
+
+	// If the next character is an integer, we can encode it.
+	if repeat > 1 {
+		retVal = fmt.Sprintf(
+			"%s%s",
+			output,
+			strings.Repeat(
+				string(char),
+				repeat,
+			),
+		)
+	} else {
+		retVal = fmt.Sprintf(
+			"%s%s",
+			output,
+			string(char),
+		)
+	}
+
+	return retVal
 }
