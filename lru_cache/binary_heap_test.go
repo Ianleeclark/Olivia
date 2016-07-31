@@ -13,6 +13,7 @@ func TestNewNode(t *testing.T) {
 		timeout: time.Now().UTC(),
 	}
 
+	time.Sleep(5 * time.Millisecond)
 	retVal := NewNode("TestingNewNodeKey", time.Now().UTC())
 
 	if expectedReturn.Key != retVal.Key {
