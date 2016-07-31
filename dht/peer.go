@@ -118,15 +118,24 @@ func (p *Peer) GetBloomFilter() {
 	)
 
 	go func() {
-		bloomfilter := <-responseChannel
+		parser := parser.NewParser(p.MessageBus)
+		response := <-responseChannel
 
-		bf, err := olilib.ConvertStringtoBF(bloomfilter)
+		responseData, err := parser.Parse(response, p.Conn)
 		if err != nil {
-			p.BloomFilter = nil
+			log.Println(err)
+			return
 		}
-		log.Println(bf)
 
-		p.BloomFilter = bf
+		for k, _ := range responseData.Args {
+			bf, err := olilib.ConvertStringtoBF(responseData.Args[k])
+			if err != nil {
+				p.BloomFilter = nil
+			}
+			p.BloomFilter = bf
+			break
+		}
+
 	}()
 }
 

@@ -45,8 +45,6 @@ func (r *Receiver) processIncomingString(incomingString string) {
 		// respond on failures to split?
 		log.Print("Invalid received command, no hash found")
 		return
-	} else {
-		log.Println(splitString)
 	}
 
 	hash := splitString[0]
