@@ -100,12 +100,11 @@ func TestRequestBloomFilter(t *testing.T) {
 
 	var bfToParse string
 	for k, _ := range requestData.Args {
-		bfToParse = requestData.Args[k]
+		bfToParse = k
 		break
 	}
 
 	newBloomfilter, err := olilib.ConvertStringtoBF(bfToParse)
-	t.Errorf("%v", len(newBloomfilter.Filter))
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
