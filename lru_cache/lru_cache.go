@@ -3,6 +3,7 @@ package olilib_lru
 import (
 	"sync"
 	"time"
+	binheap "github.com/GrappigPanda/Olivia/shared"
 )
 
 // MAXINT64 Signifies the maximum value for an int64 in Go
@@ -15,7 +16,7 @@ var MAXINT64 = int64(1<<63 - 1)
 type LRUCacheString struct {
 	KeyCount    int
 	Keys        map[string]string
-	KeyTimeouts *Heap
+	KeyTimeouts *binheap.Heap
 	Mutex       *sync.Mutex
 }
 
@@ -25,7 +26,7 @@ func NewString(maxEntries int) *LRUCacheString {
 	return &LRUCacheString{
 		KeyCount:    maxEntries,
 		Keys:        make(map[string]string),
-		KeyTimeouts: NewHeap(maxEntries),
+		KeyTimeouts: binheap.NewHeap(maxEntries),
 		Mutex:       &sync.Mutex{},
 	}
 }
@@ -60,7 +61,7 @@ func (l *LRUCacheString) Add(key string, value string) (string, bool) {
 // addNewKeyTimeout handles adding a key into our priority queue for later
 // eviction.
 func (l *LRUCacheString) addNewKeyTimeout(key string) {
-	l.KeyTimeouts.Insert(NewNode(key, getCurrentUnixTime()))
+	l.KeyTimeouts.Insert(binheap.NewNode(key, getCurrentUnixTime()))
 }
 
 // Get Retrieves a key from the LRU cache and increases its priority.

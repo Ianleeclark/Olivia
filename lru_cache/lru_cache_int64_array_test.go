@@ -4,6 +4,7 @@ import (
 	"sync"
 	"testing"
 	"time"
+	binheap "github.com/GrappigPanda/Olivia/shared"
 )
 
 var TESTLRUINT64 = NewInt64Array(10)
@@ -12,7 +13,7 @@ func TestNewInt64(t *testing.T) {
 	expectedReturn := &LRUCacheInt64Array{
 		10,
 		make(map[string][]uint64, 10),
-		NewHeap(10),
+		binheap.NewHeap(10),
 		&sync.Mutex{},
 	}
 
@@ -94,7 +95,7 @@ func TestGetInt64(t *testing.T) {
 	testLRU.Add("Key1", expectedReturn)
 
 	node, _ := testLRU.KeyTimeouts.Get("Key1")
-	originalTime := node.timeout
+	originalTime := node.Timeout
 	time.Sleep(5 * time.Millisecond)
 	value, keyExists := testLRU.Get("Key1")
 
@@ -108,7 +109,7 @@ func TestGetInt64(t *testing.T) {
 		}
 	}
 
-	if node.timeout == originalTime {
+	if node.Timeout == originalTime {
 		t.Fatalf("Time for retrieving a key didnt update, please fix.")
 	}
 }
