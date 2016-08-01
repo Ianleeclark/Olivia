@@ -4,6 +4,7 @@ import (
 	"sync"
 	"testing"
 	"time"
+	binheap "github.com/GrappigPanda/Olivia/shared"
 )
 
 var TESTLRU = NewString(10)
@@ -12,7 +13,7 @@ func TestNew(t *testing.T) {
 	expectedReturn := &LRUCacheString{
 		10,
 		make(map[string]string, 10),
-		NewHeap(10),
+		binheap.NewHeap(10),
 		&sync.Mutex{},
 	}
 
@@ -87,7 +88,7 @@ func TestGet(t *testing.T) {
 	testLRU.Add("Key1", "value1")
 
 	node, _ := testLRU.KeyTimeouts.Get("Key1")
-	originalTime := node.timeout
+	originalTime := node.Timeout
 	time.Sleep(5 * time.Millisecond)
 	value, keyExists := testLRU.Get("Key1")
 
@@ -99,7 +100,7 @@ func TestGet(t *testing.T) {
 		t.Fatalf("Expected value1, got %v", value)
 	}
 
-	if node.timeout == originalTime {
+	if node.Timeout == originalTime {
 		t.Fatalf("Time for retrieving a key didnt update, please fix.")
 	}
 }

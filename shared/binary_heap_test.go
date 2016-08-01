@@ -1,4 +1,4 @@
-package olilib_lru
+package shared
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 func TestNewNode(t *testing.T) {
 	expectedReturn := Node{
 		Key:     "TestingNewNodeKey",
-		timeout: time.Now().UTC(),
+		Timeout: time.Now().UTC(),
 	}
 
 	time.Sleep(5 * time.Millisecond)
@@ -20,10 +20,10 @@ func TestNewNode(t *testing.T) {
 		t.Errorf("Expected %v, got %v", expectedReturn.Key, retVal.Key)
 	}
 
-	if expectedReturn.timeout.Nanosecond() >= retVal.timeout.Nanosecond() {
+	if expectedReturn.Timeout.Nanosecond() >= retVal.Timeout.Nanosecond() {
 		t.Errorf("Expected expectedReturn (%v) to be lower than retval (%v)",
-			expectedReturn.timeout,
-			retVal.timeout,
+			expectedReturn.Timeout,
+			retVal.Timeout,
 		)
 	}
 }
@@ -327,7 +327,7 @@ func TestKeyUpdateTimeoutDoesntBlowUpEverything(t *testing.T) {
 	for i := 0; i < len(testHeap.Tree)-1; i++ {
 		for j := i + 1; j < len(testHeap.Tree)-1; j++ {
 			if testHeap.compareTwoTimes(i, j) {
-				t.Errorf("%v - %v", testHeap.Tree[i].Key, testHeap.Tree[i].timeout)
+				t.Errorf("%v - %v", testHeap.Tree[i].Key, testHeap.Tree[i].Timeout)
 				break
 			}
 		}

@@ -3,6 +3,7 @@ package olilib_lru
 import (
 	"sync"
 	"time"
+	binheap "github.com/GrappigPanda/Olivia/shared"
 )
 
 // LRUCacheInt64Array is a simple implementation of an LRU cache which will be used in
@@ -12,7 +13,7 @@ import (
 type LRUCacheInt64Array struct {
 	KeyCount    int
 	Keys        map[string][]uint64
-	KeyTimeouts *Heap
+	KeyTimeouts *binheap.Heap
 	Mutex       *sync.Mutex
 }
 
@@ -22,7 +23,7 @@ func NewInt64Array(maxEntries int) *LRUCacheInt64Array {
 	return &LRUCacheInt64Array{
 		KeyCount:    maxEntries,
 		Keys:        make(map[string][]uint64),
-		KeyTimeouts: NewHeap(maxEntries),
+		KeyTimeouts: binheap.NewHeap(maxEntries),
 		Mutex:       &sync.Mutex{},
 	}
 }
@@ -49,7 +50,7 @@ func (l *LRUCacheInt64Array) Add(key string, value []uint64) ([]uint64, bool) {
 	}
 
 	l.Keys[key] = value
-	l.KeyTimeouts.Insert(NewNode(key, time.Now().UTC()))
+	l.KeyTimeouts.Insert(binheap.NewNode(key, time.Now().UTC()))
 
 	return value, false
 }

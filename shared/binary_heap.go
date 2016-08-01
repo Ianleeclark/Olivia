@@ -1,4 +1,4 @@
-package olilib_lru
+package shared
 
 import (
 	"time"
@@ -16,7 +16,7 @@ const (
 // Node represents each binary heap node.
 type Node struct {
 	Key     string
-	timeout time.Time
+	Timeout time.Time
 }
 
 // Heap represents our binary heap object.
@@ -34,10 +34,10 @@ type Heap struct {
 // NewNode Allocates a new Node. It is not placed in the binary heap at
 // allocation. Rather, the caller is expected to later Insert the newly created
 // node into the binary heap.
-func NewNode(key string, timeout time.Time) *Node {
+func NewNode(key string, Timeout time.Time) *Node {
 	return &Node{
 		Key:     key,
-		timeout: timeout,
+		Timeout: Timeout,
 	}
 }
 
@@ -140,14 +140,14 @@ func (h *Heap) ReAllocate(maxSize int) {
 	h.Tree = append(h.Tree, make([]*Node, maxSize)...)
 }
 
-// UpdateNodeTimeout allows changing of the keys timeout in the
+// UpdateNodeTimeout allows changing of the keys Timeout in the
 func (h *Heap) UpdateNodeTimeout(key string) *Node {
 	nodeIndex, ok := h.keyLookup[key]
 	if !ok {
 		return nil
 	}
 
-	h.Tree[nodeIndex].timeout = time.Now().UTC()
+	h.Tree[nodeIndex].Timeout = time.Now().UTC()
 
 	if nodeIndex+1 < h.currentSize {
 		if h.compareTwoTimes(nodeIndex, nodeIndex+1) {
@@ -183,7 +183,7 @@ func (h *Heap) percolateUp(newNodeIndex int) {
 	preExistingNode := h.Tree[newNodeIndex-1]
 
 	// Unlikely to ever do anything.
-	if newlyInsertedNode.timeout.Nanosecond() < preExistingNode.timeout.Nanosecond() {
+	if newlyInsertedNode.Timeout.Nanosecond() < preExistingNode.Timeout.Nanosecond() {
 		h.swapTwoNodes(newNodeIndex, newNodeIndex-1)
 		h.percolateUp(newNodeIndex - 1)
 	}
@@ -215,7 +215,7 @@ func (h *Heap) percolateDown(fromIndex int) {
 	}
 
 	// Unlikely to ever do anything. But it asserts that the minimum
-	if trackerNode.timeout.Nanosecond() > preExistingNode.timeout.Nanosecond() {
+	if trackerNode.Timeout.Nanosecond() > preExistingNode.Timeout.Nanosecond() {
 		h.swapTwoNodes(fromIndex, fromIndex+1)
 		h.percolateDown(fromIndex + 1)
 	}
@@ -223,7 +223,7 @@ func (h *Heap) percolateDown(fromIndex int) {
 
 // swapTwoNodes swaps j into i and vice versa. Moreover, it handles updating
 // the keyLookup field in the heap so that we can continue to quickly retrieve
-// key timeouts.
+// key Timeouts.
 func (h *Heap) swapTwoNodes(i int, j int) {
 	// If we find a value at Tree[i], we can update it in the keylookup,
 	// otherwise disregard, as it's a recently evicted node.
@@ -242,7 +242,7 @@ func (h *Heap) swapTwoNodes(i int, j int) {
 // (j), then we return True. Otherwise, if the left (i) has an expiration time
 // _before_ the right (j) we return a False.
 func (h *Heap) compareTwoTimes(i int, j int) bool {
-	if h.Tree[i].timeout.Nanosecond() > h.Tree[j].timeout.Nanosecond() {
+	if h.Tree[i].Timeout.Nanosecond() > h.Tree[j].Timeout.Nanosecond() {
 		return true
 	} else {
 		return false
