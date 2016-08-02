@@ -7,6 +7,7 @@ import (
 	"github.com/GrappigPanda/Olivia/network/message_handler"
 	"log"
 	"time"
+	"github.com/GrappigPanda/Olivia/config"
 )
 
 // StartIncomingNetwork handles spinning up an incoming network router and
@@ -15,6 +16,7 @@ import (
 func StartIncomingNetwork(
 	mh *message_handler.MessageHandler,
 	cache *cache.Cache,
+	config *config.Cfg,
 ) {
 	peerList := dht.NewPeerList(mh)
 	peer := dht.NewPeerByIP("127.0.0.1:5454", mh)
@@ -30,5 +32,5 @@ func StartIncomingNetwork(
 		}
 	}
 
-	incomingNetwork.StartNetworkRouter(mh, cache, peerList)
+	incomingNetwork.StartNetworkRouter(mh, cache, peerList, config)
 }
