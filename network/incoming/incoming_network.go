@@ -9,6 +9,7 @@ import (
 	"github.com/GrappigPanda/Olivia/parser"
 	"log"
 	"net"
+	"github.com/GrappigPanda/Olivia/config"
 )
 
 // ConnectionCtx handles maintaining a persistent state per incoming
@@ -27,6 +28,7 @@ func StartNetworkRouter(
 	mh *message_handler.MessageHandler,
 	cache *cache.Cache,
 	peerList *dht.PeerList,
+	config *config.Cfg,
 ) {
 
 	listen, err := net.Listen("tcp", ":5455")
