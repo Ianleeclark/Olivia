@@ -1,4 +1,1 @@
-MySQLPort: "3306"
-MySQLUser: testuser
-MySQLPass: testuser
 BFSize: 1000

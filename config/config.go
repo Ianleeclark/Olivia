@@ -6,9 +6,9 @@ import (
 
 // Config houses information loaded from the config file.
 type Cfg struct {
-	HeartbeatInterval string
-	HeartbeatLoop string
-	BloomfilterSize string
+	HeartbeatInterval int
+	HeartbeatLoop     int
+	BloomfilterSize   int
 }
 
 // ReadConfig handles opening a file and creating a config object for use
@@ -19,14 +19,18 @@ func ReadConfig() *Cfg {
 	viper.AddConfigPath("../")
 	viper.AddConfigPath(".")
 
+	viper.SetDefault("bfsize", 1000)
+	viper.SetDefault("Heartbeatloop", 30)
+	viper.SetDefault("Heartbeatinterval", 1000)
+
 	err := viper.ReadInConfig()
 	if err != nil {
 		panic(err)
 	}
 
 	return &Cfg{
-		viper.Get("mysqlpass").(string),
-		viper.Get("mysqlport").(string),
-		viper.Get("bfsize").(string),
+		viper.Get("heartbeatinterval").(int),
+		viper.Get("heartbeatloop").(int),
+		viper.Get("bfsize").(int),
 	}
 }
