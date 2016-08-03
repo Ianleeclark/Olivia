@@ -16,11 +16,9 @@ import (
 func executeRepeatedly(
 	sleepDuration time.Duration,
 	toExecute func(),
-	stopExecution chan interface{},
+	stopExecution chan bool,
 	responseChannel chan int,
 ) {
-	executionCount := 0
-
 	for {
 		select {
 		default:
@@ -28,9 +26,9 @@ func executeRepeatedly(
 			toExecute()
 
 			if responseChannel != nil {
-				responseChannel <- executionCount
-				executionCount++
+				responseChannel <- 1
 			}
+			break;
 		case <-stopExecution:
 			return
 		}
@@ -46,7 +44,6 @@ func executeRepeatedly(
 // pre-emptively select any keys which will expire the following second.
 // Adjusting the heartbeatinterval may have strange, unintended side effects.
 func Heartbeat(heartbeatInterval time.Duration, cycleDuration time.Duration) {
-
 }
 
 // StartIncomingNetwork handles spinning up an incoming network router and
