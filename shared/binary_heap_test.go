@@ -48,7 +48,7 @@ func TestNewHeap(t *testing.T) {
 func TestHeapInsertThenReallocate(t *testing.T) {
 	testHeap := NewHeapReallocate(1)
 	testNode := NewNode("TestHeapInsertThenReallocate", time.Now().UTC())
-	time.Sleep(1 * time.Millisecond)
+	time.Sleep(5 * time.Millisecond)
 	testNode2 := NewNode("TestHeapInsertThenReallocate2", time.Now().UTC())
 
 	testHeap.Insert(testNode)
@@ -89,7 +89,7 @@ func TestMinNodeFailNoRootNode(t *testing.T) {
 func TestSwap(t *testing.T) {
 	testHeap := NewHeapReallocate(1)
 	testNode := NewNode("Testswap", time.Now().UTC())
-	time.Sleep(1 * time.Millisecond)
+	time.Sleep(5 * time.Millisecond)
 	testNode2 := NewNode("Testswap2", time.Now().UTC())
 
 	testHeap.Insert(testNode)
@@ -114,12 +114,12 @@ func TestPercolateUp(t *testing.T) {
 	testHeap := NewHeapReallocate(25)
 
 	originalNode := NewNode("Least expiration time", time.Now().UTC())
-	time.Sleep(1 * time.Millisecond)
+	time.Sleep(5 * time.Millisecond)
 
 	for i := 0; i < 5; i++ {
 		testNode := NewNode(fmt.Sprintf("Node-%v", i), time.Now().UTC())
 		testHeap.Insert(testNode)
-		time.Sleep(1 * time.Millisecond)
+		time.Sleep(5 * time.Millisecond)
 	}
 
 	testHeap.Insert(originalNode)
@@ -158,7 +158,7 @@ func TestPercolateDown(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		testNode := NewNode(fmt.Sprintf("Node-%v", i), time.Now().UTC())
 		testHeap.Insert(testNode)
-		time.Sleep(1 * time.Millisecond)
+		time.Sleep(5 * time.Millisecond)
 	}
 
 	for i := 0; i < 5; i++ {
@@ -220,7 +220,7 @@ func TestKeyLookupIndexesProperly(t *testing.T) {
 		testNode := NewNode(keyName, time.Now().UTC())
 		keyValues[i] = keyName
 		testHeap.Insert(testNode)
-		time.Sleep(1 * time.Millisecond)
+		time.Sleep(5 * time.Millisecond)
 	}
 
 	for i := 0; i < 25; i++ {
@@ -245,7 +245,7 @@ func TestKeyLookupReadjustsOnEviction(t *testing.T) {
 		testNode := NewNode(keyName, time.Now().UTC())
 		keyValues[i] = keyName
 		testHeap.Insert(testNode)
-		time.Sleep(1 * time.Millisecond)
+		time.Sleep(5 * time.Millisecond)
 	}
 
 	testHeap.EvictMinNode()
@@ -272,7 +272,7 @@ func TestKeyLookupReadjustsOnInsertion(t *testing.T) {
 	testHeap := NewHeapReallocate(25)
 
 	originalNode := NewNode("OriginalNode", time.Now().UTC())
-	time.Sleep(1 * time.Millisecond)
+	time.Sleep(5 * time.Millisecond)
 
 	keyValues := make([]string, 25)
 	for i := 0; i < 25; i++ {
@@ -280,7 +280,7 @@ func TestKeyLookupReadjustsOnInsertion(t *testing.T) {
 		testNode := NewNode(keyName, time.Now().UTC())
 		keyValues[i] = keyName
 		testHeap.Insert(testNode)
-		time.Sleep(1 * time.Millisecond)
+		time.Sleep(5 * time.Millisecond)
 	}
 
 	testHeap.Insert(originalNode)
@@ -312,7 +312,7 @@ func TestKeyUpdateTimeoutDoesntBlowUpEverything(t *testing.T) {
 		testNode := NewNode(keyName, time.Now().UTC())
 		keyValues[i] = keyName
 		testHeap.Insert(testNode)
-		time.Sleep(1 * time.Millisecond)
+		time.Sleep(5 * time.Millisecond)
 	}
 
 	for i := 0; i < 5; i++ {
@@ -321,7 +321,7 @@ func TestKeyUpdateTimeoutDoesntBlowUpEverything(t *testing.T) {
 		if ok == nil {
 			t.Errorf("Got weird error, %v index %v", keyValues, index)
 		}
-		time.Sleep(1 * time.Millisecond)
+		time.Sleep(5 * time.Millisecond)
 	}
 
 	for i := 0; i < len(testHeap.Tree)-1; i++ {

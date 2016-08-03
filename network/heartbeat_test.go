@@ -14,7 +14,7 @@ func TestExecuteRepeatedly(t *testing.T) {
 	killChan := make(chan bool)
 
 	go executeRepeatedly(
-		1 * time.Millisecond,
+		5 * time.Millisecond,
 		func() {return},
 		killChan,
 		countChan,
