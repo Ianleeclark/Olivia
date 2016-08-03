@@ -2,6 +2,7 @@ package shared
 
 import (
 	"time"
+	"fmt"
 )
 
 // HeapAllocationStrategy is a type definition used for enum values in handling
@@ -80,6 +81,7 @@ func (h *Heap) MinNode() *Node {
 // Moreover, a *Node is only returned if the binary heap is full and can no
 // longer place new nodes into it.
 func (h *Heap) Insert(node *Node) *Node {
+
 	if h.index+0 >= len(h.Tree) {
 		// If we run into the bounds of our heap, we need to either
 		// reallocate (if that's what we're wanting to do, or
@@ -128,6 +130,15 @@ func (h *Heap) EvictMinNode() *Node {
 	delete(h.keyLookup, retVal.Key)
 
 	return retVal
+}
+
+// Peek handles looking at the index of the tree.
+func (h *Heap) Peek(index int) (*Node, error) {
+	if index >= h.currentSize {
+		return nil, fmt.Errorf("Index greater than size of heap.")
+	}
+
+	return h.Tree[index], nil
 }
 
 // IsEmpty Notifies the caller if the binary heap is empty.

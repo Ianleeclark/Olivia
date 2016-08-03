@@ -1,8 +1,10 @@
 package cache
 
 import (
+	"time"
 	"fmt"
 	"sync"
+	binheap "github.com/GrappigPanda/Olivia/shared"
 )
 
 // TODO(ian): Replace this with something else
@@ -10,6 +12,7 @@ import (
 type Cache struct {
 	Cache *map[string]string
 	ReadCache *map[string]string
+	binHeap *binheap.Heap
 	sync.Mutex
 }
 
@@ -20,6 +23,7 @@ func NewCache() *Cache {
 	return &Cache{
 		Cache: &cacheMap,
 		ReadCache: &writeCache,
+		binHeap: binheap.NewHeapReallocate(100),
 	}
 }
 
@@ -27,12 +31,11 @@ func NewCache() *Cache {
 // from the ReadCache which is for copy-on-write optimizations so that
 // reading doesn't lock the cache.
 func (c *Cache) Get(key string) (string, error) {
-	var value string
 	if value, ok := (*c.ReadCache)[key]; !ok {
-		return value, fmt.Errorf("Key not found in cache")
+		return "", fmt.Errorf("Key not found in cache")
+	} else {
+		return value, nil
 	}
-
-	return value, nil
 }
 
 
@@ -52,5 +55,43 @@ func (c *Cache) Set(key string, value string) error {
 	(*c.Cache)[key] = value
 	c.Unlock()
 
+	c.copyCache()
+
 	return nil
+}
+
+// SetExpiration handles setting a key with an expiration time.
+func (c *Cache) SetExpiration(key string, value string, timeout int) error {
+	c.binHeap.Insert(binheap.NewNode(key, time.Now().UTC()))
+	err := c.Set(key, value)
+
+	c.copyCache()
+	return err
+}
+
+// EvictExpiredKeys handles
+func (c *Cache) EvictExpiredkeys(expirationDate time.Time) {
+	c.Lock()
+	keysToExpire := make([]string, len(c.binHeap.Tree))
+
+	i := 0
+	for {
+		node, err := c.binHeap.Peek(i)
+		if err != nil {
+			break
+		}
+
+		if node.Timeout.Second() > expirationDate.Second() {
+			break
+		} else {
+			keysToExpire = append(keysToExpire, node.Key)
+		}
+
+		i++
+	}
+
+	for _, key := range keysToExpire {
+		delete((*c.Cache), key)
+	}
+	c.Unlock()
 }
