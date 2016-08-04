@@ -90,6 +90,11 @@ func (p *Peer) TestConnection() {
 	(*p.Conn).SetReadDeadline(time.Now())
 	if _, err := (*p.Conn).Read([]byte{}); err != nil {
 		p.failureCount++
+		log.Printf(
+			"Connection to %v failed %v times",
+			p.IPPort,
+			p.failureCount,
+		)
 	} else {
 		p.failureCount = 0
 		p.Status = Connected
