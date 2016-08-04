@@ -34,6 +34,7 @@ type Peer struct {
 	IPPort      string
 	BloomFilter *olilib.BloomFilter
 	MessageBus  *message_handler.MessageHandler
+	failureCount int
 }
 
 // NewPeer handles creating a new peer to be used in communicating between nodes
@@ -47,6 +48,7 @@ func NewPeer(conn *net.Conn, mh *message_handler.MessageHandler) *Peer {
 		ipPort,
 		nil,
 		mh,
+		0,
 	}
 }
 
@@ -58,6 +60,7 @@ func NewPeerByIP(ipPort string, mh *message_handler.MessageHandler) *Peer {
 		ipPort,
 		nil,
 		mh,
+		0,
 	}
 
 	return newPeer
@@ -78,6 +81,23 @@ func (p *Peer) Connect() error {
 	p.GetBloomFilter()
 
 	return nil
+}
+
+// Ping handles intelligently sending heartbeats to a remote node. After 10
+// successive failures to ping, the remote node is considered failed and the
+// status is set to Timeout
+func (p *Peer) TestConnection() {
+	(*p.Conn).SetReadDeadline(time.Now())
+	if _, err := (*p.Conn).Read([]byte{}); err != nil {
+		p.failureCount++
+	} else {
+		p.failureCount = 0
+		p.Status = Connected
+	}
+
+	if p.failureCount >= 10 {
+		p.Status = Timeout
+	}
 }
 
 // Disconnect closes a connection to a remote peer.

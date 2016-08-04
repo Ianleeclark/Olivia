@@ -2,8 +2,8 @@ package networkHandler
 
 import (
 	"github.com/GrappigPanda/Olivia/cache"
-	"github.com/GrappigPanda/Olivia/config"
 	"github.com/GrappigPanda/Olivia/dht"
+	"github.com/GrappigPanda/Olivia/config"
 	"github.com/GrappigPanda/Olivia/network/incoming"
 	"github.com/GrappigPanda/Olivia/network/message_handler"
 	"log"
@@ -35,6 +35,21 @@ func executeRepeatedly(
 	}
 }
 
+// heartbeatRemoteNodes handles sending a heartbeat to every node in a peer
+// list.
+func heartbeatRemoteNodes(peerList []*dht.Peer, interval time.Duration) {
+	executeRepeatedly(
+		interval,
+		func() {
+			for peer := range peerList {
+				go peerList[peer].TestConnection()
+			}
+		},
+		nil,
+		nil,
+	)
+}
+
 // Heartbeat handles time-critical events, such as sending a heartbeat to a
 // remote node or expiring keys. heartbeatInterval is the rate at which we need
 // to send heartbeat updates to important remote nodes and cycleDuration is the
@@ -43,7 +58,13 @@ func executeRepeatedly(
 // on the second. This allows us to asynchronously send our commands and then
 // pre-emptively select any keys which will expire the following second.
 // Adjusting the heartbeatinterval may have strange, unintended side effects.
-func Heartbeat(heartbeatInterval time.Duration, cycleDuration time.Duration) {
+func Heartbeat(
+	heartbeatInterval time.Duration,
+	cycleDuration time.Duration,
+	peerList *dht.PeerList,
+) {
+	go heartbeatRemoteNodes(peerList.Peers, heartbeatInterval)
+	go heartbeatRemoteNodes(peerList.BackupPeers, cycleDuration)
 }
 
 // StartIncomingNetwork handles spinning up an incoming network router and
@@ -68,5 +89,11 @@ func StartIncomingNetwork(
 		}
 	}
 
+
+	Heartbeat(
+		5 * time.Millisecond,
+		1 * time.Second,
+		peerList,
+	)
 	incomingNetwork.StartNetworkRouter(mh, cache, peerList, config)
 }
