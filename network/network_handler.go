@@ -42,7 +42,9 @@ func heartbeatRemoteNodes(peerList []*dht.Peer, interval time.Duration) {
 		interval,
 		func() {
 			for peer := range peerList {
-				go peerList[peer].TestConnection()
+				if peerList[peer] != nil {
+					go peerList[peer].TestConnection()
+				}
 			}
 		},
 		nil,
@@ -91,7 +93,7 @@ func StartIncomingNetwork(
 
 
 	Heartbeat(
-		5 * time.Millisecond,
+		1000 * time.Millisecond,
 		1 * time.Second,
 		peerList,
 	)
