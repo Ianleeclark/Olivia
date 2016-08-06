@@ -95,25 +95,27 @@ func (ctx *ConnectionCtx) handleConnection(conn *net.Conn) {
 			}
 
 			if _, ok := command.Args["BLOOMFILTER"]; !ok {
-				log.Printf("Received %v from %v", string(line),
-					(*conn).RemoteAddr().String(),
-				)
+				if _, ok := command.Args["PING"]; !ok {
+					log.Printf("Received %v from %v", string(line),
+						(*conn).RemoteAddr().String(),
+					)
+				}
 			}
 
 			response := ctx.ExecuteCommand(*command)
 
-			if _, ok := command.Args["BLOOMFILTER"]; !ok {
+			if _, ok := command.Args["BLOOMFILTER"]; ok {
+				log.Printf("Responding to %v with bloomfilter",
+					(*conn).RemoteAddr().String(),
+				)
+			} else if _, ok := command.Args["PING"]; !ok {
 				log.Printf("Responding to %v %v with %v",
 					command.Command,
 					command.Args,
 					response,
 				)
-			} else {
-				log.Printf("Responding to %v with bloomfilter",
-					(*conn).RemoteAddr().String(),
-				)
-
 			}
+
 			(*conn).Write([]byte(response))
 			break
 		}
