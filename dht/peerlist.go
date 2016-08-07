@@ -92,6 +92,7 @@ func (p *PeerList) ConnectAllPeers() error {
 		)
 
 		p.Peers[x].GetPeerList(responseChannel)
+		p.Peers[x].GetBloomFilter()
 	}
 
 	if failureCount == len(p.Peers) {

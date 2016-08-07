@@ -38,18 +38,16 @@ func (ctx *ConnectionCtx) ExecuteCommand(requestData parser.CommandData) string 
 							continue
 						}
 
-						if ok, _ := peer.BloomFilter.HasKey([]byte(k)); ok {
-							peer.SendRequest(
-								fmt.Sprintf("GET %s", k),
-								responseChannel,
-								ctx.MessageBus,
-							)
+						peer.SendRequest(
+							fmt.Sprintf("GET %s", k),
+							responseChannel,
+							ctx.MessageBus,
+						)
 
-							value := <-responseChannel
-							if value != "" {
-								retVals[index] = fmt.Sprintf("%s:%s", k, value)
-								index++
-							}
+						value := <-responseChannel
+						if value != "" {
+							retVals[index] = fmt.Sprintf("%s:%s", k, value)
+							index++
 						}
 					}
 				}
@@ -75,6 +73,10 @@ func (ctx *ConnectionCtx) ExecuteCommand(requestData parser.CommandData) string 
 	case "REQUEST":
 		{
 			return ctx.handleRequest(requestData)
+		}
+	case "PING":
+		{
+			return "0:PONG 1\n"
 		}
 	}
 

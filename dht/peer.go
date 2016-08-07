@@ -87,22 +87,22 @@ func (p *Peer) Connect() error {
 // successive failures to ping, the remote node is considered failed and the
 // status is set to Timeout
 func (p *Peer) TestConnection() {
-	(*p.Conn).SetReadDeadline(time.Now())
-	if _, err := (*p.Conn).Read([]byte{}); err != nil {
+	_, err := p.SendCommand("0:PING 1\n")
+	if err != nil {
 		p.failureCount++
-		log.Printf(
-			"Connection to %v failed %v times",
-			p.IPPort,
-			p.failureCount,
-		)
-	} else {
-		p.failureCount = 0
-		p.Status = Connected
+		if p.failureCount == 10 {
+			p.Status = Timeout
+			log.Printf(
+				"Node %v is no longer alive",
+				p.IPPort,
+			)
+		}
+		return
 	}
 
-	if p.failureCount >= 10 {
-		p.Status = Timeout
-	}
+
+	p.failureCount = 0
+	p.Status = Connected
 }
 
 // Disconnect closes a connection to a remote peer.
@@ -112,8 +112,8 @@ func (p *Peer) Disconnect() {
 
 // SendCommand Handles sending a command to a remote node. Command is like this
 // "hash:Command"
-func (p *Peer) SendCommand(Command string) {
-	(*p.Conn).Write([]byte(Command))
+func (p *Peer) SendCommand(Command string) (int, error) {
+	return (*p.Conn).Write([]byte(Command))
 }
 
 // SendRequest handles taking in a peer object and a command and sending a
