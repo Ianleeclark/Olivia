@@ -1,6 +1,8 @@
 package shared
 
 import (
+	"fmt"
+	"sync"
 	"time"
 )
 
@@ -26,6 +28,7 @@ type Heap struct {
 	index         int
 	allocStrategy HeapAllocationStrategy
 	keyLookup     map[string]int
+	sync.Mutex
 }
 
 // keyLookup helps our LRU cache find nodes quicker than traversing the
@@ -65,6 +68,26 @@ func NewHeapReallocate(maxSize int) *Heap {
 	}
 }
 
+// Copy handles taking in a binary heap and making a copy of it.
+func (h *Heap) Copy() *Heap {
+	h.Lock()
+	defer h.Unlock()
+	newHeap := NewHeap(len(h.Tree))
+
+	for index, element := range h.Tree {
+		newHeap.Tree[index] = element
+	}
+
+	for k, v := range h.keyLookup {
+		newHeap.keyLookup[k] = v
+	}
+
+	newHeap.index = h.index
+	newHeap.currentSize = h.currentSize
+
+	return newHeap
+}
+
 // MinNode returns the root node. In this implementation, we opted for a
 // minimum binary heap instead of a generic implementation.
 func (h *Heap) MinNode() *Node {
@@ -80,7 +103,7 @@ func (h *Heap) MinNode() *Node {
 // Moreover, a *Node is only returned if the binary heap is full and can no
 // longer place new nodes into it.
 func (h *Heap) Insert(node *Node) *Node {
-	if h.index+0 >= len(h.Tree) {
+	if h.index >= len(h.Tree) {
 		// If we run into the bounds of our heap, we need to either
 		// reallocate (if that's what we're wanting to do, or
 		// maintain the size and
@@ -124,8 +147,8 @@ func (h *Heap) EvictMinNode() *Node {
 	// heap.
 	h.currentSize--
 	h.index--
-	h.percolateDown(0)
 	delete(h.keyLookup, retVal.Key)
+	h.percolateDown(0)
 
 	return retVal
 }
@@ -137,6 +160,9 @@ func (h *Heap) IsEmpty() bool {
 
 // ReAllocate Handles increasing the size of the underlying binary heap.
 func (h *Heap) ReAllocate(maxSize int) {
+	h.Lock()
+	defer h.Unlock()
+
 	h.Tree = append(h.Tree, make([]*Node, maxSize)...)
 }
 
@@ -150,14 +176,19 @@ func (h *Heap) UpdateNodeTimeout(key string) *Node {
 	h.Tree[nodeIndex].Timeout = time.Now().UTC()
 
 	if nodeIndex+1 < h.currentSize {
+		fmt.Println("0")
 		if h.compareTwoTimes(nodeIndex, nodeIndex+1) {
+			fmt.Println("1")
 			h.percolateDown(nodeIndex)
+			fmt.Println("2")
 		} else if h.compareTwoTimes(nodeIndex-1, nodeIndex) {
 			h.percolateUp(nodeIndex)
 		}
 	}
 
-	return h.Tree[h.keyLookup[key]]
+	node, _ := h.Get(key)
+	return node
+
 }
 
 // Get handles retrieving a Node by its key. Not extensively used, but it was a
@@ -179,14 +210,26 @@ func (h *Heap) percolateUp(newNodeIndex int) {
 		return
 	}
 
-	newlyInsertedNode := h.Tree[newNodeIndex]
-	preExistingNode := h.Tree[newNodeIndex-1]
+	tmpHeap := h.Copy()
 
-	// Unlikely to ever do anything.
-	if newlyInsertedNode.Timeout.Nanosecond() < preExistingNode.Timeout.Nanosecond() {
-		h.swapTwoNodes(newNodeIndex, newNodeIndex-1)
-		h.percolateUp(newNodeIndex - 1)
+	// Unlikely to ever do anyttmpHeap.ng.
+	for {
+		if newNodeIndex == 0 {
+			break
+		}
+
+		newlyInsertedNode := tmpHeap.Tree[newNodeIndex]
+		preExistingNode := tmpHeap.Tree[newNodeIndex-1]
+
+		if preExistingNode.Timeout.Sub(newlyInsertedNode.Timeout) > 0 {
+			tmpHeap.swapTwoNodes(newNodeIndex, newNodeIndex-1)
+			newNodeIndex--
+		} else {
+			break
+		}
 	}
+
+	h.swapTrees(tmpHeap)
 }
 
 // percolateDown handles moving a node starting at index `fromIndex` down into
@@ -196,29 +239,56 @@ func (h *Heap) percolateDown(fromIndex int) {
 		return
 	}
 
-	// trackerNode is the node which we're currently tracking as it percolates
-	// down the binary heap.
-	trackerNode := h.Tree[fromIndex]
-	// preExistingNode is _any_ node which we're not currently tracking.
-	preExistingNode := h.Tree[fromIndex+1]
-	// NOTE: I'm not using `compareTwoTimes` here because I think it makes it
-	// more readable. I know this is an aggregious abuse of intermediary state
-	// or some other nonsense, but it makes it easier for me to read.
+	tmpHeap := h.Copy()
 
-	// If our tracker node is nil (meaning it was the slot of the recently
-	// evited min node) we want to automatically percolate it to the bottom of
-	// the binary heap.
-	if trackerNode == nil {
-		h.swapTwoNodes(fromIndex, fromIndex+1)
-		h.percolateDown(fromIndex + 1)
-		return
+	for {
+		if fromIndex == len(tmpHeap.Tree)-1 {
+			break
+		}
+
+		// trackerNode is the node which we're currently tracking as it percolates
+		// down the binary heap.
+		trackerNode := tmpHeap.Tree[fromIndex]
+
+		// If our tracker node is nil (meaning it was the slot of the recently
+		// evited min node) we want to automatically percolate it to the bottom of
+		// the binary heap.
+		if trackerNode == nil {
+			for i := 0; i < len(h.Tree)-1; i++ {
+				tmpHeap.swapTwoNodes(i, i+1)
+			}
+			break
+		}
+
+		// preExistingNode is _any_ node which we're not currently tracking.
+		preExistingNode := tmpHeap.Tree[fromIndex+1]
+		// NOTE: I'm not using `compareTwoTimes` here because I think it makes it
+		// more readable. I know this is an aggregious abuse of intermediary state
+		// or some other nonsense, but it makes it easier for me to read.
+
+		// Unlikely to ever do anything. But it asserts that the minimum
+		if trackerNode.Timeout.Sub(preExistingNode.Timeout) > 0 {
+			tmpHeap.swapTwoNodes(fromIndex, fromIndex+1)
+			fromIndex++
+			continue
+		} else {
+			break
+		}
 	}
 
-	// Unlikely to ever do anything. But it asserts that the minimum
-	if trackerNode.Timeout.Nanosecond() > preExistingNode.Timeout.Nanosecond() {
-		h.swapTwoNodes(fromIndex, fromIndex+1)
-		h.percolateDown(fromIndex + 1)
-	}
+	h.swapTrees(tmpHeap)
+}
+
+func (h *Heap) swapTrees(newHeap *Heap) {
+	h.Lock()
+
+	h.Tree = newHeap.Tree
+	h.keyLookup = newHeap.keyLookup
+
+	h.index = newHeap.index
+	h.currentSize = newHeap.currentSize
+
+	h.Unlock()
 }
 
 // swapTwoNodes swaps j into i and vice versa. Moreover, it handles updating
@@ -242,7 +312,7 @@ func (h *Heap) swapTwoNodes(i int, j int) {
 // (j), then we return True. Otherwise, if the left (i) has an expiration time
 // _before_ the right (j) we return a False.
 func (h *Heap) compareTwoTimes(i int, j int) bool {
-	if h.Tree[i].Timeout.Nanosecond() > h.Tree[j].Timeout.Nanosecond() {
+	if h.Tree[i].Timeout.Sub(h.Tree[j].Timeout) > 0 {
 		return true
 	} else {
 		return false
