@@ -63,6 +63,8 @@ func Encode(inputString string) string {
 func Decode(encodedString string) string {
 	if len(encodedString) == 0 {
 		return ""
+	} else if len(encodedString)%2 != 0 {
+		return ""
 	}
 
 	var output string
@@ -74,7 +76,13 @@ func Decode(encodedString string) string {
 			accumulatedInt = fmt.Sprintf("%v%v", accumulatedInt, encodedString[i])
 		} else {
 			if accumulatedInt != "" {
-				count, _ := strconv.Atoi(accumulatedInt)
+				count, err := strconv.Atoi(accumulatedInt)
+				if err != nil {
+					// If we hit an error here, tehre is something really
+					// messed up with the input.
+					panic("Invalid characters detected in RLE")
+				}
+
 				output = writeRepeat(output, trackedChar, count)
 				trackedChar = encodedString[i]
 			} else {
@@ -112,6 +120,7 @@ func writeOutput(outputString string, char byte, count int) string {
 // writeRepeat handles writing repeating characters intelligently
 func writeRepeat(output string, char byte, repeat int) string {
 	var retVal string
+	fmt.Println(repeat)
 
 	// If the next character is an integer, we can encode it.
 	if repeat > 1 {
