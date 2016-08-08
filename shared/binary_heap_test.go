@@ -2,7 +2,6 @@ package shared
 
 import (
 	"fmt"
-	"math/rand"
 	"testing"
 	"time"
 )
@@ -20,7 +19,7 @@ func TestNewNode(t *testing.T) {
 		t.Errorf("Expected %v, got %v", expectedReturn.Key, retVal.Key)
 	}
 
-	if expectedReturn.Timeout.Nanosecond() >= retVal.Timeout.Nanosecond() {
+	if expectedReturn.Timeout.Sub(retVal.Timeout) > 0 {
 		t.Errorf("Expected expectedReturn (%v) to be lower than retval (%v)",
 			expectedReturn.Timeout,
 			retVal.Timeout,
@@ -87,7 +86,7 @@ func TestMinNodeFailNoRootNode(t *testing.T) {
 }
 
 func TestSwap(t *testing.T) {
-	testHeap := NewHeapReallocate(1)
+	testHeap := NewHeap(5)
 	testNode := NewNode("Testswap", time.Now().UTC())
 	time.Sleep(5 * time.Millisecond)
 	testNode2 := NewNode("Testswap2", time.Now().UTC())
@@ -111,10 +110,10 @@ func TestSwap(t *testing.T) {
 }
 
 func TestPercolateUp(t *testing.T) {
-	testHeap := NewHeapReallocate(25)
+	testHeap := NewHeap(25)
 
 	originalNode := NewNode("Least expiration time", time.Now().UTC())
-	time.Sleep(5 * time.Millisecond)
+	time.Sleep(50 * time.Millisecond)
 
 	for i := 0; i < 5; i++ {
 		testNode := NewNode(fmt.Sprintf("Node-%v", i), time.Now().UTC())
@@ -185,7 +184,7 @@ func TestPercolateDown(t *testing.T) {
 }
 
 func TestKeyLookup(t *testing.T) {
-	testHeap := NewHeapReallocate(5)
+	testHeap := NewHeap(5)
 	testNode1 := NewNode("TestNode1", time.Now().UTC())
 	testNode2 := NewNode("TestNode2", time.Now().UTC())
 	testNode3 := NewNode("TestNode3", time.Now().UTC())
@@ -212,10 +211,10 @@ func TestKeyLookup(t *testing.T) {
 }
 
 func TestKeyLookupIndexesProperly(t *testing.T) {
-	testHeap := NewHeapReallocate(25)
+	testHeap := NewHeap(25)
 
-	keyValues := make([]string, 25)
-	for i := 0; i < 25; i++ {
+	keyValues := make([]string, 24)
+	for i := 0; i < 24; i++ {
 		keyName := fmt.Sprintf("Node-%v", i)
 		testNode := NewNode(keyName, time.Now().UTC())
 		keyValues[i] = keyName
@@ -223,13 +222,18 @@ func TestKeyLookupIndexesProperly(t *testing.T) {
 		time.Sleep(5 * time.Millisecond)
 	}
 
-	for i := 0; i < 25; i++ {
+	for i := 0; i < 24; i++ {
 		key := keyValues[i]
 		keyIndex := testHeap.keyLookup[key]
 
 		if keyIndex != i {
+			for i := range keyValues {
+				t.Errorf(keyValues[i])
+			}
+			return
 			t.Errorf("Expected key %v to have an index of %v but had index of %v",
 				key,
+				i,
 				keyIndex,
 			)
 		}
@@ -237,10 +241,10 @@ func TestKeyLookupIndexesProperly(t *testing.T) {
 }
 
 func TestKeyLookupReadjustsOnEviction(t *testing.T) {
-	testHeap := NewHeapReallocate(25)
+	testHeap := NewHeap(25)
 
-	keyValues := make([]string, 25)
-	for i := 0; i < 25; i++ {
+	keyValues := make([]string, 24)
+	for i := 0; i < 24; i++ {
 		keyName := fmt.Sprintf("Node-%v", i)
 		testNode := NewNode(keyName, time.Now().UTC())
 		keyValues[i] = keyName
@@ -250,7 +254,7 @@ func TestKeyLookupReadjustsOnEviction(t *testing.T) {
 
 	testHeap.EvictMinNode()
 
-	for i := 0; i < 25; i++ {
+	for i := 0; i < 24; i++ {
 		if i == 0 {
 			continue
 		}
@@ -269,13 +273,13 @@ func TestKeyLookupReadjustsOnEviction(t *testing.T) {
 }
 
 func TestKeyLookupReadjustsOnInsertion(t *testing.T) {
-	testHeap := NewHeapReallocate(25)
+	testHeap := NewHeap(25)
 
 	originalNode := NewNode("OriginalNode", time.Now().UTC())
-	time.Sleep(5 * time.Millisecond)
+	time.Sleep(50 * time.Millisecond)
 
-	keyValues := make([]string, 25)
-	for i := 0; i < 25; i++ {
+	keyValues := make([]string, 24)
+	for i := 0; i < 24; i++ {
 		keyName := fmt.Sprintf("Node-%v", i)
 		testNode := NewNode(keyName, time.Now().UTC())
 		keyValues[i] = keyName
@@ -285,7 +289,7 @@ func TestKeyLookupReadjustsOnInsertion(t *testing.T) {
 
 	testHeap.Insert(originalNode)
 
-	for i := 0; i < 25; i++ {
+	for i := 0; i < 24; i++ {
 		if i == 0 {
 			continue
 		}
@@ -315,21 +319,79 @@ func TestKeyUpdateTimeoutDoesntBlowUpEverything(t *testing.T) {
 		time.Sleep(5 * time.Millisecond)
 	}
 
-	for i := 0; i < 5; i++ {
-		index := rand.Intn(25)
-		ok := testHeap.UpdateNodeTimeout(keyValues[index])
-		if ok == nil {
-			t.Errorf("Got weird error, %v index %v", keyValues, index)
-		}
-		time.Sleep(5 * time.Millisecond)
+	ok := testHeap.UpdateNodeTimeout(keyValues[3])
+	if ok == nil {
+		t.Errorf("Got weird error, %v index %v", keyValues, 3)
 	}
 
 	for i := 0; i < len(testHeap.Tree)-1; i++ {
 		for j := i + 1; j < len(testHeap.Tree)-1; j++ {
 			if testHeap.compareTwoTimes(i, j) {
-				t.Errorf("%v - %v", testHeap.Tree[i].Key, testHeap.Tree[i].Timeout)
+				t.Errorf(
+					"%v - %v -- %v - %v",
+					testHeap.Tree[i].Key,
+					testHeap.Tree[i].Timeout,
+					testHeap.Tree[j].Key,
+					testHeap.Tree[j].Timeout,
+				)
 				break
 			}
+		}
+	}
+}
+
+func TestCopy(t *testing.T) {
+	testHeap := NewHeap(10)
+
+	keyValues := make([]string, 10)
+	for i := 0; i < 10; i++ {
+		keyName := fmt.Sprintf("Node-%v", i)
+		testNode := NewNode(keyName, time.Now().UTC())
+		keyValues[i] = keyName
+		testHeap.Insert(testNode)
+		time.Sleep(5 * time.Millisecond)
+	}
+
+	copyHeap := testHeap.Copy()
+
+	for i := 0; i < 10; i++ {
+		if copyHeap.Tree[i] != testHeap.Tree[i] {
+			t.Errorf("Expected %v, got %v", testHeap.Tree[i], copyHeap.Tree[i])
+		}
+	}
+}
+
+func TestSwapTrees(t *testing.T) {
+	testHeap := NewHeap(11)
+
+	keyValues := make([]string, 10)
+	for i := 0; i < 10; i++ {
+		keyName := fmt.Sprintf("Node-%v", i)
+		testNode := NewNode(keyName, time.Now().UTC())
+		keyValues[i] = keyName
+		testHeap.Insert(testNode)
+		time.Sleep(5 * time.Millisecond)
+	}
+
+	copyHeap := testHeap.Copy()
+
+	for i := 0; i < 10; i++ {
+		if copyHeap.Tree[i] != testHeap.Tree[i] {
+			t.Errorf("Expected %v, got %v", testHeap.Tree[i], copyHeap.Tree[i])
+		}
+	}
+
+	testHeap.swapTrees(copyHeap)
+
+	for i := 0; i < 10; i++ {
+		if copyHeap.Tree[i] != testHeap.Tree[i] {
+			t.Errorf("Expected %v, got %v", testHeap.Tree[i], copyHeap.Tree[i])
+		}
+	}
+
+	for k, _ := range testHeap.keyLookup {
+		if testHeap.keyLookup[k] != copyHeap.keyLookup[k] {
+			t.Errorf("[Key Lookup] Expected %v,  got %v", testHeap.keyLookup[k], copyHeap.keyLookup[k])
 		}
 	}
 }
