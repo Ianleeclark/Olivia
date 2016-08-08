@@ -175,7 +175,7 @@ func (h *Heap) UpdateNodeTimeout(key string) *Node {
 
 	h.Tree[nodeIndex].Timeout = time.Now().UTC()
 
-	if nodeIndex+1 <= h.currentSize {
+	if nodeIndex+1 < h.currentSize {
 		fmt.Println("0")
 		if h.compareTwoTimes(nodeIndex, nodeIndex+1) {
 			fmt.Println("1")
