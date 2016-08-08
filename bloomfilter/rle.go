@@ -85,6 +85,7 @@ func Decode(encodedString string) string {
 
 				output = writeRepeat(output, trackedChar, count)
 				trackedChar = encodedString[i]
+				accumulatedInt = ""
 			} else {
 				trackedChar = encodedString[i]
 			}
