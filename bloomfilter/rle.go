@@ -1,9 +1,9 @@
 package olilib
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
-	"fmt"
 )
 
 // Encode handles encoding the bloom filter.
@@ -55,7 +55,6 @@ func Encode(inputString string) string {
 		count,
 	)
 
-
 	return output
 }
 
@@ -67,29 +66,21 @@ func Decode(encodedString string) string {
 	}
 
 	var output string
-	var increment bool
+	var accumulatedInt string
+	var trackedChar byte
 
-	var i int = 0
-	encodedStringLength := len(encodedString) - 1
-	for i = 0; i <= encodedStringLength; {
-		if i + 1 <= encodedStringLength {
-			repeatCount, err := strconv.Atoi(string(encodedString[i + 1]))
-			if err != nil {
-				repeatCount = 1
-				increment = true
+	for i := 0; i < len(encodedString); i++ {
+		if _, err := strconv.Atoi(string(encodedString[i])); err == nil {
+			accumulatedInt = fmt.Sprintf("%v%v", accumulatedInt, encodedString[i])
+		} else {
+			if accumulatedInt != "" {
+				count, _ := strconv.Atoi(accumulatedInt)
+				output = writeRepeat(output, trackedChar, count)
+				trackedChar = encodedString[i]
+			} else {
+				trackedChar = encodedString[i]
 			}
-			output = writeRepeat(output, encodedString[i], repeatCount)
-		} else {
-			output = writeRepeat(output, encodedString[i], 1)
 		}
-
-		if increment || i + 2 > encodedStringLength + 1 {
-			i++
-		} else {
-			i += 2
-		}
-
-		increment = false
 	}
 
 	return output
@@ -106,22 +97,6 @@ func writeOutput(outputString string, char byte, count int) string {
 			outputString,
 			string(char),
 		)
-	} else if count > 9 {
-		number := "9"
-		retVal = outputString
-		for x := 0; x <= count / 9; x++ {
-			if x == count / 9  && count % 9 != 0{
-				number = strconv.Itoa(count % 9)
-			} else if x == count / 9 {
-				continue
-			}
-			retVal = fmt.Sprintf(
-				"%s%s%s",
-				retVal,
-				string(char),
-				number,
-			)
-		}
 	} else {
 		retVal = fmt.Sprintf(
 			"%s%s%d",
@@ -130,7 +105,6 @@ func writeOutput(outputString string, char byte, count int) string {
 			count,
 		)
 	}
-
 
 	return retVal
 }

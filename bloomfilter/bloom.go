@@ -2,7 +2,6 @@ package olilib
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/GrappigPanda/Olivia/lru_cache"
 	"hash/fnv"
 	"math"
@@ -70,7 +69,11 @@ func (bf *BloomFilter) ConvertToString() string {
 	var buffer bytes.Buffer
 
 	for i := range bf.Filter {
-		buffer.WriteString(fmt.Sprintf("%v", bf.Filter[i]))
+		if bf.Filter[i] != 0 {
+			buffer.WriteString("I")
+		} else {
+			buffer.WriteString("O")
+		}
 	}
 
 	return Encode(buffer.String())
@@ -86,7 +89,14 @@ func ConvertStringtoBF(inputString string) (*BloomFilter, error) {
 
 	index := 0
 	for i, _ := range decodedString {
-		number, err := strconv.Atoi(string(decodedString[i]))
+		var char string
+		if decodedString[i] == 'O' {
+			char = "0"
+		} else {
+			char = "1"
+		}
+
+		number, err := strconv.Atoi(char)
 		if err != nil {
 			return nil, err
 		}
