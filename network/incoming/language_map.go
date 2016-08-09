@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/GrappigPanda/Olivia/dht"
 	"github.com/GrappigPanda/Olivia/parser"
-	"log"
 	"strings"
 )
 
@@ -118,7 +117,6 @@ func (ctx *ConnectionCtx) handleRequest(requestData parser.CommandData) string {
 	case "BLOOMFILTER":
 		{
 			bfString := (*ctx.Bloomfilter).ConvertToString()
-			log.Println(bfString)
 			return createResponse(
 				requestData.Command,
 				[]string{bfString},

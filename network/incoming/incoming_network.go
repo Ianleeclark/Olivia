@@ -31,7 +31,7 @@ func StartNetworkRouter(
 	config *config.Cfg,
 ) {
 
-	listen, err := net.Listen("tcp", ":5455")
+	listen, err := net.Listen("tcp", ":5454")
 	if err != nil {
 		panic(err)
 	}
@@ -94,12 +94,10 @@ func (ctx *ConnectionCtx) handleConnection(conn *net.Conn) {
 				log.Println(err)
 			}
 
-			if _, ok := command.Args["BLOOMFILTER"]; !ok {
-				if _, ok := command.Args["PING"]; !ok {
-					log.Printf("Received %v from %v", string(line),
-						(*conn).RemoteAddr().String(),
-					)
-				}
+			if command.Command != "PING" {
+				log.Printf("Received %v from %v", string(line),
+					(*conn).RemoteAddr().String(),
+				)
 			}
 
 			response := ctx.ExecuteCommand(*command)
@@ -108,7 +106,7 @@ func (ctx *ConnectionCtx) handleConnection(conn *net.Conn) {
 				log.Printf("Responding to %v with bloomfilter",
 					(*conn).RemoteAddr().String(),
 				)
-			} else if _, ok := command.Args["PING"]; !ok {
+			} else if command.Command != "PING" {
 				log.Printf("Responding to %v %v with %v",
 					command.Command,
 					command.Args,

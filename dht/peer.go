@@ -100,6 +100,10 @@ func (p *Peer) TestConnection() {
 		return
 	}
 
+	if p.Status == Timeout {
+		log.Printf("Node %v has revived.", p.IPPort)
+	}
+
 	p.failureCount = 0
 	p.Status = Connected
 }
