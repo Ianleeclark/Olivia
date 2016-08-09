@@ -1,11 +1,11 @@
 package incomingNetwork
 
 import (
-	"log"
 	"bytes"
 	"fmt"
 	"github.com/GrappigPanda/Olivia/dht"
 	"github.com/GrappigPanda/Olivia/parser"
+	"log"
 	"strings"
 )
 

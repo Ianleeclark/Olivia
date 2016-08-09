@@ -1,7 +1,6 @@
 package dht
 
 import (
-	"log"
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
@@ -9,6 +8,7 @@ import (
 	"github.com/GrappigPanda/Olivia/network/message_handler"
 	"github.com/GrappigPanda/Olivia/network/receiver"
 	"github.com/GrappigPanda/Olivia/parser"
+	"log"
 	"net"
 	"time"
 )
@@ -29,11 +29,11 @@ const (
 
 // Peer Houses the state for remote Peers
 type Peer struct {
-	Status      State
-	Conn        *net.Conn
-	IPPort      string
-	BloomFilter *olilib.BloomFilter
-	MessageBus  *message_handler.MessageHandler
+	Status       State
+	Conn         *net.Conn
+	IPPort       string
+	BloomFilter  *olilib.BloomFilter
+	MessageBus   *message_handler.MessageHandler
 	failureCount int
 }
 
@@ -99,7 +99,6 @@ func (p *Peer) TestConnection() {
 		}
 		return
 	}
-
 
 	p.failureCount = 0
 	p.Status = Connected
@@ -168,7 +167,6 @@ func (p *Peer) GetBloomFilter() {
 func (p *Peer) GetPeerList(responseChannel chan string) {
 	p.SendRequest(parser.GET_REMOTE_PEERLIST, responseChannel, p.MessageBus)
 }
-
 
 // addCommandToMessageHandler send a command to the message container to store
 // the callback channel.

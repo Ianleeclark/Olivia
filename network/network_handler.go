@@ -2,8 +2,8 @@ package networkHandler
 
 import (
 	"github.com/GrappigPanda/Olivia/cache"
-	"github.com/GrappigPanda/Olivia/dht"
 	"github.com/GrappigPanda/Olivia/config"
+	"github.com/GrappigPanda/Olivia/dht"
 	"github.com/GrappigPanda/Olivia/network/incoming"
 	"github.com/GrappigPanda/Olivia/network/message_handler"
 	"log"
@@ -28,7 +28,7 @@ func executeRepeatedly(
 			if responseChannel != nil {
 				responseChannel <- 1
 			}
-			break;
+			break
 		case <-stopExecution:
 			return
 		}
@@ -91,10 +91,9 @@ func StartIncomingNetwork(
 		}
 	}
 
-
 	Heartbeat(
-		1000 * time.Millisecond,
-		1 * time.Second,
+		1000*time.Millisecond,
+		1*time.Second,
 		peerList,
 	)
 	incomingNetwork.StartNetworkRouter(mh, cache, peerList, config)

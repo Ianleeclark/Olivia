@@ -10,8 +10,8 @@ func TestExecuteRepeatedly(t *testing.T) {
 	killChan := make(chan bool)
 
 	go executeRepeatedly(
-		5 * time.Millisecond,
-		func() {return},
+		5*time.Millisecond,
+		func() { return },
 		killChan,
 		countChan,
 	)
@@ -23,7 +23,7 @@ func TestExecuteRepeatedly(t *testing.T) {
 		if count == 10 {
 			killChan <- true
 		}
-		break;
+		break
 	default:
 		return
 	}
