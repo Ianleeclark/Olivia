@@ -127,7 +127,6 @@ func writeOutput(outputString string, char byte, count int) string {
 // writeRepeat handles writing repeating characters intelligently
 func writeRepeat(output string, char byte, repeat int) string {
 	var retVal string
-	fmt.Println(repeat)
 
 	// If the next character is an integer, we can encode it.
 	if repeat > 1 {
