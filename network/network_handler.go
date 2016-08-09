@@ -8,9 +8,7 @@ import (
 	"github.com/GrappigPanda/Olivia/network/message_handler"
 	"log"
 	"time"
-)
-
-// executeRepeatedly Allows repeated calls to any function which doesn't accept
+) // executeRepeatedly Allows repeated calls to any function which doesn't accept
 // arguments. Allows for remote stopping of the execution and passing back
 // total number of executions.
 func executeRepeatedly(
@@ -84,8 +82,8 @@ func Heartbeat(
 ) {
 	go heartbeatRemoteNodes(peerList.Peers, heartbeatInterval)
 	go heartbeatRemoteNodes(peerList.BackupPeers, cycleDuration)
-	go getRemoteBloomFilters(peerList.Peers, cycleDuration)
-	go getRemoteBloomFilters(peerList.BackupPeers, cycleDuration)
+	go getRemoteBloomFilters(peerList.Peers, heartbeatInterval*time.Second)
+	go getRemoteBloomFilters(peerList.BackupPeers, heartbeatInterval*time.Second)
 }
 
 // StartIncomingNetwork handles spinning up an incoming network router and
