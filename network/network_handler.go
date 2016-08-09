@@ -52,6 +52,23 @@ func heartbeatRemoteNodes(peerList []*dht.Peer, interval time.Duration) {
 	)
 }
 
+// getRemoteBloomFilters requests a remote node's peer list on a timed
+// interval.
+func getRemoteBloomFilters(peerList []*dht.Peer, interval time.Duration) {
+	executeRepeatedly(
+		interval,
+		func() {
+			for peer := range peerList {
+				if peerList[peer] != nil {
+					go peerList[peer].GetBloomFilter()
+				}
+			}
+		},
+		nil,
+		nil,
+	)
+}
+
 // Heartbeat handles time-critical events, such as sending a heartbeat to a
 // remote node or expiring keys. heartbeatInterval is the rate at which we need
 // to send heartbeat updates to important remote nodes and cycleDuration is the
@@ -67,6 +84,8 @@ func Heartbeat(
 ) {
 	go heartbeatRemoteNodes(peerList.Peers, heartbeatInterval)
 	go heartbeatRemoteNodes(peerList.BackupPeers, cycleDuration)
+	go getRemoteBloomFilters(peerList.Peers, cycleDuration)
+	go getRemoteBloomFilters(peerList.BackupPeers, cycleDuration)
 }
 
 // StartIncomingNetwork handles spinning up an incoming network router and
