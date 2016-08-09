@@ -1,18 +1,18 @@
 package dht
 
 import (
-	"strings"
 	"fmt"
-	"log"
 	"github.com/GrappigPanda/Olivia/network/message_handler"
+	"log"
+	"strings"
 )
 
 // PeerList is a data structure which represents remote olivia nodes.
 type PeerList struct {
-	Peers []*Peer
+	Peers       []*Peer
 	BackupPeers []*Peer
-	PeerMap *map[string]bool
-	MessageBus *message_handler.MessageHandler
+	PeerMap     *map[string]bool
+	MessageBus  *message_handler.MessageHandler
 }
 
 // NewPeerList Creates a new peer list
@@ -43,15 +43,15 @@ func (p *PeerList) AddPeer(ipPort string) {
 
 	newPeer := NewPeerByIP(ipPort, p.MessageBus)
 
-	if len(p.Peers) + 1 <= 3 {
+	if len(p.Peers)+1 <= 3 {
 		p.Peers = append(p.Peers, newPeer)
 		return
 	}
 
-	if len(p.BackupPeers) + 1 >= cap(p.BackupPeers) {
+	if len(p.BackupPeers)+1 >= cap(p.BackupPeers) {
 		p.BackupPeers = append(
 			p.BackupPeers,
-			make([]*Peer, cap(p.BackupPeers) * 2)...,
+			make([]*Peer, cap(p.BackupPeers)*2)...,
 		)
 
 		p.BackupPeers = append(p.BackupPeers, newPeer)
@@ -120,7 +120,6 @@ func (p *PeerList) handlePeerQueries(responseChannel chan string) {
 		if len(splitResponse) != 2 {
 			continue
 		}
-
 
 		peers := strings.Split(splitResponse[1], ",")
 

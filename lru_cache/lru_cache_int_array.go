@@ -1,9 +1,9 @@
 package olilib_lru
 
 import (
+	binheap "github.com/GrappigPanda/Olivia/shared"
 	"sync"
 	"time"
-	binheap "github.com/GrappigPanda/Olivia/shared"
 )
 
 // LRUCacheInt64Array is a simple implementation of an LRU cache which will be used in

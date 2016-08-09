@@ -1,10 +1,10 @@
 package olilib_lru
 
 import (
+	binheap "github.com/GrappigPanda/Olivia/shared"
 	"sync"
 	"testing"
 	"time"
-	binheap "github.com/GrappigPanda/Olivia/shared"
 )
 
 var TESTLRU = NewString(10)
