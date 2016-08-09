@@ -63,32 +63,38 @@ func Encode(inputString string) string {
 func Decode(encodedString string) string {
 	if len(encodedString) == 0 {
 		return ""
-	} else if len(encodedString)%2 != 0 {
-		return ""
 	}
 
 	var output string
 	var accumulatedInt string
 	var trackedChar byte
 
-	for i := 0; i < len(encodedString); i++ {
+	for i := 0; i <= len(encodedString); i++ {
+		if i == len(encodedString) {
+			count, _ := strconv.Atoi(accumulatedInt)
+			output = writeRepeat(output, trackedChar, count)
+
+			continue
+		}
+
 		if _, err := strconv.Atoi(string(encodedString[i])); err == nil {
-			accumulatedInt = fmt.Sprintf("%v%v", accumulatedInt, encodedString[i])
+			if accumulatedInt == "0" {
+				accumulatedInt = string(encodedString[i])
+			} else {
+				accumulatedInt = fmt.Sprintf("%s%s", accumulatedInt, string(encodedString[i]))
+			}
+
 		} else {
 			if accumulatedInt != "" {
-				count, err := strconv.Atoi(accumulatedInt)
-				if err != nil {
-					// If we hit an error here, tehre is something really
-					// messed up with the input.
-					panic("Invalid characters detected in RLE")
-				}
+				count, _ := strconv.Atoi(accumulatedInt)
 
 				output = writeRepeat(output, trackedChar, count)
-				trackedChar = encodedString[i]
-				accumulatedInt = ""
-			} else {
-				trackedChar = encodedString[i]
+			} else if accumulatedInt == "0" {
+				output = writeRepeat(output, trackedChar, 1)
 			}
+
+			trackedChar = encodedString[i]
+			accumulatedInt = "0"
 		}
 	}
 
