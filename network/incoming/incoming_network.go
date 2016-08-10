@@ -2,6 +2,7 @@ package incomingNetwork
 
 import (
 	"bufio"
+	"fmt"
 	"github.com/GrappigPanda/Olivia/bloomfilter"
 	"github.com/GrappigPanda/Olivia/cache"
 	"github.com/GrappigPanda/Olivia/config"
@@ -89,6 +90,7 @@ func (ctx *ConnectionCtx) handleConnection(conn *net.Conn) {
 			connProc.Authenticate(password)
 			break
 		case PROCESSING:
+			fmt.Println(string(line))
 			command, err := ctx.Parser.Parse(string(line), conn)
 			if err != nil {
 				log.Println(err)

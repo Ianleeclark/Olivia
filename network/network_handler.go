@@ -82,8 +82,8 @@ func Heartbeat(
 ) {
 	go heartbeatRemoteNodes(peerList.Peers, heartbeatInterval)
 	go heartbeatRemoteNodes(peerList.BackupPeers, cycleDuration)
-	go getRemoteBloomFilters(peerList.Peers, heartbeatInterval*time.Second)
-	go getRemoteBloomFilters(peerList.BackupPeers, heartbeatInterval*time.Second)
+	go getRemoteBloomFilters(peerList.Peers, cycleDuration)
+	go getRemoteBloomFilters(peerList.BackupPeers, cycleDuration)
 }
 
 // StartIncomingNetwork handles spinning up an incoming network router and
@@ -95,12 +95,14 @@ func StartIncomingNetwork(
 	config *config.Cfg,
 ) {
 	peerList := dht.NewPeerList(mh)
-	peer := dht.NewPeerByIP("127.0.0.1:5454", mh)
-	peerList.Peers[0] = peer
-	(*peerList.PeerMap)["127.0.0.1:5454"] = true
+	/*
+		peer := dht.NewPeerByIP("127.0.0.1:5454", mh)
+		peerList.Peers[0] = peer
+		(*peerList.PeerMap)["127.0.0.1:5454"] = true
+	*/
 
 	err := peerList.ConnectAllPeers()
-	if err != nil {
+	if err != nil && false {
 		for err != nil {
 			log.Println("Sleeping for 60 seconds and attempting to reconnect")
 			time.Sleep(time.Second * 60)
@@ -110,7 +112,7 @@ func StartIncomingNetwork(
 
 	Heartbeat(
 		1000*time.Millisecond,
-		1*time.Second,
+		60*time.Second,
 		peerList,
 	)
 	incomingNetwork.StartNetworkRouter(mh, cache, peerList, config)

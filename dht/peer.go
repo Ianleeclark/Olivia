@@ -133,6 +133,7 @@ func (p *Peer) SendRequest(Command string, responseChannel chan string, mh *mess
 	}()
 
 	p.SendCommand(fmt.Sprintf("%s:%s\n", hash, Command))
+	fmt.Println(fmt.Sprintf("%s:%s\n", hash, Command))
 }
 
 // GetBloomFilter handles retrieving a remote node's bloom filter.
