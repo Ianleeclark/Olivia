@@ -31,7 +31,7 @@ func StartNetworkRouter(
 	config *config.Cfg,
 ) {
 
-	listen, err := net.Listen("tcp", ":5455")
+	listen, err := net.Listen("tcp", ":5454")
 	if err != nil {
 		panic(err)
 	}
