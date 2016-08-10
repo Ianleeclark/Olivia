@@ -79,7 +79,7 @@ func (ctx *ConnectionCtx) ExecuteCommand(requestData parser.CommandData) string 
 		}
 	}
 
-	return "Invalid command sent in.\n"
+	return "[]Invalid command sent in.\n"
 }
 
 func createResponse(command string, retVals []string, hash string) string {
@@ -127,6 +127,7 @@ func (ctx *ConnectionCtx) handleRequest(requestData parser.CommandData) string {
 		{
 			peer := dht.NewPeer(requestData.Conn, ctx.MessageBus)
 			(*peer).GetBloomFilter()
+			return (*ctx.Bloomfilter).ConvertToString()
 		}
 	case "PEERS":
 		{
