@@ -114,9 +114,7 @@ func TestRequestBloomFilter(t *testing.T) {
 		t.Fatalf("newBloomfilter doesnt have key1!")
 	}
 
-	for i := range bf.Filter {
-		if bf.Filter[i] != newBloomfilter.Filter[i] {
-			t.Fatalf("Two bfs are not equal")
-		}
+	if !bf.Filter.BS.Equal(newBloomfilter.Filter.BS) {
+		t.Fatalf("Two bfs are not equal")
 	}
 }
