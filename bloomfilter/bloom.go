@@ -1,7 +1,7 @@
 package olilib
 
 import (
-	"bytes"
+	"fmt"
 	"github.com/GrappigPanda/Olivia/lru_cache"
 	"hash/fnv"
 	"math"
@@ -13,7 +13,7 @@ type BloomFilter struct {
 	MaxSize uint
 	// Total number of hashing functions
 	HashFunctions uint
-	Filter        []int
+	Filter        *Bitset
 	HashCache     *olilib_lru.LRUCacheInt64Array
 }
 
@@ -22,7 +22,7 @@ func New(maxSize uint, hashFuns uint) *BloomFilter {
 	return &BloomFilter{
 		maxSize,
 		hashFuns,
-		make([]int, maxSize),
+		NewBitset(maxSize),
 		olilib_lru.NewInt64Array(int((float64(maxSize) * float64(0.1)))),
 	}
 }
@@ -36,24 +36,25 @@ func NewByFailRate(items uint, probability float64) *BloomFilter {
 }
 
 // AddKey Adds a new key to the bloom filter
-func (bf *BloomFilter) AddKey(key []byte) (bool, []uint64) {
+func (bf *BloomFilter) AddKey(key []byte) (bool, []uint) {
 	hasKey, hashIndexes := bf.HasKey(key)
 	if !hasKey {
 		hashIndexes = bf.hashKey(key)
 	}
 
-	for _, element := range hashIndexes {
-		bf.Filter[element] += 1
+	for _, index := range hashIndexes {
+		bf.Filter.Add(index)
 	}
 
 	return true, hashIndexes
 }
 
 // HasKey verifies if a key is or isn't in the bloom filter.
-func (bf *BloomFilter) HasKey(key []byte) (bool, []uint64) {
+func (bf *BloomFilter) HasKey(key []byte) (bool, []uint) {
 	hashIndexes := bf.hashKey(key)
+
 	for _, element := range hashIndexes {
-		if bf.Filter[element] > 0 {
+		if bf.Filter.Contains(element) {
 			continue
 		} else {
 			return false, nil
@@ -66,17 +67,7 @@ func (bf *BloomFilter) HasKey(key []byte) (bool, []uint64) {
 // ConvertToString handles conversion of a bloom filter to a string. Moreover,
 // it enforces RLE encoding, so that fewer bytes are transferred per request.
 func (bf *BloomFilter) ConvertToString() string {
-	var buffer bytes.Buffer
-
-	for i := range bf.Filter {
-		if bf.Filter[i] != 0 {
-			buffer.WriteString("I")
-		} else {
-			buffer.WriteString("O")
-		}
-	}
-
-	return Encode(buffer.String())
+	return Encode(bf.Filter.ToString())
 }
 
 // ConvertStringToBF Decodes the RLE'd bloom filter and then converts it to
@@ -85,25 +76,8 @@ func ConvertStringtoBF(inputString string) (*BloomFilter, error) {
 	// TODO(ian): Remove this magic number.
 	bf := NewByFailRate(1000, 0.01)
 
-	decodedString := Decode(inputString)
-
-	index := 0
-	for i, _ := range decodedString {
-		var char string
-		if decodedString[i] == 'O' {
-			char = "0"
-		} else {
-			char = "1"
-		}
-
-		number, err := strconv.Atoi(char)
-		if err != nil {
-			return nil, err
-		}
-
-		bf.Filter[index] = int(number)
-		index++
-	}
+	sz := fmt.Sprintf("\"%s=\"", Decode(inputString))
+	bf.Filter.FromString(sz)
 
 	return bf, nil
 }
@@ -121,26 +95,21 @@ func estimateBounds(items uint, probability float64) (uint, uint) {
 }
 
 // calculateHash Takes in a string and calculates the 64bit hash value.
-func calculateHash(key []byte, offSet int) uint64 {
-	hasher := fnv.New64()
+func calculateHash(key []byte, offSet int) uint {
+	hasher := fnv.New32()
 	hasher.Write(key)
 	hasher.Write([]byte(strconv.Itoa(offSet)))
-	return hasher.Sum64()
+	return uint(hasher.Sum32())
 }
 
 // hashKey Takes a string in as an argument and hashes it several times to
 // create usable indexes for the bloom filter.
-func (bf *BloomFilter) hashKey(key []byte) []uint64 {
-	if hashes, ok := bf.HashCache.Get(string(key)); ok {
-		return hashes
-	}
-
-	hashes := make([]uint64, bf.HashFunctions)
+func (bf *BloomFilter) hashKey(key []byte) []uint {
+	hashes := make([]uint, bf.HashFunctions)
 
 	for index, _ := range hashes {
-		hashes[index] = calculateHash(key, index) % uint64(bf.MaxSize)
+		hashes[index] = calculateHash(key, index) % uint(bf.MaxSize)
 	}
 
-	bf.HashCache.Add(string(key), hashes)
 	return hashes
 }
