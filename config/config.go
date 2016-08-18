@@ -2,6 +2,7 @@ package config
 
 import (
 	"github.com/spf13/viper"
+	"log"
 )
 
 // Config houses information loaded from the config file.
@@ -25,7 +26,8 @@ func ReadConfig() *Cfg {
 
 	err := viper.ReadInConfig()
 	if err != nil {
-		panic(err)
+		// If we get an error here, we just fallback to the defaults.
+		log.Println("No config file found! Falling back to defaults.")
 	}
 
 	return &Cfg{
