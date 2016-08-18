@@ -32,4 +32,9 @@ func TestConfig(t *testing.T) {
 			break
 		}
 	}
+
+	if cfg.ListenPort != 5454 {
+		t.Errorf("Expected 5454, got %v", cfg.HeartbeatLoop)
+	}
+
 }

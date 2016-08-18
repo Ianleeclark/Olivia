@@ -2,6 +2,7 @@ package incomingNetwork
 
 import (
 	"bufio"
+	"fmt"
 	"github.com/GrappigPanda/Olivia/bloomfilter"
 	"github.com/GrappigPanda/Olivia/cache"
 	"github.com/GrappigPanda/Olivia/config"
@@ -36,7 +37,7 @@ func StartNetworkRouter(
 	// via channels. It's overly indented, this should probably be seperated
 	// elsewhere.
 	go func(stopchan chan struct{}) {
-		listen, err := net.Listen("tcp", ":5454")
+		listen, err := net.Listen("tcp", fmt.Sprintf(":%d", config.ListenPort))
 		if err != nil {
 			panic(err)
 		}

@@ -13,6 +13,9 @@ HeartbeatInterval: 1000
 # Default rate at which we send pings to any other nodes. 
 # Default: 30 (in seconds)
 HeartbeatCycle: 30
+# Port we listen for incoming connections on.
+# Default: 5454
+ListenPort: 5454
 # A list of nodes which our node will attempt to connect to upon startup.
 # Default: 127.0.0.1:5455
 RemotePeers:

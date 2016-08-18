@@ -12,6 +12,7 @@ type Cfg struct {
 	BloomfilterSize   int
 	BaseNode          bool
 	RemotePeers       []string
+	ListenPort        int
 }
 
 // ReadConfig handles opening a file and creating a config object for use
@@ -26,8 +27,9 @@ func ReadConfig() *Cfg {
 	viper.SetDefault("heartbeatloop", 30)
 	viper.SetDefault("heartbeatinterval", 1000)
 	viper.SetDefault("basenode", true)
-	// By default we assume no peers because
+	// By default we assume no peers because we assume we're a base node.
 	viper.SetDefault("remotepeers", []string{})
+	viper.SetDefault("listenport", 5454)
 
 	err := viper.ReadInConfig()
 	if err != nil {
@@ -41,5 +43,6 @@ func ReadConfig() *Cfg {
 		viper.Get("bfsize").(int),
 		viper.GetBool("basenode"),
 		viper.GetStringSlice("remotepeers"),
+		viper.GetInt("listenport"),
 	}
 }
