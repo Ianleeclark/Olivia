@@ -29,38 +29,52 @@ func StartNetworkRouter(
 	cache *cache.Cache,
 	peerList *dht.PeerList,
 	config *config.Cfg,
-) {
+) chan struct{} {
+	stopchan := make(chan struct{})
 
-	listen, err := net.Listen("tcp", ":5454")
-	if err != nil {
-		panic(err)
-	}
-	defer listen.Close()
-
-	bf := olilib.NewByFailRate(1000, 0.01)
-
-	ctx := &ConnectionCtx{
-		parser.NewParser(mh),
-		cache,
-		bf,
-		mh,
-		peerList,
-	}
-
-	log.Println("Starting connection router.")
-
-	for {
-		conn, err := listen.Accept()
+	// Here we spin up a network router which allows us to start/stop on demand
+	// via channels. It's overly indented, this should probably be seperated
+	// elsewhere.
+	go func(stopchan chan struct{}) {
+		listen, err := net.Listen("tcp", ":5454")
 		if err != nil {
-			log.Println(err)
-			continue
+			panic(err)
 		}
-		log.Println("Incoming connection detected from ",
-			conn.RemoteAddr().String(),
-		)
+		defer listen.Close()
 
-		go ctx.handleConnection(&conn)
-	}
+		bf := olilib.NewByFailRate(1000, 0.01)
+
+		ctx := &ConnectionCtx{
+			parser.NewParser(mh),
+			cache,
+			bf,
+			mh,
+			peerList,
+		}
+
+		log.Println("Starting connection router.")
+
+		for {
+			select {
+			default:
+				conn, err := listen.Accept()
+				if err != nil {
+					log.Println(err)
+					continue
+				}
+				log.Println("Incoming connection detected from ",
+					conn.RemoteAddr().String(),
+				)
+
+				go ctx.handleConnection(&conn)
+			case <-stopchan:
+				log.Printf("Forcefully quitting network router.")
+				return
+			}
+		}
+	}(stopchan)
+
+	return stopchan
 }
 
 // handleConnection handles handling state of the incoming network FSM,
