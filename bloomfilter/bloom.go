@@ -14,7 +14,7 @@ type BloomFilter struct {
 	// Total number of hashing functions
 	HashFunctions uint
 	Filter        *Bitset
-	HashCache     *olilib_lru.LRUCacheInt64Array
+	HashCache     *olilib_lru.LRUCacheInt32Array
 }
 
 // New Returns a pointer to a newly allocated `BloomFilter` object
@@ -23,7 +23,7 @@ func New(maxSize uint, hashFuns uint) *BloomFilter {
 		maxSize,
 		hashFuns,
 		NewBitset(maxSize),
-		olilib_lru.NewInt64Array(int((float64(maxSize) * float64(0.1)))),
+		olilib_lru.NewInt32Array(int((float64(maxSize) * float64(0.1)))),
 	}
 }
 
