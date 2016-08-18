@@ -64,6 +64,7 @@ func Decode(encodedString string) string {
 	if len(encodedString) == 0 {
 		return ""
 	}
+	encodedString = strings.TrimSpace(encodedString)
 
 	var output string
 	var accumulatedInt string
