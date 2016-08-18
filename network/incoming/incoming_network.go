@@ -89,8 +89,6 @@ func (ctx *ConnectionCtx) handleConnection(conn *net.Conn) {
 	(*ctx.PeerList).AddPeer((*conn).RemoteAddr().String())
 
 	for {
-		// TODO(ian): Replace this with a new language processor for incoming
-		// commands
 		password := "TestBcryptPassword"
 		line, _, err := reader.ReadLine()
 		if err != nil {
@@ -101,6 +99,10 @@ func (ctx *ConnectionCtx) handleConnection(conn *net.Conn) {
 		switch connProc.State {
 		case UNAUTHENTICATED:
 			connProc.Authenticate(password)
+			log.Println(
+				"Unauthenticated request from %v",
+				(*conn).RemoteAddr().String(),
+			)
 			break
 		case PROCESSING:
 			command, err := ctx.Parser.Parse(string(line), conn)
