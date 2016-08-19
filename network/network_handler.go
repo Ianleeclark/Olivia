@@ -93,6 +93,7 @@ func StartIncomingNetwork(
 	mh *message_handler.MessageHandler,
 	cache *cache.Cache,
 	config *config.Cfg,
+	mainStopChan chan struct{},
 ) {
 	peerList := dht.NewPeerList(mh)
 
@@ -122,8 +123,15 @@ func StartIncomingNetwork(
 		)
 	}
 
-	incomingNetwork.StartNetworkRouter(mh, cache, peerList, config)
+	networkRouterStopChan := incomingNetwork.StartNetworkRouter(mh, cache, peerList, config)
 	// TODO(ian): Clean up this for statement, it's technical debt.
 	for {
+		select {
+		default:
+			continue
+		case <-mainStopChan:
+			networkRouterStopChan <- struct{}{}
+			break
+		}
 	}
 }

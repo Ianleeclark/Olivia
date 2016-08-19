@@ -17,6 +17,7 @@ func Init() {
 		messageHandler,
 		internalCache,
 		config,
+		nil,
 	)
 }
 
