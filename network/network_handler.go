@@ -82,8 +82,8 @@ func Heartbeat(
 ) {
 	go heartbeatRemoteNodes(peerList.Peers, heartbeatInterval)
 	go heartbeatRemoteNodes(peerList.BackupPeers, cycleDuration)
-	go getRemoteBloomFilters(peerList.Peers, cycleDuration)
-	go getRemoteBloomFilters(peerList.BackupPeers, cycleDuration)
+	go getRemoteBloomFilters(peerList.Peers, heartbeatInterval*time.Second)
+	go getRemoteBloomFilters(peerList.BackupPeers, heartbeatInterval*time.Second)
 }
 
 // StartIncomingNetwork handles spinning up an incoming network router and
@@ -114,13 +114,13 @@ func StartIncomingNetwork(
 				err = peerList.ConnectAllPeers()
 			}
 		}
-	}
 
-	Heartbeat(
-		1000*time.Millisecond,
-		60*time.Second,
-		peerList,
-	)
+		Heartbeat(
+			1000*time.Millisecond,
+			1*time.Second,
+			peerList,
+		)
+	}
 
 	incomingNetwork.StartNetworkRouter(mh, cache, peerList, config)
 	// TODO(ian): Clean up this for statement, it's technical debt.
