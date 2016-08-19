@@ -39,6 +39,7 @@ func (r *Receiver) Run() {
 }
 
 func (r *Receiver) processIncomingString(incomingString string) {
+	log.Println("Got string %v", incomingString)
 	splitString := strings.SplitN(incomingString, ":", 2)
 	if len(splitString) <= 1 {
 		// TODO(ian): Should we have a reference to the conn object and

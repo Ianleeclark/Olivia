@@ -78,7 +78,6 @@ func (p *Peer) Connect() error {
 
 	p.Conn = &conn
 	p.Status = Connected
-	p.GetBloomFilter()
 
 	return nil
 }
@@ -156,6 +155,7 @@ func (p *Peer) GetBloomFilter() {
 		}
 
 		for k, _ := range responseData.Args {
+			log.Print(responseData.Args[k])
 			bf, err := olilib.ConvertStringtoBF(responseData.Args[k])
 			if err != nil {
 				p.BloomFilter = nil

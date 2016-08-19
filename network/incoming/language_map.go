@@ -125,9 +125,12 @@ func (ctx *ConnectionCtx) handleRequest(requestData parser.CommandData) string {
 		}
 	case "CONNECT":
 		{
-			peer := dht.NewPeer(requestData.Conn, ctx.MessageBus)
-			(*peer).GetBloomFilter()
-			return (*ctx.Bloomfilter).ConvertToString()
+			(*ctx.PeerList).AddPeer((*requestData.Conn).RemoteAddr().String())
+			return createResponse(
+				requestData.Command,
+				[]string{(*ctx.Bloomfilter).ConvertToString()},
+				"",
+			)
 		}
 	case "PEERS":
 		{
