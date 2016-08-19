@@ -14,6 +14,7 @@ func (ctx *ConnectionCtx) ExecuteCommand(requestData parser.CommandData) string 
 	command := requestData.Command
 	args := requestData.Args
 
+	fmt.Println(requestData)
 	switch strings.ToUpper(command) {
 	case "GET":
 		{
@@ -38,7 +39,7 @@ func (ctx *ConnectionCtx) ExecuteCommand(requestData parser.CommandData) string 
 						}
 
 						peer.SendRequest(
-							fmt.Sprintf("GET %s", k),
+							fmt.Sprintf("GET %s\n", k),
 							responseChannel,
 							ctx.MessageBus,
 						)
