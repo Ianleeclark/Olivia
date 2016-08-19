@@ -4,25 +4,14 @@
 
 Olivia is essentially a distributed hash table that I built to test out some
 weird ideas I've had about Go and distributed programming that I've had.
-These are just high-level.
-
-```
- 1. Implement some sort of gossip protocol to improve node discovery 
-    Current node discovery takes O(n^2), but it looks like swim offers O(N)
-    Chord DHT offers O(logN) and doesn't entirely change olivia.
- 2. Implement some sort of redundancy + consensus. I'm thinking Raft
-```
-
-## Deployment
-
-Docker stuff and non-docker stuff
 
 ## Is it production ready?
-only if ur dumb lul
-
-I can't say for sure if I ever meant for this to be complete and it was
-just something which I did after work to de-stress and so that I could
-solve actually interesting problems.
+I'd definitely consider this **not** production ready. I typically approach
+personal projects in two phases: the initial naive phase, where I implement
+things in the most natural (for me) way; and the improvement phase, where I
+exchange naive solutions for more optimal solutions. I'm heavily entrenched
+into the naive phase, so while I'm getting to the optimal solution phase, I'm
+not there yet.
 
 ## What is Olivia
 Olivia is essentially just a distributed hash table with added goodies.
@@ -30,6 +19,19 @@ From early on, I wanted to use bloomfilters to enhance lookup speed
 between different remote nodes and I'm fairly happy with how that's turned
 out. Bloom filters allow us to prioritize which nodes we'll request keys from,
 rather than blindly sending out requests to all known nodes.
+
+## What Olivia could become
+I'm still not 100% sure on the end vision. When I originally started out
+building this thing, I just wanted three things:
+  - Distribution
+  - Remote key lookups (consistency between each node has never been huge)
+  - Key Expiration
+
+As I build it, however, my desired are changing. I now want consistency between
+nodes, but I haven't yet decided how I'll go about it. Olivia was originally
+intended to be part of a distributed torrent tracker network, but it is no
+longer a worthwhile pursuit, as distributed hash tables (as a part of the
+Bittorrent network) are able to be edited (upon BEP acceptance).
 
 ## Contact Maintainer
 
