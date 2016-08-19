@@ -82,5 +82,5 @@ func setKeyValue(dict *map[string]string, key string, value string) {
 	key = strings.Replace(key, "\n", "", -1)
 	value = strings.Replace(value, "\n", "", -1)
 
-	(*dict)[strings.ToUpper(key)] = value
+	(*dict)[key] = value
 }

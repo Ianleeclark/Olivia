@@ -95,18 +95,24 @@ func StartIncomingNetwork(
 	config *config.Cfg,
 ) {
 	peerList := dht.NewPeerList(mh)
-	/*
-		peer := dht.NewPeerByIP("127.0.0.1:5454", mh)
-		peerList.Peers[0] = peer
-		(*peerList.PeerMap)["127.0.0.1:5454"] = true
-	*/
 
-	err := peerList.ConnectAllPeers()
-	if err != nil && false {
-		for err != nil {
-			log.Println("Sleeping for 60 seconds and attempting to reconnect")
-			time.Sleep(time.Second * 60)
-			err = peerList.ConnectAllPeers()
+	// BaseNode==True signifies that we're not expecting to connect to any
+	// remote nodes on connection, so if it's false, we'll skip that step and
+	// just wait for incoming connections.
+	if !config.BaseNode {
+		for index, peerIP := range config.RemotePeers {
+			peer := dht.NewPeerByIP(peerIP, mh)
+			peerList.Peers[index] = peer
+			(*peerList.PeerMap)[peerIP] = true
+		}
+
+		err := peerList.ConnectAllPeers()
+		if err != nil {
+			for err != nil {
+				log.Println("Sleeping for 60 seconds and attempting to reconnect")
+				time.Sleep(time.Second * 60)
+				err = peerList.ConnectAllPeers()
+			}
 		}
 	}
 
@@ -115,5 +121,9 @@ func StartIncomingNetwork(
 		60*time.Second,
 		peerList,
 	)
+
 	incomingNetwork.StartNetworkRouter(mh, cache, peerList, config)
+	// TODO(ian): Clean up this for statement, it's technical debt.
+	for {
+	}
 }

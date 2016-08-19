@@ -43,7 +43,6 @@ func (ctx *ConnectionCtx) ExecuteCommand(requestData parser.CommandData) string 
 							responseChannel,
 							ctx.MessageBus,
 						)
-						fmt.Println("test")
 
 						value := <-responseChannel
 						if value != "" {
