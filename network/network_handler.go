@@ -82,8 +82,6 @@ func Heartbeat(
 ) {
 	go heartbeatRemoteNodes(peerList.Peers, heartbeatInterval)
 	go heartbeatRemoteNodes(peerList.BackupPeers, cycleDuration)
-	go getRemoteBloomFilters(peerList.Peers, heartbeatInterval*time.Second)
-	go getRemoteBloomFilters(peerList.BackupPeers, heartbeatInterval*time.Second)
 }
 
 // StartIncomingNetwork handles spinning up an incoming network router and
