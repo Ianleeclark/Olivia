@@ -106,7 +106,6 @@ func (ctx *ConnectionCtx) handleConnection(conn *net.Conn) {
 			)
 			break
 		case PROCESSING:
-			fmt.Println(string(line))
 			command, err := ctx.Parser.Parse(string(line), conn)
 			if err != nil {
 				log.Println(err)
