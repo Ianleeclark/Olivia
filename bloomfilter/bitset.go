@@ -2,6 +2,7 @@ package olilib
 
 import (
 	"github.com/willf/bitset"
+	"log"
 )
 
 // Bitset is a simple wrapper around the willf bitset library.
@@ -41,6 +42,6 @@ func (b *Bitset) ToString() string {
 func (b *Bitset) FromString(inputString string) {
 	err := b.BS.UnmarshalJSON([]byte(inputString))
 	if err != nil {
-		panic(err)
+		log.Println("Invalid bloomfilter received: ", err)
 	}
 }
