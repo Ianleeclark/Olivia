@@ -45,7 +45,13 @@ func (ctx *ConnectionCtx) ExecuteCommand(requestData parser.CommandData) string 
 
 						value := <-responseChannel
 						if value != "" {
-							retVals[index] = fmt.Sprintf("%s:%s", k, value)
+							splitString := strings.Split(value, " ")
+							splitString = strings.Split(splitString[1], ":")
+							if len(splitString) > 1 {
+								retVals[index] = fmt.Sprintf("%s:%s", k, splitString[1])
+							} else {
+								retVals[index] = fmt.Sprintf("%s:%s", k, "")
+							}
 							index++
 						}
 					}

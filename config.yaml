@@ -19,4 +19,4 @@ ListenPort: 5454
 # A list of nodes which our node will attempt to connect to upon startup.
 # Default: 127.0.0.1:5455
 RemotePeers:
-  - 127.0.0.1:5455    
+  - 127.0.0.1:5454    
