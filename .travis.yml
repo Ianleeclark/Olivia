@@ -5,6 +5,7 @@ sudo: false
 go:
 - 1.5
 - 1.6
+- 1.7
 
 script:
 - go test ./... -cover -race
