@@ -99,10 +99,6 @@ func (p *Peer) TestConnection() {
 		return
 	}
 
-	if p.Status == Timeout {
-		log.Printf("Node %v has revived.", p.IPPort)
-	}
-
 	p.failureCount = 0
 	p.Status = Connected
 }
@@ -138,12 +134,6 @@ func (p *Peer) SendRequest(Command string, responseChannel chan string, mh *mess
 func (p *Peer) GetBloomFilter() {
 	responseChannel := make(chan string)
 
-	go p.SendRequest(
-		parser.GET_REMOTE_BLOOMFILTER,
-		responseChannel,
-		p.MessageBus,
-	)
-
 	go func() {
 		parser := parser.NewParser(p.MessageBus)
 		response := <-responseChannel
@@ -155,7 +145,6 @@ func (p *Peer) GetBloomFilter() {
 		}
 
 		for k, _ := range responseData.Args {
-			log.Print(responseData.Args[k])
 			bf, err := olilib.ConvertStringtoBF(responseData.Args[k])
 			if err != nil {
 				p.BloomFilter = nil
@@ -165,6 +154,12 @@ func (p *Peer) GetBloomFilter() {
 		}
 
 	}()
+
+	p.SendRequest(
+		parser.GET_REMOTE_BLOOMFILTER,
+		responseChannel,
+		p.MessageBus,
+	)
 }
 
 // GetPeerListAsync handles retrieving all known peers from a remote node.

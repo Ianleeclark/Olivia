@@ -97,6 +97,7 @@ func (p *PeerList) ConnectAllPeers() error {
 			"Requesting peer list",
 		)
 
+		log.Println("Sending Request Connect")
 		p.Peers[x].SendCommand("0:REQUEST CONNECT\n")
 		p.Peers[x].GetPeerList(responseChannel)
 	}
