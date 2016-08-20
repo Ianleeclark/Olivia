@@ -53,7 +53,7 @@ func StartNetworkRouter(
 			peerList,
 		}
 
-		log.Println("Starting connection router.")
+		log.Println("Starting connection router!")
 
 		for {
 			select {
@@ -85,12 +85,9 @@ func (ctx *ConnectionCtx) handleConnection(conn *net.Conn) {
 	// TODO(ian): Implement authentication (new issue).
 	connProc := NewProcessorFSM(PROCESSING)
 	reader := bufio.NewReader(*conn)
-
-	// Place the remote peer into our peer list.
-	(*ctx.PeerList).AddPeer((*conn).RemoteAddr().String())
+	password := "TestBcryptPassword"
 
 	for {
-		password := "TestBcryptPassword"
 		line, _, err := reader.ReadLine()
 		if err != nil {
 			log.Printf("Connection %v failed to readline, closing connection.", *conn)
