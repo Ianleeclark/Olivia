@@ -6,7 +6,7 @@ BFSize: 1000
 # may attempt to connect to this base node. The default is set to True if the
 # config file doesn to load correctly.
 # Default: true
-BaseNode: false
+BaseNode: true
 # Rate at which we send pings to important remote nodes. 
 # Default: 1000 (in milliseconds)
 HeartbeatInterval: 1000
@@ -15,7 +15,7 @@ HeartbeatInterval: 1000
 HeartbeatCycle: 30
 # Port we listen for incoming connections on.
 # Default: 5454
-ListenPort: 5555
+ListenPort: 5454
 # A list of nodes which our node will attempt to connect to upon startup.
 # Default: 127.0.0.1:5455
 RemotePeers:
