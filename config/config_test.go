@@ -26,8 +26,8 @@ func TestConfig(t *testing.T) {
 	}
 
 	for _, peer := range cfg.RemotePeers {
-		if peer != "127.0.0.1:5455" {
-			t.Errorf("Expected 127.0.0.1:5455, got %v", peer)
+		if peer != "127.0.0.1:5454" {
+			t.Errorf("Expected 127.0.0.1:5454, got %v", peer)
 		} else {
 			break
 		}
