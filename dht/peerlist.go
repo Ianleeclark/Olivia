@@ -100,6 +100,7 @@ func (p *PeerList) ConnectAllPeers() error {
 		log.Println("Sending Request Connect")
 		p.Peers[x].SendCommand("0:REQUEST CONNECT\n")
 		p.Peers[x].GetPeerList(responseChannel)
+		p.Peers[x].GetBloomFilter()
 	}
 
 	if failureCount == len(p.Peers) {
