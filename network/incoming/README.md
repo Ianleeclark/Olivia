@@ -15,6 +15,7 @@ in the network/ folder.
     - Allows a remote node/client to request a bloom filter from a remote node.
   - Connect:
     - Allows a remote node/client to request a connection from a remote node.
+    - Upon acceptance, both nodes will exchange bloom filters.
   - Peers:
     - Allows a remote node/client to request a peer list from a remote node.
   - Disconnect:
