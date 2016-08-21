@@ -78,6 +78,7 @@ func (p *Peer) Connect() error {
 
 	p.Conn = &conn
 	p.Status = Connected
+	p.GetBloomFilter()
 
 	return nil
 }
