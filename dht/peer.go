@@ -146,7 +146,7 @@ func (p *Peer) GetBloomFilter() {
 		}
 
 		for k, _ := range responseData.Args {
-			bf, err := olilib.ConvertStringtoBF(responseData.Args[k])
+			bf, err := olilib.ConvertStringtoBF(k)
 			if err != nil {
 				p.BloomFilter = nil
 			}
