@@ -33,9 +33,35 @@ intended to be part of a distributed torrent tracker network, but it is no
 longer a worthwhile pursuit, as distributed hash tables (as a part of the
 Bittorrent network) are able to be edited (upon BEP acceptance).
 
+## Running an Olivia Node
+Real quick and easy steps to run a node:
+```
+  1. git clone https://github.com/GrappigPanda/Olivia
+  2. cd Olivia
+  3. build/install_deps.sh
+  4. go build
+  5. ./Olivia
+```
+
+These 5 commands will get a **base level** node running, where the node runs,
+accepts commands, and will allow incoming connections from other Olivia nodes.
+To run a network of nodes, please see the config file and change a grand total
+of _3_ variables.
+
+An example workflow.
+```
+  $ nc 127.0.0.1 5454
+  SET key1:value1,key2:value2,key3:value3
+  :SAT key1:value1,key2:value2,key3:value3
+  GET key2
+  :GOT key2:value2
+```
+This is a really simple workflow, but it shows that setting keys/retrieving
+keys is simple. 
+
 ## Contact Maintainer
 
-[open an issue](https://github.com/GrappigPanda/notorious/issues/new)
+[open an issue](https://github.com/GrappigPanda/Olivia/issues/new)
 
 [tweet me](http://twitter.com/GrappigPanda)
 

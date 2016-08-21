@@ -12,6 +12,6 @@ cache and return. While I'm updating the cache, I don't need to lock, I can just
 wait until the new cache is completely constructed and then lock, change
 pointer, unlock. Yeah, I should do that.
 
-Beyond that, I want to allow key expirations. I can use my binary heap that I
-created to order by expiration time and on each heartbeat update, check the
-root node. If it's at our current time or before, we can expire the key.
+Beyond that, I want to allow key expirations. I plan on provindg key
+expirations via a Treap or my current binary heap implementation (which is
+Treap-like).

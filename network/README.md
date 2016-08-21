@@ -11,6 +11,10 @@ Inside each goroutine, the connection will be handled by a connection
 processing finite state machine (FSM). The FSM operates in several states
 allowing varying states and processing paths in each goroutine.
 
+Upon a remote node connecting, a `REQUEST connect` command will be sent and any
+operations which are necessary will happen: currently (0.1.x) we just
+send/request bloom filters.
+
 # How the Network Layer works for outgoing connections.
 
 There's two ways. We have the ability to just send a normal command through
