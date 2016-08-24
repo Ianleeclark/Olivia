@@ -1,9 +1,9 @@
 package cache
 
 import (
-	"time"
 	"fmt"
 	"testing"
+	"time"
 )
 
 func TestNewCache(t *testing.T) {
@@ -41,7 +41,7 @@ func TestCache_SetExpiration(t *testing.T) {
 	testValue := "1024"
 
 	for i := 0; i < 5; i++ {
-		cache.SetExpiration(
+		err := cache.SetExpiration(
 			fmt.Sprintf("%v-%v",
 				key,
 				i,
@@ -49,6 +49,9 @@ func TestCache_SetExpiration(t *testing.T) {
 			testValue,
 			1,
 		)
+		if err != nil {
+			t.Errorf("Got an error SetExpiration'ing")
+		}
 	}
 
 	time.Sleep(2 * time.Second)
@@ -57,11 +60,11 @@ func TestCache_SetExpiration(t *testing.T) {
 
 	for i := 0; i < 5; i++ {
 		value, err := cache.Get(
-				fmt.Sprintf("%v-%v",
-					key,
-					i,
-				),
-			)
+			fmt.Sprintf("%v-%v",
+				key,
+				i,
+			),
+		)
 
 		if err == nil {
 			t.Fatalf("Expected err, got %v", value)

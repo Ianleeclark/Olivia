@@ -1,17 +1,16 @@
 package cache
 
 import (
-	"time"
 	"fmt"
-	"sync"
 	binheap "github.com/GrappigPanda/Olivia/shared"
+	"sync"
+	"time"
 )
 
 // TODO(ian): Replace this with something else
 // Cache is actually just a map[string]string. Don't tell anyone.
 type Cache struct {
-	Cache     *map[string]string
-	ReadCache *map[string]string
+	Cache   *map[string]string
 	binHeap *binheap.Heap
 	sync.Mutex
 }
@@ -19,10 +18,8 @@ type Cache struct {
 // NewCache creates a new cache and internal ReadCache.
 func NewCache() *Cache {
 	cacheMap := make(map[string]string)
-	writeCache := make(map[string]string)
 	return &Cache{
-		Cache:     &cacheMap,
-		ReadCache: &writeCache,
+		Cache:   &cacheMap,
 		binHeap: binheap.NewHeapReallocate(100),
 	}
 }
@@ -31,7 +28,7 @@ func NewCache() *Cache {
 // from the ReadCache which is for copy-on-write optimizations so that
 // reading doesn't lock the cache.
 func (c *Cache) Get(key string) (string, error) {
-	if value, ok := (*c.ReadCache)[key]; !ok {
+	if value, ok := (*c.Cache)[key]; !ok {
 		return "", fmt.Errorf("Key not found in cache")
 	} else {
 		return value, nil
@@ -42,7 +39,7 @@ func (c *Cache) Get(key string) (string, error) {
 func (c *Cache) copyCache() {
 	c.Lock()
 	for k, v := range *c.Cache {
-		(*c.ReadCache)[k] = v
+		(*c.Cache)[k] = v
 	}
 	c.Unlock()
 }
@@ -61,8 +58,13 @@ func (c *Cache) Set(key string, value string) error {
 
 // SetExpiration handles setting a key with an expiration time.
 func (c *Cache) SetExpiration(key string, value string, timeout int) error {
-	c.binHeap.Insert(binheap.NewNode(key, time.Now().UTC()))
 	err := c.Set(key, value)
+	if err != nil {
+		return err
+	}
+
+	duration := time.Duration(timeout) * time.Second
+	c.binHeap.Insert(binheap.NewNode(key, time.Now().UTC().Add(duration)))
 
 	c.copyCache()
 	return err
@@ -70,17 +72,18 @@ func (c *Cache) SetExpiration(key string, value string, timeout int) error {
 
 // EvictExpiredKeys handles
 func (c *Cache) EvictExpiredkeys(expirationDate time.Time) {
-	c.Lock()
 	keysToExpire := make([]string, len(c.binHeap.Tree))
 
 	i := 0
+
+	c.Lock()
 	for {
 		node, err := c.binHeap.Peek(i)
 		if err != nil {
 			break
 		}
 
-		if node.Timeout.Second() > expirationDate.Second() {
+		if expirationDate.Sub(node.Timeout) < 0 {
 			break
 		} else {
 			keysToExpire = append(keysToExpire, node.Key)
@@ -90,7 +93,12 @@ func (c *Cache) EvictExpiredkeys(expirationDate time.Time) {
 	}
 
 	for _, key := range keysToExpire {
-		delete((*c.Cache), key)
+		c.expireKey(key)
 	}
 	c.Unlock()
+}
+
+func (c *Cache) expireKey(key string) {
+	delete(*c.Cache, key)
+	// TODO(ian): We need to also remove the the key from the binary heap.
 }
