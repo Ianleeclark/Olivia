@@ -1,7 +1,6 @@
 package incomingNetwork
 
 import (
-	"log"
 	"bytes"
 	"fmt"
 	"github.com/GrappigPanda/Olivia/dht"
@@ -38,18 +37,22 @@ func (ctx *ConnectionCtx) ExecuteCommand(requestData parser.CommandData) string 
 							continue
 						}
 
-						if ok, _ := peer.BloomFilter.HasKey([]byte(k)); ok {
-							peer.SendRequest(
-								fmt.Sprintf("GET %s", k),
-								responseChannel,
-								ctx.MessageBus,
-							)
+						peer.SendRequest(
+							fmt.Sprintf("GET %s", k),
+							responseChannel,
+							ctx.MessageBus,
+						)
 
-							value := <-responseChannel
-							if value != "" {
-								retVals[index] = fmt.Sprintf("%s:%s", k, value)
-								index++
+						value := <-responseChannel
+						if value != "" {
+							splitString := strings.Split(value, " ")
+							splitString = strings.Split(splitString[1], ":")
+							if len(splitString) > 1 {
+								retVals[index] = fmt.Sprintf("%s:%s", k, splitString[1])
+							} else {
+								retVals[index] = fmt.Sprintf("%s:%s", k, "")
 							}
+							index++
 						}
 					}
 				}
@@ -76,9 +79,13 @@ func (ctx *ConnectionCtx) ExecuteCommand(requestData parser.CommandData) string 
 		{
 			return ctx.handleRequest(requestData)
 		}
+	case "PING":
+		{
+			return "0:PONG 1\n"
+		}
 	}
 
-	return "Invalid command sent in.\n"
+	return "[]Invalid command sent in.\n"
 }
 
 func createResponse(command string, retVals []string, hash string) string {
@@ -116,7 +123,6 @@ func (ctx *ConnectionCtx) handleRequest(requestData parser.CommandData) string {
 	case "BLOOMFILTER":
 		{
 			bfString := (*ctx.Bloomfilter).ConvertToString()
-			log.Println(bfString)
 			return createResponse(
 				requestData.Command,
 				[]string{bfString},
@@ -125,8 +131,12 @@ func (ctx *ConnectionCtx) handleRequest(requestData parser.CommandData) string {
 		}
 	case "CONNECT":
 		{
-			peer := dht.NewPeer(requestData.Conn, ctx.MessageBus)
-			(*peer).GetBloomFilter()
+			(*ctx.PeerList).AddPeer((*requestData.Conn).RemoteAddr().String())
+			return createResponse(
+				requestData.Command,
+				[]string{(*ctx.Bloomfilter).ConvertToString()},
+				"",
+			)
 		}
 	case "PEERS":
 		{

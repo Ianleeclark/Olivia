@@ -17,12 +17,12 @@ var MESSAGEBUS = message_handler.NewMessageHandler()
 var CTX = &ConnectionCtx{
 	nil,
 	&cache.Cache{
-		Cache: &CACHE,
+		Cache:     &CACHE,
 		ReadCache: &READCACHE,
 	},
 	olilib.NewByFailRate(1000, 0.01),
 	MESSAGEBUS,
-	dht.NewPeerList(MESSAGEBUS),
+	dht.NewPeerList(MESSAGEBUS, *CONFIG),
 }
 
 func TestExecuteGetAllSucceed(t *testing.T) {
@@ -104,7 +104,7 @@ func TestRequestBloomFilter(t *testing.T) {
 		break
 	}
 
-	newBloomfilter, err := olilib.ConvertStringtoBF(bfToParse)
+	newBloomfilter, err := olilib.ConvertStringtoBF(bfToParse, uint(CONFIG.BloomfilterSize))
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -114,9 +114,7 @@ func TestRequestBloomFilter(t *testing.T) {
 		t.Fatalf("newBloomfilter doesnt have key1!")
 	}
 
-	for i := range bf.Filter {
-		if bf.Filter[i] != newBloomfilter.Filter[i] {
-			t.Fatalf("Two bfs are not equal")
-		}
+	if !bf.Filter.BS.Equal(newBloomfilter.Filter.BS) {
+		t.Fatalf("Two bfs are not equal")
 	}
 }

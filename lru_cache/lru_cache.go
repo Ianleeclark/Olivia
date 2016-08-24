@@ -1,9 +1,9 @@
 package olilib_lru
 
 import (
+	binheap "github.com/GrappigPanda/Olivia/shared"
 	"sync"
 	"time"
-	binheap "github.com/GrappigPanda/Olivia/shared"
 )
 
 // MAXINT64 Signifies the maximum value for an int64 in Go

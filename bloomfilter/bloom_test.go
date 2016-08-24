@@ -1,17 +1,20 @@
 package olilib
 
 import (
+	"github.com/GrappigPanda/Olivia/config"
 	"testing"
 )
 
+var CONFIG = config.ReadConfig()
+
 func TestNewBloomFilter(t *testing.T) {
 	expectedReturn := BloomFilter{
-		MaxSize:       1000,
+		MaxSize:       uint(CONFIG.BloomfilterSize),
 		HashFunctions: 3,
-		Filter:        make([]int, 1000),
+		Filter:        new(Bitset),
 	}
 
-	result := New(1000, 3)
+	result := New(uint(CONFIG.BloomfilterSize), 3)
 
 	if expectedReturn.MaxSize != result.MaxSize {
 		t.Fatalf("Expected %v got %v", expectedReturn.MaxSize, result.MaxSize)
@@ -26,10 +29,10 @@ func TestNewBloomFilterByFailRate(t *testing.T) {
 	expectedReturn := BloomFilter{
 		MaxSize:       9585,
 		HashFunctions: 3,
-		Filter:        make([]int, 1000),
+		Filter:        new(Bitset),
 	}
 
-	result := NewByFailRate(1000, 0.01)
+	result := NewByFailRate(uint(CONFIG.BloomfilterSize), 0.01)
 
 	if expectedReturn.MaxSize != result.MaxSize {
 		t.Fatalf("Expected %v got %v", expectedReturn.MaxSize, result.MaxSize)
@@ -37,7 +40,7 @@ func TestNewBloomFilterByFailRate(t *testing.T) {
 }
 
 func TestAddKey(t *testing.T) {
-	bf := NewByFailRate(1000, 0.01)
+	bf := NewByFailRate(uint(CONFIG.BloomfilterSize), 0.01)
 
 	addKeyRet, addIndexes := bf.AddKey([]byte("TestKey"))
 	hasKeyRet, hasIndexes := bf.HasKey([]byte("TestKey"))
@@ -58,7 +61,7 @@ func TestAddKey(t *testing.T) {
 }
 
 func TestHasKeyFailNoKey(t *testing.T) {
-	bf := NewByFailRate(1000, 0.01)
+	bf := NewByFailRate(uint(CONFIG.BloomfilterSize), 0.01)
 
 	hasKeyRet, _ := bf.HasKey([]byte("TestKey"))
 
@@ -68,24 +71,22 @@ func TestHasKeyFailNoKey(t *testing.T) {
 }
 
 func TestConvertToString(t *testing.T) {
-	bf := NewByFailRate(1000, 0.01)
+	bf := NewByFailRate(uint(CONFIG.BloomfilterSize), 0.01)
 
 	new_bf_str := bf.ConvertToString()
 
-	new_bf, err := ConvertStringtoBF(new_bf_str)
+	new_bf, err := ConvertStringtoBF(new_bf_str, uint(CONFIG.BloomfilterSize))
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
 
-	for i := range bf.Filter {
-		if bf.Filter[i] != new_bf.Filter[i] {
-			t.Fatalf("Two bfs are not equal")
-		}
+	if !new_bf.Filter.BS.Equal(bf.Filter.BS) {
+		t.Fatalf("Two bfs are not equal")
 	}
 }
 
 func TestConvertWithContainedValues(t *testing.T) {
-	bf := NewByFailRate(1000, 0.01)
+	bf := NewByFailRate(uint(CONFIG.BloomfilterSize), 0.01)
 
 	bf.AddKey([]byte("keyalksdjfl"))
 	bf.AddKey([]byte("key1"))
@@ -95,7 +96,7 @@ func TestConvertWithContainedValues(t *testing.T) {
 
 	new_bf_str := bf.ConvertToString()
 
-	new_bf, err := ConvertStringtoBF(new_bf_str)
+	new_bf, err := ConvertStringtoBF(new_bf_str, uint(CONFIG.BloomfilterSize))
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -105,9 +106,7 @@ func TestConvertWithContainedValues(t *testing.T) {
 		t.Fatalf("new_bf doesnt have key1!")
 	}
 
-	for i := range bf.Filter {
-		if bf.Filter[i] != new_bf.Filter[i] {
-			t.Fatalf("Two bfs are not equal")
-		}
+	if !new_bf.Filter.BS.Equal(bf.Filter.BS) {
+		t.Fatalf("Two bfs are not equal")
 	}
 }

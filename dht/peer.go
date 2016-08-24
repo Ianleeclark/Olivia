@@ -1,15 +1,17 @@
 package dht
 
 import (
-	"log"
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
 	"github.com/GrappigPanda/Olivia/bloomfilter"
+	"github.com/GrappigPanda/Olivia/config"
 	"github.com/GrappigPanda/Olivia/network/message_handler"
 	"github.com/GrappigPanda/Olivia/network/receiver"
 	"github.com/GrappigPanda/Olivia/parser"
+	"log"
 	"net"
+	"sync"
 	"time"
 )
 
@@ -29,35 +31,39 @@ const (
 
 // Peer Houses the state for remote Peers
 type Peer struct {
-	Status      State
-	Conn        *net.Conn
-	IPPort      string
-	BloomFilter *olilib.BloomFilter
-	MessageBus  *message_handler.MessageHandler
+	Status       State
+	Conn         *net.Conn
+	IPPort       string
+	BloomFilter  *olilib.BloomFilter
+	MessageBus   *message_handler.MessageHandler
+	failureCount int
+	sync.Mutex
 }
 
 // NewPeer handles creating a new peer to be used in communicating between nodes
-func NewPeer(conn *net.Conn, mh *message_handler.MessageHandler) *Peer {
+func NewPeer(conn *net.Conn, mh *message_handler.MessageHandler, config *config.Cfg) *Peer {
 	ipPort := (*conn).RemoteAddr().String()
 	log.Println("New peer connected: %v", ipPort)
 
 	return &Peer{
-		Disconnected,
-		conn,
-		ipPort,
-		nil,
-		mh,
+		Status:       Disconnected,
+		Conn:         conn,
+		IPPort:       ipPort,
+		BloomFilter:  olilib.NewByFailRate(uint(config.BloomfilterSize), 0.01),
+		MessageBus:   mh,
+		failureCount: 0,
 	}
 }
 
 // NewPeerByIP handles creating a peer by its ip, opening a connection, &c.
-func NewPeerByIP(ipPort string, mh *message_handler.MessageHandler) *Peer {
+func NewPeerByIP(ipPort string, mh *message_handler.MessageHandler, config config.Cfg) *Peer {
 	newPeer := &Peer{
-		Disconnected,
-		nil,
-		ipPort,
-		nil,
-		mh,
+		Status:       Disconnected,
+		Conn:         nil,
+		IPPort:       ipPort,
+		BloomFilter:  olilib.NewByFailRate(uint(config.BloomfilterSize), 0.01),
+		MessageBus:   mh,
+		failureCount: 0,
 	}
 
 	return newPeer
@@ -80,6 +86,27 @@ func (p *Peer) Connect() error {
 	return nil
 }
 
+// Ping handles intelligently sending heartbeats to a remote node. After 10
+// successive failures to ping, the remote node is considered failed and the
+// status is set to Timeout
+func (p *Peer) TestConnection() {
+	_, err := p.SendCommand("0:PING 1\n")
+	if err != nil {
+		p.failureCount++
+		if p.failureCount == 10 {
+			p.Status = Timeout
+			log.Printf(
+				"Node %v is no longer alive",
+				p.IPPort,
+			)
+		}
+		return
+	}
+
+	p.failureCount = 0
+	p.Status = Connected
+}
+
 // Disconnect closes a connection to a remote peer.
 func (p *Peer) Disconnect() {
 	(*p.Conn).Close()
@@ -87,8 +114,8 @@ func (p *Peer) Disconnect() {
 
 // SendCommand Handles sending a command to a remote node. Command is like this
 // "hash:Command"
-func (p *Peer) SendCommand(Command string) {
-	(*p.Conn).Write([]byte(Command))
+func (p *Peer) SendCommand(Command string) (int, error) {
+	return (*p.Conn).Write([]byte(Command))
 }
 
 // SendRequest handles taking in a peer object and a command and sending a
@@ -111,12 +138,6 @@ func (p *Peer) SendRequest(Command string, responseChannel chan string, mh *mess
 func (p *Peer) GetBloomFilter() {
 	responseChannel := make(chan string)
 
-	go p.SendRequest(
-		parser.GET_REMOTE_BLOOMFILTER,
-		responseChannel,
-		p.MessageBus,
-	)
-
 	go func() {
 		parser := parser.NewParser(p.MessageBus)
 		response := <-responseChannel
@@ -128,7 +149,9 @@ func (p *Peer) GetBloomFilter() {
 		}
 
 		for k, _ := range responseData.Args {
-			bf, err := olilib.ConvertStringtoBF(responseData.Args[k])
+			p.Lock()
+			defer p.Unlock()
+			bf, err := olilib.ConvertStringtoBF(k, p.BloomFilter.MaxSize)
 			if err != nil {
 				p.BloomFilter = nil
 			}
@@ -137,13 +160,18 @@ func (p *Peer) GetBloomFilter() {
 		}
 
 	}()
+
+	p.SendRequest(
+		parser.GET_REMOTE_BLOOMFILTER,
+		responseChannel,
+		p.MessageBus,
+	)
 }
 
 // GetPeerListAsync handles retrieving all known peers from a remote node.
 func (p *Peer) GetPeerList(responseChannel chan string) {
 	p.SendRequest(parser.GET_REMOTE_PEERLIST, responseChannel, p.MessageBus)
 }
-
 
 // addCommandToMessageHandler send a command to the message container to store
 // the callback channel.

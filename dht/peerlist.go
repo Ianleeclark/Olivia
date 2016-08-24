@@ -1,22 +1,26 @@
 package dht
 
 import (
-	"strings"
 	"fmt"
-	"log"
+	"github.com/GrappigPanda/Olivia/config"
 	"github.com/GrappigPanda/Olivia/network/message_handler"
+	"log"
+	"strings"
+	"sync"
 )
 
 // PeerList is a data structure which represents remote olivia nodes.
 type PeerList struct {
-	Peers []*Peer
+	Peers       []*Peer
 	BackupPeers []*Peer
-	PeerMap *map[string]bool
-	MessageBus *message_handler.MessageHandler
+	PeerMap     *map[string]bool
+	MessageBus  *message_handler.MessageHandler
+	config      config.Cfg
+	sync.Mutex
 }
 
 // NewPeerList Creates a new peer list
-func NewPeerList(mh *message_handler.MessageHandler) *PeerList {
+func NewPeerList(mh *message_handler.MessageHandler, config config.Cfg) *PeerList {
 	peerlist := make([]*Peer, 3)
 	// We originally allocate 10 slots for backup peers, but if necessary
 	// we readjust whenever we request peers from a new node.
@@ -25,10 +29,11 @@ func NewPeerList(mh *message_handler.MessageHandler) *PeerList {
 	peerMap := make(map[string]bool)
 
 	return &PeerList{
-		peerlist,
-		backupList,
-		&peerMap,
-		mh,
+		Peers:       peerlist,
+		BackupPeers: backupList,
+		PeerMap:     &peerMap,
+		MessageBus:  mh,
+		config:      config,
 	}
 }
 
@@ -41,17 +46,20 @@ func (p *PeerList) AddPeer(ipPort string) {
 		return
 	}
 
-	newPeer := NewPeerByIP(ipPort, p.MessageBus)
+	log.Println(p.config)
+	newPeer := NewPeerByIP(ipPort, p.MessageBus, p.config)
 
-	if len(p.Peers) + 1 <= 3 {
+	p.Lock()
+	defer p.Unlock()
+	if len(p.Peers)+1 <= 3 {
 		p.Peers = append(p.Peers, newPeer)
 		return
 	}
 
-	if len(p.BackupPeers) + 1 >= cap(p.BackupPeers) {
+	if len(p.BackupPeers)+1 >= cap(p.BackupPeers) {
 		p.BackupPeers = append(
 			p.BackupPeers,
-			make([]*Peer, cap(p.BackupPeers) * 2)...,
+			make([]*Peer, cap(p.BackupPeers)*2)...,
 		)
 
 		p.BackupPeers = append(p.BackupPeers, newPeer)
@@ -70,6 +78,8 @@ func (p *PeerList) ConnectAllPeers() error {
 	failureCount := 0
 	successCount := 0
 
+	p.Lock()
+	defer p.Unlock()
 	for x := range p.Peers {
 		if p.Peers[x] == nil {
 			failureCount++
@@ -91,7 +101,10 @@ func (p *PeerList) ConnectAllPeers() error {
 			"Requesting peer list",
 		)
 
+		log.Println("Sending Request Connect")
+		p.Peers[x].SendCommand("0:REQUEST CONNECT\n")
 		p.Peers[x].GetPeerList(responseChannel)
+		p.Peers[x].GetBloomFilter()
 	}
 
 	if failureCount == len(p.Peers) {
@@ -114,12 +127,13 @@ func (p *PeerList) DisconnectAllPeers() {
 
 // handlePeerQueries handles the responses for each peer list.
 func (p *PeerList) handlePeerQueries(responseChannel chan string) {
+	p.Lock()
+	defer p.Unlock()
 	for response := range responseChannel {
 		splitResponse := strings.SplitN(response, " ", 2)
 		if len(splitResponse) != 2 {
 			continue
 		}
-
 
 		peers := strings.Split(splitResponse[1], ",")
 

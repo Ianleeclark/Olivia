@@ -2,9 +2,9 @@ package main
 
 import (
 	"github.com/GrappigPanda/Olivia/cache"
+	"github.com/GrappigPanda/Olivia/config"
 	"github.com/GrappigPanda/Olivia/network"
 	"github.com/GrappigPanda/Olivia/network/message_handler"
-	"github.com/GrappigPanda/Olivia/config"
 )
 
 func Init() {
@@ -17,6 +17,7 @@ func Init() {
 		messageHandler,
 		internalCache,
 		config,
+		nil,
 	)
 }
 

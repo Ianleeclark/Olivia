@@ -5,17 +5,13 @@ import (
 	"time"
 )
 
-func TestHeartbeat(t *testing.T) {
-	Heartbeat(1*time.Second, 60*time.Second)
-}
-
 func TestExecuteRepeatedly(t *testing.T) {
 	countChan := make(chan int)
 	killChan := make(chan bool)
 
 	go executeRepeatedly(
-		5 * time.Millisecond,
-		func() {return},
+		5*time.Millisecond,
+		func() { return },
 		killChan,
 		countChan,
 	)
@@ -27,7 +23,7 @@ func TestExecuteRepeatedly(t *testing.T) {
 		if count == 10 {
 			killChan <- true
 		}
-		break;
+		break
 	default:
 		return
 	}

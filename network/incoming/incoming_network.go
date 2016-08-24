@@ -2,14 +2,15 @@ package incomingNetwork
 
 import (
 	"bufio"
+	"fmt"
 	"github.com/GrappigPanda/Olivia/bloomfilter"
 	"github.com/GrappigPanda/Olivia/cache"
+	"github.com/GrappigPanda/Olivia/config"
 	"github.com/GrappigPanda/Olivia/dht"
 	"github.com/GrappigPanda/Olivia/network/message_handler"
 	"github.com/GrappigPanda/Olivia/parser"
 	"log"
 	"net"
-	"github.com/GrappigPanda/Olivia/config"
 )
 
 // ConnectionCtx handles maintaining a persistent state per incoming
@@ -29,38 +30,52 @@ func StartNetworkRouter(
 	cache *cache.Cache,
 	peerList *dht.PeerList,
 	config *config.Cfg,
-) {
+) chan struct{} {
+	stopchan := make(chan struct{})
 
-	listen, err := net.Listen("tcp", ":5455")
-	if err != nil {
-		panic(err)
-	}
-	defer listen.Close()
-
-	bf := olilib.NewByFailRate(1000, 0.01)
-
-	ctx := &ConnectionCtx{
-		parser.NewParser(mh),
-		cache,
-		bf,
-		mh,
-		peerList,
-	}
-
-	log.Println("Starting connection router.")
-
-	for {
-		conn, err := listen.Accept()
+	// Here we spin up a network router which allows us to start/stop on demand
+	// via channels. It's overly indented, this should probably be seperated
+	// elsewhere.
+	go func(stopchan chan struct{}) {
+		listen, err := net.Listen("tcp", fmt.Sprintf(":%d", config.ListenPort))
 		if err != nil {
-			log.Println(err)
-			continue
+			panic(err)
 		}
-		log.Println("Incoming connection detected from ",
-			conn.RemoteAddr().String(),
-		)
+		defer listen.Close()
 
-		go ctx.handleConnection(&conn)
-	}
+		bf := olilib.NewByFailRate(1000, 0.01)
+
+		ctx := &ConnectionCtx{
+			parser.NewParser(mh),
+			cache,
+			bf,
+			mh,
+			peerList,
+		}
+
+		log.Println("Starting connection router!")
+
+		for {
+			select {
+			default:
+				conn, err := listen.Accept()
+				if err != nil {
+					log.Println(err)
+					continue
+				}
+				log.Println("Incoming connection detected from ",
+					conn.RemoteAddr().String(),
+				)
+
+				go ctx.handleConnection(&conn)
+			case <-stopchan:
+				log.Printf("Forcefully quitting network router.")
+				return
+			}
+		}
+	}(stopchan)
+
+	return stopchan
 }
 
 // handleConnection handles handling state of the incoming network FSM,
@@ -70,14 +85,9 @@ func (ctx *ConnectionCtx) handleConnection(conn *net.Conn) {
 	// TODO(ian): Implement authentication (new issue).
 	connProc := NewProcessorFSM(PROCESSING)
 	reader := bufio.NewReader(*conn)
-
-	// Place the remote peer into our peer list.
-	(*ctx.PeerList).AddPeer((*conn).RemoteAddr().String())
+	password := "TestBcryptPassword"
 
 	for {
-		// TODO(ian): Replace this with a new language processor for incoming
-		// commands
-		password := "TestBcryptPassword"
 		line, _, err := reader.ReadLine()
 		if err != nil {
 			log.Printf("Connection %v failed to readline, closing connection.", *conn)
@@ -87,6 +97,10 @@ func (ctx *ConnectionCtx) handleConnection(conn *net.Conn) {
 		switch connProc.State {
 		case UNAUTHENTICATED:
 			connProc.Authenticate(password)
+			log.Println(
+				"Unauthenticated request from %v",
+				(*conn).RemoteAddr().String(),
+			)
 			break
 		case PROCESSING:
 			command, err := ctx.Parser.Parse(string(line), conn)
@@ -94,7 +108,7 @@ func (ctx *ConnectionCtx) handleConnection(conn *net.Conn) {
 				log.Println(err)
 			}
 
-			if _, ok := command.Args["BLOOMFILTER"]; !ok {
+			if command.Command != "PING" {
 				log.Printf("Received %v from %v", string(line),
 					(*conn).RemoteAddr().String(),
 				)
@@ -102,18 +116,18 @@ func (ctx *ConnectionCtx) handleConnection(conn *net.Conn) {
 
 			response := ctx.ExecuteCommand(*command)
 
-			if _, ok := command.Args["BLOOMFILTER"]; !ok {
+			if _, ok := command.Args["BLOOMFILTER"]; ok {
+				log.Printf("Responding to %v with bloomfilter",
+					(*conn).RemoteAddr().String(),
+				)
+			} else if command.Command != "PING" {
 				log.Printf("Responding to %v %v with %v",
 					command.Command,
 					command.Args,
 					response,
 				)
-			} else {
-				log.Printf("Responding to %v with bloomfilter",
-					(*conn).RemoteAddr().String(),
-				)
-
 			}
+
 			(*conn).Write([]byte(response))
 			break
 		}

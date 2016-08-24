@@ -10,7 +10,7 @@ import (
 // TODO(ian): Replace this with something else
 // Cache is actually just a map[string]string. Don't tell anyone.
 type Cache struct {
-	Cache *map[string]string
+	Cache     *map[string]string
 	ReadCache *map[string]string
 	binHeap *binheap.Heap
 	sync.Mutex
@@ -21,7 +21,7 @@ func NewCache() *Cache {
 	cacheMap := make(map[string]string)
 	writeCache := make(map[string]string)
 	return &Cache{
-		Cache: &cacheMap,
+		Cache:     &cacheMap,
 		ReadCache: &writeCache,
 		binHeap: binheap.NewHeapReallocate(100),
 	}
@@ -38,11 +38,10 @@ func (c *Cache) Get(key string) (string, error) {
 	}
 }
 
-
 // copyCache handles creating a copy of the cache
 func (c *Cache) copyCache() {
 	c.Lock()
-	for k, v := range (*c.Cache) {
+	for k, v := range *c.Cache {
 		(*c.ReadCache)[k] = v
 	}
 	c.Unlock()

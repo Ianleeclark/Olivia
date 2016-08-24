@@ -1,9 +1,9 @@
 package network_receiver
 
 import (
-	"log"
 	"bufio"
 	. "github.com/GrappigPanda/Olivia/network/message_handler"
+	"log"
 	"net"
 	"strings"
 )

@@ -1,18 +1,18 @@
 package olilib_lru
 
 import (
+	binheap "github.com/GrappigPanda/Olivia/shared"
 	"sync"
 	"testing"
 	"time"
-	binheap "github.com/GrappigPanda/Olivia/shared"
 )
 
-var TESTLRUINT64 = NewInt64Array(10)
+var TESTLRUINT32 = NewInt32Array(10)
 
-func TestNewInt64(t *testing.T) {
-	expectedReturn := &LRUCacheInt64Array{
+func TestNewInt32(t *testing.T) {
+	expectedReturn := &LRUCacheInt32Array{
 		10,
-		make(map[string][]uint64, 10),
+		make(map[string][]uint32, 10),
 		binheap.NewHeap(10),
 		&sync.Mutex{},
 	}
@@ -24,10 +24,10 @@ func TestNewInt64(t *testing.T) {
 	}
 }
 
-func TestAddInt64(t *testing.T) {
-	expectedReturn := []uint64{3, 5, 1}
+func TestAddInt32(t *testing.T) {
+	expectedReturn := []uint32{3, 5, 1}
 
-	value, err := TESTLRUINT64.Add("Key", expectedReturn)
+	value, err := TESTLRUINT32.Add("Key", expectedReturn)
 
 	for i := range value {
 		if value[i] != expectedReturn[i] {
@@ -40,23 +40,23 @@ func TestAddInt64(t *testing.T) {
 	}
 }
 
-func TestAddPreExistingKeyInt64(t *testing.T) {
-	expectedReturn := []uint64{4, 7, 9}
-	_, ok := TESTLRUINT64.Add("Key", expectedReturn)
+func TestAddPreExistingKeyInt32(t *testing.T) {
+	expectedReturn := []uint32{4, 7, 9}
+	_, ok := TESTLRUINT32.Add("Key", expectedReturn)
 
 	if ok != true {
 		t.Fatalf("Failed to add pre-existing key. Keys: %v",
-			TESTLRUINT64.Keys,
+			TESTLRUINT32.Keys,
 		)
 	}
 }
 
-func TestAddRemoveOldestInt64(t *testing.T) {
-	testLRU := NewInt64Array(10)
-	testLRU.Add("Key1", []uint64{1, 2, 3})
+func TestAddRemoveOldestInt32(t *testing.T) {
+	testLRU := NewInt32Array(10)
+	testLRU.Add("Key1", []uint32{1, 2, 3})
 	time.Sleep(time.Nanosecond * 1)
-	testLRU.Add("Key2", []uint64{1, 2, 3})
-	testLRU.Add("Key3", []uint64{1, 2, 3})
+	testLRU.Add("Key2", []uint32{1, 2, 3})
+	testLRU.Add("Key3", []uint32{1, 2, 3})
 
 	expectedKeys := []string{"Key1", "Key2", "Key3"}
 
@@ -73,7 +73,7 @@ func TestAddRemoveOldestInt64(t *testing.T) {
 		}
 	}
 
-	testLRU.Add("Key4", []uint64{12, 13, 14})
+	testLRU.Add("Key4", []uint32{12, 13, 14})
 
 	expectedKeys = []string{"Key4", "Key2", "Key3"}
 
@@ -89,9 +89,9 @@ func TestAddRemoveOldestInt64(t *testing.T) {
 
 }
 
-func TestGetInt64(t *testing.T) {
-	expectedReturn := []uint64{5, 7, 9}
-	testLRU := NewInt64Array(5)
+func TestGetInt32(t *testing.T) {
+	expectedReturn := []uint32{5, 7, 9}
+	testLRU := NewInt32Array(5)
 	testLRU.Add("Key1", expectedReturn)
 
 	node, _ := testLRU.KeyTimeouts.Get("Key1")
@@ -114,8 +114,8 @@ func TestGetInt64(t *testing.T) {
 	}
 }
 
-func TestGetDoesntExistInt64(t *testing.T) {
-	testLRU := NewInt64Array(5)
+func TestGetDoesntExistInt32(t *testing.T) {
+	testLRU := NewInt32Array(5)
 
 	_, keyExists := testLRU.Get("Key14")
 
