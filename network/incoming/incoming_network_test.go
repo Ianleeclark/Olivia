@@ -16,6 +16,7 @@ import (
 )
 
 var BASENODE = "127.0.0.1:5454"
+var CONFIG = config.ReadConfig()
 
 func sendCommand(command string, t *testing.T) string {
 	conn, err := net.DialTimeout("tcp", BASENODE, 1*time.Second)
@@ -41,7 +42,7 @@ func TestGetBloomfilter(t *testing.T) {
 
 	bf_str := strings.Split(str, " ")
 	inputStr := strings.TrimSpace(bf_str[1])
-	_, err := olilib.ConvertStringtoBF(inputStr)
+	_, err := olilib.ConvertStringtoBF(inputStr, uint(CONFIG.BloomfilterSize))
 	if err != nil {
 		t.Errorf("%v", err)
 	}
@@ -73,7 +74,7 @@ func TestSetKeyUpdatesBloomFilter(t *testing.T) {
 
 	bf_str := strings.Split(str, " ")
 	inputStr := strings.TrimSpace(bf_str[1])
-	bf, err := olilib.ConvertStringtoBF(inputStr)
+	bf, err := olilib.ConvertStringtoBF(inputStr, uint(CONFIG.BloomfilterSize))
 	if err != nil {
 		t.Errorf("%v", err)
 	}
@@ -99,7 +100,7 @@ func TestGetKeyFromRemoteNode(t *testing.T) {
 func TestMain(m *testing.M) {
 	mh := message_handler.NewMessageHandler()
 	cache := cache.NewCache()
-	peerList := dht.NewPeerList(mh)
+	peerList := dht.NewPeerList(mh, *CONFIG)
 	config := config.ReadConfig()
 	stopchan := StartNetworkRouter(mh, cache, peerList, config)
 

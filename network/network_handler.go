@@ -95,14 +95,14 @@ func StartIncomingNetwork(
 	config *config.Cfg,
 	mainStopChan chan struct{},
 ) {
-	peerList := dht.NewPeerList(mh)
+	peerList := dht.NewPeerList(mh, *config)
 
 	// BaseNode==True signifies that we're not expecting to connect to any
 	// remote nodes on connection, so if it's false, we'll skip that step and
 	// just wait for incoming connections.
 	if !config.BaseNode {
 		for index, peerIP := range config.RemotePeers {
-			peer := dht.NewPeerByIP(peerIP, mh)
+			peer := dht.NewPeerByIP(peerIP, mh, *config)
 			peerList.Peers[index] = peer
 			(*peerList.PeerMap)[peerIP] = true
 		}

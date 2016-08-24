@@ -2,6 +2,7 @@ package dht
 
 import (
 	"fmt"
+	"github.com/GrappigPanda/Olivia/config"
 	"github.com/GrappigPanda/Olivia/network/message_handler"
 	"log"
 	"strings"
@@ -14,11 +15,12 @@ type PeerList struct {
 	BackupPeers []*Peer
 	PeerMap     *map[string]bool
 	MessageBus  *message_handler.MessageHandler
+	config      config.Cfg
 	sync.Mutex
 }
 
 // NewPeerList Creates a new peer list
-func NewPeerList(mh *message_handler.MessageHandler) *PeerList {
+func NewPeerList(mh *message_handler.MessageHandler, config config.Cfg) *PeerList {
 	peerlist := make([]*Peer, 3)
 	// We originally allocate 10 slots for backup peers, but if necessary
 	// we readjust whenever we request peers from a new node.
@@ -31,6 +33,7 @@ func NewPeerList(mh *message_handler.MessageHandler) *PeerList {
 		BackupPeers: backupList,
 		PeerMap:     &peerMap,
 		MessageBus:  mh,
+		config:      config,
 	}
 }
 
@@ -43,7 +46,8 @@ func (p *PeerList) AddPeer(ipPort string) {
 		return
 	}
 
-	newPeer := NewPeerByIP(ipPort, p.MessageBus)
+	log.Println(p.config)
+	newPeer := NewPeerByIP(ipPort, p.MessageBus, p.config)
 
 	p.Lock()
 	defer p.Unlock()
