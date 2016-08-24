@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/GrappigPanda/Olivia/bloomfilter"
+	"github.com/GrappigPanda/Olivia/config"
 	"github.com/GrappigPanda/Olivia/network/message_handler"
 	"github.com/GrappigPanda/Olivia/network/receiver"
 	"github.com/GrappigPanda/Olivia/parser"
@@ -40,7 +41,7 @@ type Peer struct {
 }
 
 // NewPeer handles creating a new peer to be used in communicating between nodes
-func NewPeer(conn *net.Conn, mh *message_handler.MessageHandler) *Peer {
+func NewPeer(conn *net.Conn, mh *message_handler.MessageHandler, config *config.Cfg) *Peer {
 	ipPort := (*conn).RemoteAddr().String()
 	log.Println("New peer connected: %v", ipPort)
 
@@ -48,19 +49,19 @@ func NewPeer(conn *net.Conn, mh *message_handler.MessageHandler) *Peer {
 		Status:       Disconnected,
 		Conn:         conn,
 		IPPort:       ipPort,
-		BloomFilter:  nil,
+		BloomFilter:  olilib.NewByFailRate(uint(config.BloomfilterSize), 0.01),
 		MessageBus:   mh,
 		failureCount: 0,
 	}
 }
 
 // NewPeerByIP handles creating a peer by its ip, opening a connection, &c.
-func NewPeerByIP(ipPort string, mh *message_handler.MessageHandler) *Peer {
+func NewPeerByIP(ipPort string, mh *message_handler.MessageHandler, config config.Cfg) *Peer {
 	newPeer := &Peer{
 		Status:       Disconnected,
 		Conn:         nil,
 		IPPort:       ipPort,
-		BloomFilter:  nil,
+		BloomFilter:  olilib.NewByFailRate(uint(config.BloomfilterSize), 0.01),
 		MessageBus:   mh,
 		failureCount: 0,
 	}
@@ -148,9 +149,9 @@ func (p *Peer) GetBloomFilter() {
 		}
 
 		for k, _ := range responseData.Args {
-			bf, err := olilib.ConvertStringtoBF(k)
 			p.Lock()
 			defer p.Unlock()
+			bf, err := olilib.ConvertStringtoBF(k, p.BloomFilter.MaxSize)
 			if err != nil {
 				p.BloomFilter = nil
 			}

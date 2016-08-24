@@ -22,7 +22,7 @@ var CTX = &ConnectionCtx{
 	},
 	olilib.NewByFailRate(1000, 0.01),
 	MESSAGEBUS,
-	dht.NewPeerList(MESSAGEBUS),
+	dht.NewPeerList(MESSAGEBUS, *CONFIG),
 }
 
 func TestExecuteGetAllSucceed(t *testing.T) {
@@ -104,7 +104,7 @@ func TestRequestBloomFilter(t *testing.T) {
 		break
 	}
 
-	newBloomfilter, err := olilib.ConvertStringtoBF(bfToParse)
+	newBloomfilter, err := olilib.ConvertStringtoBF(bfToParse, uint(CONFIG.BloomfilterSize))
 	if err != nil {
 		t.Fatalf("%v", err)
 	}

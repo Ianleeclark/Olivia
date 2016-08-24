@@ -72,9 +72,8 @@ func (bf *BloomFilter) ConvertToString() string {
 
 // ConvertStringToBF Decodes the RLE'd bloom filter and then converts it to
 // an actual bloom filter in-memory.
-func ConvertStringtoBF(inputString string) (*BloomFilter, error) {
-	// TODO(ian): Remove this magic number.
-	bf := NewByFailRate(1000, 0.01)
+func ConvertStringtoBF(inputString string, maxSize uint) (*BloomFilter, error) {
+	bf := NewByFailRate(maxSize, 0.01)
 
 	sz := fmt.Sprintf("\"%s=\"", Decode(inputString))
 	bf.Filter.FromString(sz)
