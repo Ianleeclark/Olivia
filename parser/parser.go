@@ -15,10 +15,11 @@ type Parser struct {
 
 // CommandData is a struct representing the command sent in.
 type CommandData struct {
-	Hash    string
-	Command string
-	Args    map[string]string
-	Conn    *net.Conn
+	Hash       string
+	Command    string
+	Args       map[string]string
+	Expiration map[string]string
+	Conn       *net.Conn
 }
 
 // NewParser handles creating a new parser (mostly just initializing a new LRU
@@ -40,41 +41,46 @@ func (p *Parser) Parse(commandString string, conn *net.Conn) (*CommandData, erro
 	var hash string
 	var command string
 	hashAndCommand := strings.Split(splitCommand[0], ":")
-	if len(hashAndCommand) == 2 {
+	if len(hashAndCommand) >= 2 {
 		hash = hashAndCommand[0]
 		command = hashAndCommand[1]
+
 	} else if len(hashAndCommand) == 1 {
 		hash = ""
 		command = hashAndCommand[0]
 	}
 
-	args := make(map[string]string)
-
-	args = parseArgs(strings.Split(splitCommand[1], ","))
+	args, expirations := parseArgs(strings.Split(splitCommand[1], ","))
 
 	return &CommandData{
 		hash,
 		command,
 		args,
+		expirations,
 		conn,
 	}, nil
 }
 
 // parseArgs handles filtering commands based on the command grammer.
 // Essentially seperates commands delimited by colons and commands not.
-func parseArgs(args []string) map[string]string {
-	outMap := make(map[string]string)
+func parseArgs(args []string) (map[string]string, map[string]string) {
+	argMap := make(map[string]string)
+	expirationMap := make(map[string]string)
 
 	for arg := range args {
 		if strings.Contains(args[arg], ":") {
 			subCommand := strings.Split(args[arg], ":")
-			setKeyValue(&outMap, subCommand[0], subCommand[1])
+			setKeyValue(&argMap, subCommand[0], subCommand[1])
+
+			if len(subCommand) > 2 {
+				setKeyValue(&expirationMap, subCommand[0], subCommand[2])
+			}
 		} else {
-			setKeyValue(&outMap, args[arg], "")
+			setKeyValue(&argMap, args[arg], "")
 		}
 	}
 
-	return outMap
+	return argMap, expirationMap
 }
 
 // setKeyValue sets a key-value  to a capitalized(key) = value

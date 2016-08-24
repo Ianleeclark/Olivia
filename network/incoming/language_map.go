@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/GrappigPanda/Olivia/dht"
 	"github.com/GrappigPanda/Olivia/parser"
+	"log"
+	"strconv"
 	"strings"
 )
 
@@ -75,6 +77,35 @@ func (ctx *ConnectionCtx) ExecuteCommand(requestData parser.CommandData) string 
 
 			return createResponse(command, retVals, requestData.Hash)
 		}
+	case "SETEX":
+		{
+			retVals := make([]string, len(args))
+			expirations := requestData.Expiration
+
+			if len(args) != len(expirations) {
+				return "Invalid command sent in. Unbalanced keys:expirations.\n"
+			}
+
+			index := 0
+			for k, v := range args {
+				expInt, err := strconv.Atoi(expirations[k])
+				if err != nil {
+					continue
+				}
+
+				log.Println(k, v, expInt)
+				(*ctx.Cache).SetExpiration(k, v, expInt)
+
+				retVals[index] = fmt.Sprintf("%s:%s:%d", k, v, expInt)
+				index++
+				// Please note: Expiration keys are not added to the bloom
+				// filter, as the bloom filter only tracks the immutable state
+				// of Olivia.
+			}
+
+			return createResponse(command, retVals, requestData.Hash)
+
+		}
 	case "REQUEST":
 		{
 			return ctx.handleRequest(requestData)
@@ -92,6 +123,7 @@ func createResponse(command string, retVals []string, hash string) string {
 	CommandMap := make(map[string]string)
 	CommandMap["GET"] = "GOT "
 	CommandMap["SET"] = "SAT "
+	CommandMap["SETEX"] = "SATEX "
 	CommandMap["REQUEST"] = "FULFILLED "
 
 	var buffer bytes.Buffer

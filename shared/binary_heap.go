@@ -153,6 +153,15 @@ func (h *Heap) EvictMinNode() *Node {
 	return retVal
 }
 
+// Peek handles looking at the index of the tree.
+func (h *Heap) Peek(index int) (*Node, error) {
+	if index >= h.currentSize {
+		return nil, fmt.Errorf("Index greater than size of heap.")
+	}
+
+	return h.Tree[index], nil
+}
+
 // IsEmpty Notifies the caller if the binary heap is empty.
 func (h *Heap) IsEmpty() bool {
 	return h.currentSize == 0
