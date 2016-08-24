@@ -18,6 +18,7 @@ func TestParseFailInvalidCommand(t *testing.T) {
 
 func TestParseStringOfCommas(t *testing.T) {
 	args := make(map[string]string)
+	exps := make(map[string]string)
 	args["key1"] = ""
 	args["key2"] = ""
 	args["key3"] = ""
@@ -26,6 +27,7 @@ func TestParseStringOfCommas(t *testing.T) {
 		"",
 		"GET",
 		args,
+		exps,
 		nil,
 	}
 
@@ -57,6 +59,7 @@ func TestParseSetKeysWithColon(t *testing.T) {
 		"",
 		"SET",
 		args,
+		make(map[string]string),
 		nil,
 	}
 
@@ -84,6 +87,7 @@ func TestParseCommandWithHash(t *testing.T) {
 		"",
 		"SET",
 		args,
+		make(map[string]string),
 		nil,
 	}
 
