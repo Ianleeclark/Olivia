@@ -1,12 +1,12 @@
 package incomingNetwork
 
 import (
-	"github.com/GrappigPanda/Olivia/bloomfilter"
+	"testing"
+
 	"github.com/GrappigPanda/Olivia/cache"
 	"github.com/GrappigPanda/Olivia/dht"
 	"github.com/GrappigPanda/Olivia/network/message_handler"
 	"github.com/GrappigPanda/Olivia/parser"
-	"testing"
 )
 
 var MESSAGEBUS = message_handler.NewMessageHandler()
@@ -119,7 +119,7 @@ func TestRequestBloomFilter(t *testing.T) {
 
 	val, _ := newBloomfilter.HasKey([]byte("key1"))
 	if !val {
-		t.Fatalf("newBloomfilter doesnt have key1!")
+		t.Fatalf("newBloomfilter doesn't have key1!")
 	}
 
 	if !bf.Filter.BS.Equal(newBloomfilter.Filter.BS) {

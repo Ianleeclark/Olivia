@@ -1,8 +1,9 @@
 package olilib
 
 import (
-	"github.com/GrappigPanda/Olivia/config"
 	"testing"
+
+	"github.com/GrappigPanda/Olivia/config"
 )
 
 var CONFIG = config.ReadConfig()
@@ -103,7 +104,7 @@ func TestConvertWithContainedValues(t *testing.T) {
 
 	val, _ := new_bf.HasKey([]byte("key1"))
 	if !val {
-		t.Fatalf("new_bf doesnt have key1!")
+		t.Fatalf("new_bf doesn't have key1!")
 	}
 
 	if !new_bf.Filter.BS.Equal(bf.Filter.BS) {

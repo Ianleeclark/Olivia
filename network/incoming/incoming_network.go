@@ -3,14 +3,14 @@ package incomingNetwork
 import (
 	"bufio"
 	"fmt"
-	"github.com/GrappigPanda/Olivia/bloomfilter"
+	"log"
+	"net"
+
 	"github.com/GrappigPanda/Olivia/cache"
 	"github.com/GrappigPanda/Olivia/config"
 	"github.com/GrappigPanda/Olivia/dht"
 	"github.com/GrappigPanda/Olivia/network/message_handler"
 	"github.com/GrappigPanda/Olivia/parser"
-	"log"
-	"net"
 )
 
 // ConnectionCtx handles maintaining a persistent state per incoming
@@ -34,7 +34,7 @@ func StartNetworkRouter(
 	stopchan := make(chan struct{})
 
 	// Here we spin up a network router which allows us to start/stop on demand
-	// via channels. It's overly indented, this should probably be seperated
+	// via channels. It's overly indented, this should probably be separated
 	// elsewhere.
 	go func(stopchan chan struct{}) {
 		listen, err := net.Listen("tcp", fmt.Sprintf(":%d", config.ListenPort))
