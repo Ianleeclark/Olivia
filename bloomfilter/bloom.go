@@ -2,6 +2,7 @@ package olilib
 
 import (
 	"fmt"
+	"github.com/GrappigPanda/Olivia/lru_cache"
 	"hash/fnv"
 	"math"
 	"strconv"
