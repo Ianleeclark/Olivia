@@ -2,9 +2,10 @@ package cache
 
 import (
 	"fmt"
-	binheap "github.com/GrappigPanda/Olivia/shared"
 	"sync"
 	"time"
+
+	binheap "github.com/GrappigPanda/Olivia/shared"
 )
 
 // TODO(ian): Replace this with something else
@@ -28,11 +29,11 @@ func NewCache() *Cache {
 // from the ReadCache which is for copy-on-write optimizations so that
 // reading doesn't lock the cache.
 func (c *Cache) Get(key string) (string, error) {
-	if value, ok := (*c.Cache)[key]; !ok {
-		return "", fmt.Errorf("Key not found in cache")
-	} else {
+	value, ok := (*c.Cache)[key]
+	if ok {
 		return value, nil
 	}
+	return "", fmt.Errorf("Key not found in cache")
 }
 
 // copyCache handles creating a copy of the cache

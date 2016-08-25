@@ -1,8 +1,9 @@
 package olilib
 
 import (
-	"github.com/GrappigPanda/Olivia/config"
 	"testing"
+
+	"github.com/GrappigPanda/Olivia/config"
 )
 
 var CONFIG = config.ReadConfig()
@@ -53,7 +54,7 @@ func TestAddKey(t *testing.T) {
 		t.Fatalf("Adding keys failed with indexes %v", addIndexes)
 	}
 
-	for index, _ := range hasIndexes {
+	for index := range hasIndexes {
 		if hasIndexes[index] != addIndexes[index] {
 			t.Fatalf("Expected indexes %v, got %v", hasIndexes[index], addIndexes[index])
 		}
@@ -73,14 +74,14 @@ func TestHasKeyFailNoKey(t *testing.T) {
 func TestConvertToString(t *testing.T) {
 	bf := NewByFailRate(uint(CONFIG.BloomfilterSize), 0.01)
 
-	new_bf_str := bf.ConvertToString()
+	newBfStr := bf.ConvertToString()
 
-	new_bf, err := ConvertStringtoBF(new_bf_str, uint(CONFIG.BloomfilterSize))
+	newBf, err := ConvertStringtoBF(newBfStr, uint(CONFIG.BloomfilterSize))
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
 
-	if !new_bf.Filter.BS.Equal(bf.Filter.BS) {
+	if !newBf.Filter.BS.Equal(bf.Filter.BS) {
 		t.Fatalf("Two bfs are not equal")
 	}
 }
@@ -94,19 +95,19 @@ func TestConvertWithContainedValues(t *testing.T) {
 	bf.AddKey([]byte("key3"))
 	bf.AddKey([]byte("key4"))
 
-	new_bf_str := bf.ConvertToString()
+	newBfStr := bf.ConvertToString()
 
-	new_bf, err := ConvertStringtoBF(new_bf_str, uint(CONFIG.BloomfilterSize))
+	newBf, err := ConvertStringtoBF(newBfStr, uint(CONFIG.BloomfilterSize))
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
 
-	val, _ := new_bf.HasKey([]byte("key1"))
+	val, _ := newBf.HasKey([]byte("key1"))
 	if !val {
-		t.Fatalf("new_bf doesnt have key1!")
+		t.Fatalf("newBf doesnt have key1!")
 	}
 
-	if !new_bf.Filter.BS.Equal(bf.Filter.BS) {
+	if !newBf.Filter.BS.Equal(bf.Filter.BS) {
 		t.Fatalf("Two bfs are not equal")
 	}
 }

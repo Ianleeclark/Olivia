@@ -3,16 +3,16 @@ package incomingNetwork
 import (
 	"bufio"
 	"fmt"
-	"github.com/GrappigPanda/Olivia/bloomfilter"
-	"github.com/GrappigPanda/Olivia/cache"
-	"github.com/GrappigPanda/Olivia/config"
-	"github.com/GrappigPanda/Olivia/dht"
-	"github.com/GrappigPanda/Olivia/network/message_handler"
 	"net"
 	"os"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/GrappigPanda/Olivia/cache"
+	"github.com/GrappigPanda/Olivia/config"
+	"github.com/GrappigPanda/Olivia/dht"
+	"github.com/GrappigPanda/Olivia/network/message_handler"
 )
 
 var BASENODE = "127.0.0.1:5454"
@@ -40,8 +40,8 @@ func TestGetBloomfilter(t *testing.T) {
 	// anything, as we have tests for that already.
 	str := sendCommand("REQUEST bloomfilter\n", t)
 
-	bf_str := strings.Split(str, " ")
-	inputStr := strings.TrimSpace(bf_str[1])
+	bfStr := strings.Split(str, " ")
+	inputStr := strings.TrimSpace(bfStr[1])
 	_, err := olilib.ConvertStringtoBF(inputStr, uint(CONFIG.BloomfilterSize))
 	if err != nil {
 		t.Errorf("%v", err)
@@ -72,8 +72,8 @@ func TestSetKeyUpdatesBloomFilter(t *testing.T) {
 
 	str := sendCommand("REQUEST bloomfilter\n", t)
 
-	bf_str := strings.Split(str, " ")
-	inputStr := strings.TrimSpace(bf_str[1])
+	bfStr := strings.Split(str, " ")
+	inputStr := strings.TrimSpace(bfStr[1])
 	bf, err := olilib.ConvertStringtoBF(inputStr, uint(CONFIG.BloomfilterSize))
 	if err != nil {
 		t.Errorf("%v", err)

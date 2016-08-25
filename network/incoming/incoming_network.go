@@ -3,14 +3,14 @@ package incomingNetwork
 import (
 	"bufio"
 	"fmt"
-	"github.com/GrappigPanda/Olivia/bloomfilter"
+	"log"
+	"net"
+
 	"github.com/GrappigPanda/Olivia/cache"
 	"github.com/GrappigPanda/Olivia/config"
 	"github.com/GrappigPanda/Olivia/dht"
 	"github.com/GrappigPanda/Olivia/network/message_handler"
 	"github.com/GrappigPanda/Olivia/parser"
-	"log"
-	"net"
 )
 
 // ConnectionCtx handles maintaining a persistent state per incoming
@@ -97,7 +97,7 @@ func (ctx *ConnectionCtx) handleConnection(conn *net.Conn) {
 		switch connProc.State {
 		case UNAUTHENTICATED:
 			connProc.Authenticate(password)
-			log.Println(
+			log.Printf(
 				"Unauthenticated request from %v",
 				(*conn).RemoteAddr().String(),
 			)

@@ -230,12 +230,12 @@ func TestKeyLookupIndexesProperly(t *testing.T) {
 			for i := range keyValues {
 				t.Errorf(keyValues[i])
 			}
-			return
 			t.Errorf("Expected key %v to have an index of %v but had index of %v",
 				key,
 				i,
 				keyIndex,
 			)
+			return
 		}
 	}
 }
@@ -389,7 +389,7 @@ func TestSwapTrees(t *testing.T) {
 		}
 	}
 
-	for k, _ := range testHeap.keyLookup {
+	for k := range testHeap.keyLookup {
 		if testHeap.keyLookup[k] != copyHeap.keyLookup[k] {
 			t.Errorf("[Key Lookup] Expected %v,  got %v", testHeap.keyLookup[k], copyHeap.keyLookup[k])
 		}
