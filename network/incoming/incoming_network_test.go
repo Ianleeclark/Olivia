@@ -8,7 +8,8 @@ import (
 	"strings"
 	"testing"
 	"time"
-
+	
+	"github.com/GrappigPanda/Olivia/bloomfilter"
 	"github.com/GrappigPanda/Olivia/cache"
 	"github.com/GrappigPanda/Olivia/config"
 	"github.com/GrappigPanda/Olivia/dht"
