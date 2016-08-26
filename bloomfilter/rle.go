@@ -20,7 +20,7 @@ func Encode(inputString string) string {
 	}
 
 	var currentChar byte
-	var count int = 0
+	var count int
 	var output string
 
 	// Iterate through each character in the string. Keep the current
@@ -113,16 +113,13 @@ func writeOutput(outputString string, char byte, count int) string {
 			outputString,
 			string(char),
 		)
-	} else {
-		retVal = fmt.Sprintf(
-			"%s%s%d",
-			outputString,
-			string(char),
-			count,
-		)
 	}
-
-	return retVal
+	return fmt.Sprintf(
+		"%s%s%d",
+		outputString,
+		string(char),
+		count,
+	)
 }
 
 // writeRepeat handles writing repeating characters intelligently

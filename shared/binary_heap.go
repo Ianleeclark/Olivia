@@ -203,11 +203,11 @@ func (h *Heap) UpdateNodeTimeout(key string) *Node {
 // Get handles retrieving a Node by its key. Not extensively used, but it was a
 // nice-to-have.
 func (h *Heap) Get(key string) (*Node, bool) {
-	if index, ok := h.keyLookup[key]; ok {
+	index, ok := h.keyLookup[key]
+	if ok {
 		return h.Tree[index], ok
-	} else {
-		return nil, ok
 	}
+	return nil, ok
 }
 
 // percolateUp handles sorting a newly inserted node into its correct position.
@@ -323,7 +323,6 @@ func (h *Heap) swapTwoNodes(i int, j int) {
 func (h *Heap) compareTwoTimes(i int, j int) bool {
 	if h.Tree[i].Timeout.Sub(h.Tree[j].Timeout) > 0 {
 		return true
-	} else {
-		return false
 	}
+	return false
 }

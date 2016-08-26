@@ -106,7 +106,7 @@ func calculateHash(key []byte, offSet int) uint {
 func (bf *BloomFilter) hashKey(key []byte) []uint {
 	hashes := make([]uint, bf.HashFunctions)
 
-	for index, _ := range hashes {
+	for index := range hashes {
 		hashes[index] = calculateHash(key, index) % uint(bf.MaxSize)
 	}
 

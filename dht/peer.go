@@ -4,15 +4,17 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
-	"github.com/GrappigPanda/Olivia/bloomfilter"
-	"github.com/GrappigPanda/Olivia/config"
-	"github.com/GrappigPanda/Olivia/network/message_handler"
-	"github.com/GrappigPanda/Olivia/network/receiver"
-	"github.com/GrappigPanda/Olivia/parser"
 	"log"
 	"net"
 	"sync"
 	"time"
+
+	"github.com/GrappigPanda/Olivia/bloomfilter"
+	"github.com/GrappigPanda/Olivia/config"
+	"github.com/GrappigPanda/Olivia/network/message_handler"
+	"github.com/GrappigPanda/Olivia/parser"
+	"github.com/GrappigPanda/Olivia/network/receiver"
+
 )
 
 // State represents the state that the remote peer is in.
@@ -43,7 +45,7 @@ type Peer struct {
 // NewPeer handles creating a new peer to be used in communicating between nodes
 func NewPeer(conn *net.Conn, mh *message_handler.MessageHandler, config *config.Cfg) *Peer {
 	ipPort := (*conn).RemoteAddr().String()
-	log.Println("New peer connected: %v", ipPort)
+	log.Printf("New peer connected: %v", ipPort)
 
 	return &Peer{
 		Status:       Disconnected,
@@ -148,7 +150,7 @@ func (p *Peer) GetBloomFilter() {
 			return
 		}
 
-		for k, _ := range responseData.Args {
+		for k := range responseData.Args {
 			p.Lock()
 			defer p.Unlock()
 			bf, err := olilib.ConvertStringtoBF(k, p.BloomFilter.MaxSize)

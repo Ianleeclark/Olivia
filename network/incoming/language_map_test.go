@@ -1,12 +1,13 @@
 package incomingNetwork
 
 import (
+	"testing"
+
 	"github.com/GrappigPanda/Olivia/bloomfilter"
 	"github.com/GrappigPanda/Olivia/cache"
 	"github.com/GrappigPanda/Olivia/dht"
 	"github.com/GrappigPanda/Olivia/network/message_handler"
 	"github.com/GrappigPanda/Olivia/parser"
-	"testing"
 )
 
 var MESSAGEBUS = message_handler.NewMessageHandler()
@@ -107,7 +108,7 @@ func TestRequestBloomFilter(t *testing.T) {
 	requestData, _ := parser.NewParser(nil).Parse(newBfStr, nil)
 
 	var bfToParse string
-	for k, _ := range requestData.Args {
+	for k := range requestData.Args {
 		bfToParse = k
 		break
 	}
