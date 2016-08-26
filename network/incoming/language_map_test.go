@@ -3,6 +3,7 @@ package incomingNetwork
 import (
 	"testing"
 
+	"github.com/GrappigPanda/Olivia/bloomfilter"
 	"github.com/GrappigPanda/Olivia/cache"
 	"github.com/GrappigPanda/Olivia/dht"
 	"github.com/GrappigPanda/Olivia/network/message_handler"
