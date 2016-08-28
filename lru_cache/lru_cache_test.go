@@ -1,11 +1,10 @@
 package olilib_lru
 
 import (
+	binheap "github.com/GrappigPanda/Olivia/shared"
 	"sync"
 	"testing"
 	"time"
-
-	binheap "github.com/GrappigPanda/Olivia/shared"
 )
 
 var TESTLRU = NewString(10)
@@ -102,7 +101,7 @@ func TestGet(t *testing.T) {
 	}
 
 	if node.Timeout == originalTime {
-		t.Fatalf("Time for retrieving a key didn't update, please fix.")
+		t.Fatalf("Time for retrieving a key didnt update, please fix.")
 	}
 }
 
