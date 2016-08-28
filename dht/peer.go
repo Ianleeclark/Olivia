@@ -34,7 +34,7 @@ type Peer struct {
 	Status       State
 	Conn         *net.Conn
 	IPPort       string
-	BloomFilter  *olilib.BloomFilter
+	BloomFilter  *bloomfilter.BloomFilter
 	MessageBus   *message_handler.MessageHandler
 	failureCount int
 	sync.Mutex
@@ -49,7 +49,7 @@ func NewPeer(conn *net.Conn, mh *message_handler.MessageHandler, config *config.
 		Status:       Disconnected,
 		Conn:         conn,
 		IPPort:       ipPort,
-		BloomFilter:  olilib.NewByFailRate(uint(config.BloomfilterSize), 0.01),
+		BloomFilter:  bloomfilter.NewByFailRate(uint(config.BloomfilterSize), 0.01),
 		MessageBus:   mh,
 		failureCount: 0,
 	}
@@ -61,7 +61,7 @@ func NewPeerByIP(ipPort string, mh *message_handler.MessageHandler, config confi
 		Status:       Disconnected,
 		Conn:         nil,
 		IPPort:       ipPort,
-		BloomFilter:  olilib.NewByFailRate(uint(config.BloomfilterSize), 0.01),
+		BloomFilter:  bloomfilter.NewByFailRate(uint(config.BloomfilterSize), 0.01),
 		MessageBus:   mh,
 		failureCount: 0,
 	}
@@ -151,7 +151,7 @@ func (p *Peer) GetBloomFilter() {
 		for k, _ := range responseData.Args {
 			p.Lock()
 			defer p.Unlock()
-			bf, err := olilib.ConvertStringtoBF(k, p.BloomFilter.MaxSize)
+			bf, err := bloomfilter.ConvertStringtoBF(k, p.BloomFilter.MaxSize)
 			if err != nil {
 				p.BloomFilter = nil
 			}

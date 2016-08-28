@@ -42,7 +42,7 @@ func TestGetBloomfilter(t *testing.T) {
 
 	bf_str := strings.Split(str, " ")
 	inputStr := strings.TrimSpace(bf_str[1])
-	_, err := olilib.ConvertStringtoBF(inputStr, uint(CONFIG.BloomfilterSize))
+	_, err := bloomfilter.ConvertStringtoBF(inputStr, uint(CONFIG.BloomfilterSize))
 	if err != nil {
 		t.Errorf("%v", err)
 	}
@@ -74,7 +74,7 @@ func TestSetKeyUpdatesBloomFilter(t *testing.T) {
 
 	bf_str := strings.Split(str, " ")
 	inputStr := strings.TrimSpace(bf_str[1])
-	bf, err := olilib.ConvertStringtoBF(inputStr, uint(CONFIG.BloomfilterSize))
+	bf, err := bloomfilter.ConvertStringtoBF(inputStr, uint(CONFIG.BloomfilterSize))
 	if err != nil {
 		t.Errorf("%v", err)
 	}
