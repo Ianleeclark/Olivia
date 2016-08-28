@@ -272,7 +272,7 @@ func (h *Heap) percolateDown(fromIndex int) {
 		// preExistingNode is _any_ node which we're not currently tracking.
 		preExistingNode := tmpHeap.Tree[fromIndex+1]
 		// NOTE: I'm not using `compareTwoTimes` here because I think it makes it
-		// more readable. I know this is an egregious abuse of intermediary state
+		// more readable. I know this is an aggregious abuse of intermediary state
 		// or some other nonsense, but it makes it easier for me to read.
 
 		// Unlikely to ever do anything. But it asserts that the minimum

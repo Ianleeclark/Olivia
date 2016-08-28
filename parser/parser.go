@@ -3,10 +3,9 @@ package parser
 import (
 	"fmt"
 	"github.com/GrappigPanda/Olivia/lru_cache"
+	"github.com/GrappigPanda/Olivia/network/message_handler"
 	"net"
 	"strings"
-
-	"github.com/GrappigPanda/Olivia/network/message_handler"
 )
 
 type Parser struct {
@@ -31,7 +30,7 @@ func NewParser(mh *message_handler.MessageHandler) *Parser {
 	}
 }
 
-// Parse handles parsing the grammar into a `CommandData` struct to be later
+// Parse handles parsing the grammer into a `CommandData` struct to be later
 // processed.
 func (p *Parser) Parse(commandString string, conn *net.Conn) (*CommandData, error) {
 	splitCommand := strings.SplitN(commandString, " ", 2)
@@ -62,8 +61,8 @@ func (p *Parser) Parse(commandString string, conn *net.Conn) (*CommandData, erro
 	}, nil
 }
 
-// parseArgs handles filtering commands based on the command grammar.
-// Essentially separates commands delimited by colons and commands not.
+// parseArgs handles filtering commands based on the command grammer.
+// Essentially seperates commands delimited by colons and commands not.
 func parseArgs(args []string) (map[string]string, map[string]string) {
 	argMap := make(map[string]string)
 	expirationMap := make(map[string]string)
