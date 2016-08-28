@@ -14,7 +14,7 @@ var MESSAGEBUS = message_handler.NewMessageHandler()
 var CTX = &ConnectionCtx{
 	nil,
 	cache.NewCache(),
-	olilib.NewByFailRate(1000, 0.01),
+	bloomfilter.NewByFailRate(1000, 0.01),
 	MESSAGEBUS,
 	dht.NewPeerList(MESSAGEBUS, *CONFIG),
 }
@@ -82,7 +82,7 @@ func TestExecuteSetKeyWithExpiration(t *testing.T) {
 }
 
 func TestRequestBloomFilter(t *testing.T) {
-	bf := olilib.NewByFailRate(1000, 0.01)
+	bf := bloomfilter.NewByFailRate(1000, 0.01)
 
 	bf.AddKey([]byte("keyalksdjfl"))
 	bf.AddKey([]byte("key1"))
@@ -112,7 +112,7 @@ func TestRequestBloomFilter(t *testing.T) {
 		break
 	}
 
-	newBloomfilter, err := olilib.ConvertStringtoBF(bfToParse, uint(CONFIG.BloomfilterSize))
+	newBloomfilter, err := bloomfilter.ConvertStringtoBF(bfToParse, uint(CONFIG.BloomfilterSize))
 	if err != nil {
 		t.Fatalf("%v", err)
 	}

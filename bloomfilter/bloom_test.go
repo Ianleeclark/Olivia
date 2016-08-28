@@ -1,4 +1,4 @@
-package olilib
+package bloomfilter
 
 import (
 	"github.com/GrappigPanda/Olivia/config"

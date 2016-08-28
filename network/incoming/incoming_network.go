@@ -18,7 +18,7 @@ import (
 type ConnectionCtx struct {
 	Parser      *parser.Parser
 	Cache       *cache.Cache
-	Bloomfilter *olilib.BloomFilter
+	Bloomfilter *bloomfilter.BloomFilter
 	MessageBus  *message_handler.MessageHandler
 	PeerList    *dht.PeerList
 }
@@ -43,7 +43,7 @@ func StartNetworkRouter(
 		}
 		defer listen.Close()
 
-		bf := olilib.NewByFailRate(1000, 0.01)
+		bf := bloomfilter.NewByFailRate(1000, 0.01)
 
 		ctx := &ConnectionCtx{
 			parser.NewParser(mh),
