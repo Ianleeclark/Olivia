@@ -3,9 +3,10 @@ package bloomfilter
 import (
 	"fmt"
 	"github.com/GrappigPanda/Olivia/lru_cache"
+    "github.com/spaolacci/murmur3"
+    "github.com/mtchavez/jenkins"
 	"hash/fnv"
 	"math"
-	"strconv"
 )
 
 type BloomFilter struct {
@@ -95,10 +96,23 @@ func estimateBounds(items uint, probability float64) (uint, uint) {
 
 // calculateHash Takes in a string and calculates the 64bit hash value.
 func calculateHash(key []byte, offSet int) uint {
-	hasher := fnv.New32()
-	hasher.Write(key)
-	hasher.Write([]byte(strconv.Itoa(offSet)))
-	return uint(hasher.Sum32())
+    switch offSet {
+    // By Default/for offset 1 we'll just use FNV
+    default:
+        hasher := fnv.New32()
+        hasher.Write(key)
+        return uint(hasher.Sum32())
+    case 1:
+        hasher := murmur3.New32()
+        hasher.Write(key)
+        return uint(hasher.Sum32())
+    case 2:
+        hasher := jenkins.New()
+        hasher.Write(key)
+        return uint(hasher.Sum32())
+    }
+
+    return 0;
 }
 
 // hashKey Takes a string in as an argument and hashes it several times to
