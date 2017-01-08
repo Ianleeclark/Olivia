@@ -13,7 +13,7 @@ import (
 type LRUCacheInt32Array struct {
 	KeyCount    int
 	Keys        map[string][]uint32
-	KeyTimeouts *binheap.Heap
+	KeyTimeouts binheap.BinHeap
 	Mutex       *sync.Mutex
 }
 

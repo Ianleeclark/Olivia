@@ -69,7 +69,7 @@ func NewHeapReallocate(maxSize int) *Heap {
 }
 
 // Copy handles taking in a binary heap and making a copy of it.
-func (h *Heap) Copy() *Heap {
+func (h *Heap) Copy() Heap {
 	h.Lock()
 	defer h.Unlock()
 	newHeap := NewHeap(len(h.Tree))
@@ -85,7 +85,7 @@ func (h *Heap) Copy() *Heap {
 	newHeap.index = h.index
 	newHeap.currentSize = h.currentSize
 
-	return newHeap
+	return *newHeap
 }
 
 // MinNode returns the root node. In this implementation, we opted for a
@@ -238,7 +238,7 @@ func (h *Heap) percolateUp(newNodeIndex int) {
 		}
 	}
 
-	h.swapTrees(tmpHeap)
+	h.swapTrees(&tmpHeap)
 }
 
 // percolateDown handles moving a node starting at index `fromIndex` down into
@@ -285,7 +285,7 @@ func (h *Heap) percolateDown(fromIndex int) {
 		}
 	}
 
-	h.swapTrees(tmpHeap)
+	h.swapTrees(&tmpHeap)
 }
 
 func (h *Heap) swapTrees(newHeap *Heap) {

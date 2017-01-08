@@ -381,7 +381,7 @@ func TestSwapTrees(t *testing.T) {
 		}
 	}
 
-	testHeap.swapTrees(copyHeap)
+	testHeap.swapTrees(&copyHeap)
 
 	for i := 0; i < 10; i++ {
 		if copyHeap.Tree[i] != testHeap.Tree[i] {

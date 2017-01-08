@@ -8,7 +8,7 @@ in the network/ folder.
 1. GET
   - Get allows requests for key/value pairs from a remote node.
 2. SET
-  - Set allows a remote node/client to set a value in an olivia node.
+  - Set allows a remote node/client to set a value in an Olivia node.
 3. SETEX
   - Setex allows setting a key on an expiration timer. The expiration time
     **must** be in seconds (e.g., "key1:value1:30").
