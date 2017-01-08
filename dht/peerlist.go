@@ -9,7 +9,7 @@ import (
 	"sync"
 )
 
-// PeerList is a data structure which represents remote olivia nodes.
+// PeerList is a data structure which represents remote Olivia nodes.
 type PeerList struct {
 	Peers       []*Peer
 	BackupPeers []*Peer
