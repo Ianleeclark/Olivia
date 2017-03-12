@@ -35,13 +35,15 @@ func executeRepeatedly(
 
 // heartbeatRemoteNodes handles sending a heartbeat to every node in a peer
 // list.
-func heartbeatRemoteNodes(peerList []*dht.Peer, interval time.Duration) {
+func heartbeatRemoteNodes(interval time.Duration, peerLists ...[]*dht.Peer) {
 	executeRepeatedly(
 		interval,
 		func() {
-			for peer := range peerList {
-				if peerList[peer] != nil {
-					go peerList[peer].TestConnection()
+			for _, peerList := range peerLists {
+				for peer := range peerList {
+					if peerList[peer] != nil {
+						go peerList[peer].TestConnection()
+					}
 				}
 			}
 		},
@@ -52,13 +54,15 @@ func heartbeatRemoteNodes(peerList []*dht.Peer, interval time.Duration) {
 
 // getRemoteBloomFilters requests a remote node's peer list on a timed
 // interval.
-func getRemoteBloomFilters(peerList []*dht.Peer, interval time.Duration) {
+func getRemoteBloomFilters(interval time.Duration, peerLists ...[]*dht.Peer) {
 	executeRepeatedly(
 		interval,
 		func() {
-			for peer := range peerList {
-				if peerList[peer] != nil {
-					go peerList[peer].GetBloomFilter()
+			for _, peerList := range peerLists {
+				for peer := range peerList {
+					if peerList[peer] != nil {
+						go peerList[peer].GetBloomFilter()
+					}
 				}
 			}
 		},
@@ -80,10 +84,16 @@ func Heartbeat(
 	cycleDuration time.Duration,
 	peerList *dht.PeerList,
 ) {
-	go heartbeatRemoteNodes(peerList.Peers, heartbeatInterval)
-	go heartbeatRemoteNodes(peerList.BackupPeers, cycleDuration)
-	go getRemoteBloomFilters(peerList.Peers, cycleDuration)
-	go getRemoteBloomFilters(peerList.BackupPeers, cycleDuration)
+	go heartbeatRemoteNodes(
+		heartbeatInterval,
+		peerList.Peers,
+		peerList.BackupPeers,
+	)
+	go getRemoteBloomFilters(
+		cycleDuration,
+		peerList.Peers,
+		peerList.BackupPeers,
+	)
 }
 
 // StartIncomingNetwork handles spinning up an incoming network router and
