@@ -34,7 +34,7 @@ type Peer struct {
 	Status       State
 	Conn         *net.Conn
 	IPPort       string
-	BloomFilter  *bloomfilter.BloomFilter
+	BloomFilter  bloomfilter.BloomFilter
 	MessageBus   *message_handler.MessageHandler
 	failureCount int
 	sync.Mutex
@@ -148,10 +148,10 @@ func (p *Peer) GetBloomFilter() {
 			return
 		}
 
-		for k, _ := range responseData.Args {
+		for k := range responseData.Args {
 			p.Lock()
 			defer p.Unlock()
-			bf, err := bloomfilter.ConvertStringtoBF(k, p.BloomFilter.MaxSize)
+			bf, err := bloomfilter.Deserialize(k, p.BloomFilter.GetMaxSize())
 			if err != nil {
 				p.BloomFilter = nil
 			}

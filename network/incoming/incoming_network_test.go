@@ -42,7 +42,7 @@ func TestGetBloomfilter(t *testing.T) {
 
 	bf_str := strings.Split(str, " ")
 	inputStr := strings.TrimSpace(bf_str[1])
-	_, err := bloomfilter.ConvertStringtoBF(inputStr, uint(CONFIG.BloomfilterSize))
+	_, err := bloomfilter.Deserialize(inputStr, uint(CONFIG.BloomfilterSize))
 	if err != nil {
 		t.Errorf("%v", err)
 	}
@@ -74,21 +74,21 @@ func TestSetKeyUpdatesBloomFilter(t *testing.T) {
 
 	bf_str := strings.Split(str, " ")
 	inputStr := strings.TrimSpace(bf_str[1])
-	bf, err := bloomfilter.ConvertStringtoBF(inputStr, uint(CONFIG.BloomfilterSize))
+	bf, err := bloomfilter.Deserialize(inputStr, uint(CONFIG.BloomfilterSize))
 	if err != nil {
 		t.Errorf("%v", err)
 	}
 
 	if ok, _ := bf.HasKey([]byte("key1")); !ok {
-		t.Errorf("Bloom filter doesn't contain correct keys %v", bf.ConvertToString())
+		t.Errorf("Bloom filter doesn't contain correct keys %v", bf.Serialize())
 	}
 
 	if ok, _ := bf.HasKey([]byte("key2")); !ok {
-		t.Errorf("Bloom filter doesn't contain correct keys %v", bf.ConvertToString())
+		t.Errorf("Bloom filter doesn't contain correct keys %v", bf.Serialize())
 	}
 
 	if ok, _ := bf.HasKey([]byte("key3")); !ok {
-		t.Errorf("Bloom filter doesn't contain correct keys %v", bf.ConvertToString())
+		t.Errorf("Bloom filter doesn't contain correct keys %v", bf.Serialize())
 	}
 }
 

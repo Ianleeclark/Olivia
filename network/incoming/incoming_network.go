@@ -18,7 +18,7 @@ import (
 type ConnectionCtx struct {
 	Parser      *parser.Parser
 	Cache       *cache.Cache
-	Bloomfilter *bloomfilter.BloomFilter
+	Bloomfilter bloomfilter.BloomFilter
 	MessageBus  *message_handler.MessageHandler
 	PeerList    *dht.PeerList
 }

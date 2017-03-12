@@ -112,7 +112,7 @@ func TestRequestBloomFilter(t *testing.T) {
 		break
 	}
 
-	newBloomfilter, err := bloomfilter.ConvertStringtoBF(bfToParse, uint(CONFIG.BloomfilterSize))
+	newBloomfilter, err := bloomfilter.Deserialize(bfToParse, uint(CONFIG.BloomfilterSize))
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
