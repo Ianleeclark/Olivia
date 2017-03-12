@@ -3,8 +3,8 @@ package bloomfilter
 import (
 	"fmt"
 	"github.com/GrappigPanda/Olivia/lru_cache"
-    "github.com/spaolacci/murmur3"
-    "github.com/mtchavez/jenkins"
+	"github.com/spaolacci/murmur3"
+	"github.com/mtchavez/jenkins"
 	"hash/fnv"
 	"math"
 )
@@ -14,7 +14,7 @@ type BloomFilter struct {
 	MaxSize uint
 	// Total number of hashing functions
 	HashFunctions uint
-	Filter        *Bitset
+	Filter        Bitset
 	HashCache     *olilib_lru.LRUCacheInt32Array
 }
 
@@ -23,7 +23,7 @@ func New(maxSize uint, hashFuns uint) *BloomFilter {
 	return &BloomFilter{
 		maxSize,
 		hashFuns,
-		NewBitset(maxSize),
+		NewWFBitset(maxSize),
 		olilib_lru.NewInt32Array(int((float64(maxSize) * float64(0.1)))),
 	}
 }
@@ -120,7 +120,7 @@ func calculateHash(key []byte, offSet int) uint {
 func (bf *BloomFilter) hashKey(key []byte) []uint {
 	hashes := make([]uint, bf.HashFunctions)
 
-	for index, _ := range hashes {
+	for index := range hashes {
 		hashes[index] = calculateHash(key, index) % uint(bf.MaxSize)
 	}
 
