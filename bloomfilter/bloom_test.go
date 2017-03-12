@@ -8,16 +8,16 @@ import (
 var CONFIG = config.ReadConfig()
 
 func TestNewBloomFilter(t *testing.T) {
-	expectedReturn := BloomFilter{
-		MaxSize:       uint(CONFIG.BloomfilterSize),
+	expectedReturn := SimpleBloomFilter{
+		maxSize:       uint(CONFIG.BloomfilterSize),
 		HashFunctions: 3,
-		Filter:        new(Bitset),
+		Filter:        NewWFBitset(10000),
 	}
 
-	result := New(uint(CONFIG.BloomfilterSize), 3)
+	result := NewSimpleBF(uint(CONFIG.BloomfilterSize), 3)
 
-	if expectedReturn.MaxSize != result.MaxSize {
-		t.Fatalf("Expected %v got %v", expectedReturn.MaxSize, result.MaxSize)
+	if expectedReturn.GetMaxSize() != result.GetMaxSize() {
+		t.Fatalf("Expected %v got %v", expectedReturn.GetMaxSize(), result.GetMaxSize())
 	}
 
 	if expectedReturn.HashFunctions != result.HashFunctions {
@@ -26,16 +26,16 @@ func TestNewBloomFilter(t *testing.T) {
 }
 
 func TestNewBloomFilterByFailRate(t *testing.T) {
-	expectedReturn := BloomFilter{
-		MaxSize:       9585,
+	expectedReturn := SimpleBloomFilter{
+		maxSize:       9585,
 		HashFunctions: 3,
-		Filter:        new(Bitset),
+		Filter:        NewWFBitset(10000),
 	}
 
 	result := NewByFailRate(uint(CONFIG.BloomfilterSize), 0.01)
 
-	if expectedReturn.MaxSize != result.MaxSize {
-		t.Fatalf("Expected %v got %v", expectedReturn.MaxSize, result.MaxSize)
+	if expectedReturn.GetMaxSize() != result.GetMaxSize() {
+		t.Fatalf("Expected %v got %v", expectedReturn.GetMaxSize(), result.GetMaxSize())
 	}
 }
 
@@ -73,14 +73,14 @@ func TestHasKeyFailNoKey(t *testing.T) {
 func TestConvertToString(t *testing.T) {
 	bf := NewByFailRate(uint(CONFIG.BloomfilterSize), 0.01)
 
-	new_bf_str := bf.ConvertToString()
+	new_bf_str := bf.Serialize()
 
-	new_bf, err := ConvertStringtoBF(new_bf_str, uint(CONFIG.BloomfilterSize))
+	new_bf, err := Deserialize(new_bf_str, uint(CONFIG.BloomfilterSize))
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
 
-	if !new_bf.Filter.BS.Equal(bf.Filter.BS) {
+	if !new_bf.Filter.Compare(bf.Filter) {
 		t.Fatalf("Two bfs are not equal")
 	}
 }
@@ -94,9 +94,9 @@ func TestConvertWithContainedValues(t *testing.T) {
 	bf.AddKey([]byte("key3"))
 	bf.AddKey([]byte("key4"))
 
-	new_bf_str := bf.ConvertToString()
+	new_bf_str := bf.Serialize()
 
-	new_bf, err := ConvertStringtoBF(new_bf_str, uint(CONFIG.BloomfilterSize))
+	new_bf, err := Deserialize(new_bf_str, uint(CONFIG.BloomfilterSize))
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -106,7 +106,7 @@ func TestConvertWithContainedValues(t *testing.T) {
 		t.Fatalf("new_bf doesnt have key1!")
 	}
 
-	if !new_bf.Filter.BS.Equal(bf.Filter.BS) {
+	if !new_bf.Filter.Compare(bf.Filter) {
 		t.Fatalf("Two bfs are not equal")
 	}
 }

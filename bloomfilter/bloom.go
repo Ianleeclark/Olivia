@@ -3,27 +3,35 @@ package bloomfilter
 import (
 	"fmt"
 	"github.com/GrappigPanda/Olivia/lru_cache"
-    "github.com/spaolacci/murmur3"
-    "github.com/mtchavez/jenkins"
+	"github.com/spaolacci/murmur3"
+	"github.com/mtchavez/jenkins"
 	"hash/fnv"
 	"math"
 )
 
-type BloomFilter struct {
+type BloomFilter interface {
+	AddKey(key []byte) (bool, []uint)
+	HasKey(key []byte) (bool, []uint)
+	Serialize() string
+	GetMaxSize() uint
+}
+
+
+type SimpleBloomFilter struct {
 	// The maximum size for the bloom filter
-	MaxSize uint
+	maxSize uint
 	// Total number of hashing functions
 	HashFunctions uint
-	Filter        *Bitset
+	Filter        Bitset
 	HashCache     *olilib_lru.LRUCacheInt32Array
 }
 
-// New Returns a pointer to a newly allocated `BloomFilter` object
-func New(maxSize uint, hashFuns uint) *BloomFilter {
-	return &BloomFilter{
+// New Returns a pointer to a newly allocated `SimpleBloomFilter` object
+func NewSimpleBF(maxSize uint, hashFuns uint) *SimpleBloomFilter {
+	return &SimpleBloomFilter{
 		maxSize,
 		hashFuns,
-		NewBitset(maxSize),
+		NewWFBitset(maxSize),
 		olilib_lru.NewInt32Array(int((float64(maxSize) * float64(0.1)))),
 	}
 }
@@ -31,13 +39,18 @@ func New(maxSize uint, hashFuns uint) *BloomFilter {
 // NewByFailRate allows generation of a bloom filter with a pre-conceived
 // amount of items and a false-positive failure rate. We calculate our bloom
 // filter bounds and generate the new bloom filter this way.
-func NewByFailRate(items uint, probability float64) *BloomFilter {
+func NewByFailRate(items uint, probability float64) *SimpleBloomFilter {
 	m, k := estimateBounds(items, probability)
-	return New(m, k)
+	return NewSimpleBF(m, k)
+}
+
+// GetMaxSize returns the max size. Just an ugly getter.
+func (bf *SimpleBloomFilter) GetMaxSize() uint {
+	return bf.maxSize
 }
 
 // AddKey Adds a new key to the bloom filter
-func (bf *BloomFilter) AddKey(key []byte) (bool, []uint) {
+func (bf *SimpleBloomFilter) AddKey(key []byte) (bool, []uint) {
 	hasKey, hashIndexes := bf.HasKey(key)
 	if !hasKey {
 		hashIndexes = bf.hashKey(key)
@@ -51,7 +64,7 @@ func (bf *BloomFilter) AddKey(key []byte) (bool, []uint) {
 }
 
 // HasKey verifies if a key is or isn't in the bloom filter.
-func (bf *BloomFilter) HasKey(key []byte) (bool, []uint) {
+func (bf *SimpleBloomFilter) HasKey(key []byte) (bool, []uint) {
 	hashIndexes := bf.hashKey(key)
 
 	for _, element := range hashIndexes {
@@ -67,13 +80,13 @@ func (bf *BloomFilter) HasKey(key []byte) (bool, []uint) {
 
 // ConvertToString handles conversion of a bloom filter to a string. Moreover,
 // it enforces RLE encoding, so that fewer bytes are transferred per request.
-func (bf *BloomFilter) ConvertToString() string {
+func (bf *SimpleBloomFilter) Serialize() string {
 	return Encode(bf.Filter.ToString())
 }
 
 // ConvertStringToBF Decodes the RLE'd bloom filter and then converts it to
 // an actual bloom filter in-memory.
-func ConvertStringtoBF(inputString string, maxSize uint) (*BloomFilter, error) {
+func Deserialize(inputString string, maxSize uint) (*SimpleBloomFilter, error) {
 	bf := NewByFailRate(maxSize, 0.01)
 
 	sz := fmt.Sprintf("\"%s=\"", Decode(inputString))
@@ -117,11 +130,11 @@ func calculateHash(key []byte, offSet int) uint {
 
 // hashKey Takes a string in as an argument and hashes it several times to
 // create usable indexes for the bloom filter.
-func (bf *BloomFilter) hashKey(key []byte) []uint {
+func (bf *SimpleBloomFilter) hashKey(key []byte) []uint {
 	hashes := make([]uint, bf.HashFunctions)
 
-	for index, _ := range hashes {
-		hashes[index] = calculateHash(key, index) % uint(bf.MaxSize)
+	for index := range hashes {
+		hashes[index] = calculateHash(key, index) % uint(bf.GetMaxSize())
 	}
 
 	return hashes

@@ -72,7 +72,7 @@ func (ctx *ConnectionCtx) ExecuteCommand(requestData parser.CommandData) string 
 
 				retVals[index] = fmt.Sprintf("%s:%s", k, v)
 				index++
-				(*ctx.Bloomfilter).AddKey([]byte(k))
+				ctx.Bloomfilter.AddKey([]byte(k))
 			}
 
 			return createResponse(command, retVals, requestData.Hash)
@@ -154,7 +154,7 @@ func (ctx *ConnectionCtx) handleRequest(requestData parser.CommandData) string {
 	switch strings.ToUpper(requestItem) {
 	case "BLOOMFILTER":
 		{
-			bfString := (*ctx.Bloomfilter).ConvertToString()
+			bfString := ctx.Bloomfilter.Serialize()
 			return createResponse(
 				requestData.Command,
 				[]string{bfString},
@@ -166,7 +166,7 @@ func (ctx *ConnectionCtx) handleRequest(requestData parser.CommandData) string {
 			(*ctx.PeerList).AddPeer((*requestData.Conn).RemoteAddr().String())
 			return createResponse(
 				requestData.Command,
-				[]string{(*ctx.Bloomfilter).ConvertToString()},
+				[]string{ctx.Bloomfilter.Serialize()},
 				"",
 			)
 		}

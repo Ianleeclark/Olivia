@@ -112,7 +112,7 @@ func TestRequestBloomFilter(t *testing.T) {
 		break
 	}
 
-	newBloomfilter, err := bloomfilter.ConvertStringtoBF(bfToParse, uint(CONFIG.BloomfilterSize))
+	newBloomfilter, err := bloomfilter.Deserialize(bfToParse, uint(CONFIG.BloomfilterSize))
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -122,7 +122,7 @@ func TestRequestBloomFilter(t *testing.T) {
 		t.Fatalf("newBloomfilter doesnt have key1!")
 	}
 
-	if !bf.Filter.BS.Equal(newBloomfilter.Filter.BS) {
+	if !bf.Filter.Compare(newBloomfilter.Filter) {
 		t.Fatalf("Two bfs are not equal")
 	}
 }
