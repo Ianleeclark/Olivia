@@ -23,8 +23,8 @@ func TestExecuteGetAllSucceed(t *testing.T) {
 	expectedReturn := "hash:GOT key1:test1,key2:test14\n"
 	expectedReturn2 := "hash:GOT key2:test14,key1:test1\n"
 
-	(*CTX.Cache.Cache)["key1"] = "test1"
-	(*CTX.Cache.Cache)["key2"] = "test14"
+	CTX.Cache.Set("key1", "test1")
+	CTX.Cache.Set("key2", "test14")
 
 	command := parser.CommandData{"hash", "GET", map[string]string{"key1": "", "key2": ""}, make(map[string]string), nil}
 	result := CTX.ExecuteCommand(command)
@@ -40,8 +40,8 @@ func TestExecuteGetAllSkipNonexistingKey(t *testing.T) {
 	expectedReturn := "hash:GOT key1:test1,key2:test14\n"
 	expectedReturn2 := "hash:GOT key2:test14,key1:test1\n"
 
-	(*CTX.Cache.Cache)["key1"] = "test1"
-	(*CTX.Cache.Cache)["key2"] = "test14"
+	CTX.Cache.Set("key1", "test1")
+	CTX.Cache.Set("key2", "test14")
 
 	command := parser.CommandData{"hash", "GET", map[string]string{"key1": "", "key2": ""}, make(map[string]string), nil}
 	result := CTX.ExecuteCommand(command)

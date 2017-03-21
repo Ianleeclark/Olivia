@@ -15,7 +15,7 @@ func TestSetGet(t *testing.T) {
 
 	key := "TestKey"
 	cache.Set(key, "1024")
-	if value, ok := (*cache.Cache)[key]; !ok || value != "1024" {
+	if value, err := cache.Get(key); err != nil || value != "1024" {
 		t.Fatalf("expected %v, got %v", "1024", value)
 		t.Fatalf("Expected True, got False")
 	}
@@ -23,9 +23,8 @@ func TestSetGet(t *testing.T) {
 	secondValue, err := cache.Get(key)
 	if err != nil {
 		t.Fatalf(
-			"Got error from GETing key: %v, %v",
+			"Got error from GETing key: %v",
 			err,
-			(*cache.Cache),
 		)
 	}
 
