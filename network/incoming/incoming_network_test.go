@@ -6,7 +6,6 @@ import (
 	"github.com/GrappigPanda/Olivia/bloomfilter"
 	"github.com/GrappigPanda/Olivia/cache"
 	"github.com/GrappigPanda/Olivia/config"
-	"github.com/GrappigPanda/Olivia/dht"
 	"github.com/GrappigPanda/Olivia/network/message_handler"
 	"net"
 	"os"
@@ -99,10 +98,9 @@ func TestGetKeyFromRemoteNode(t *testing.T) {
 
 func TestMain(m *testing.M) {
 	mh := message_handler.NewMessageHandler()
-	cache := cache.NewCache()
-	peerList := dht.NewPeerList(mh, *CONFIG)
+	cache := cache.NewCache(mh, CONFIG)
 	config := config.ReadConfig()
-	stopchan := StartNetworkRouter(mh, cache, peerList, config)
+	stopchan := StartNetworkRouter(mh, cache, config)
 
 	os.Exit(m.Run())
 

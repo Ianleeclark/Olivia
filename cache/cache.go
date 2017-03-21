@@ -7,6 +7,7 @@ import (
 	"github.com/GrappigPanda/Olivia/network/message_handler"
 	binheap "github.com/GrappigPanda/Olivia/shared"
 	"log"
+	"strings"
 	"sync"
 	"time"
 )
@@ -14,9 +15,10 @@ import (
 // TODO(ian): Replace this with something else
 // Cache is actually just a map[string]string. Don't tell anyone.
 type Cache struct {
-	PeerList *dht.PeerList
-	cache    *map[string]string
-	binHeap  *binheap.Heap
+	PeerList   *dht.PeerList
+	MessageBus *message_handler.MessageHandler
+	cache      *map[string]string
+	binHeap    *binheap.Heap
 	sync.Mutex
 }
 
@@ -24,9 +26,10 @@ type Cache struct {
 func NewCache(mh *message_handler.MessageHandler, config *config.Cfg) *Cache {
 	cacheMap := make(map[string]string)
 	cache := &Cache{
-		PeerList: dht.NewPeerList(mh, *config),
-		cache:    &cacheMap,
-		binHeap:  binheap.NewHeapReallocate(100),
+		PeerList:   dht.NewPeerList(mh, *config),
+		MessageBus: mh,
+		cache:      &cacheMap,
+		binHeap:    binheap.NewHeapReallocate(100),
 	}
 
 	for index, peerIP := range config.RemotePeers {
@@ -52,6 +55,30 @@ func NewCache(mh *message_handler.MessageHandler, config *config.Cfg) *Cache {
 // reading doesn't lock the cache.
 func (c *Cache) Get(key string) (string, error) {
 	if value, ok := (*c.cache)[key]; !ok {
+		responseChannel := make(chan string)
+		for _, peer := range c.PeerList.Peers {
+			// TODO(ian): Pull out the dht.Timeout and dht.Disconnected to an `isConnectable` function.
+			if peer == nil || peer.Status == dht.Timeout || peer.Status == dht.Disconnected {
+				continue
+			}
+
+			peer.SendRequest(
+				fmt.Sprintf("GET %s", key),
+				responseChannel,
+				c.MessageBus,
+			)
+
+			value := <-responseChannel
+			if value != "" {
+				splitString := strings.Split(value, " ")
+				splitString = strings.Split(splitString[1], ":")
+				if len(splitString) > 1 {
+					return fmt.Sprintf("%s:%s", key, splitString[1]), nil
+				} else {
+					return fmt.Sprintf("%s:%s", key, ""), nil
+				}
+			}
+		}
 		return "", fmt.Errorf("Key not found in cache")
 	} else {
 		return value, nil
@@ -124,4 +151,70 @@ func (c *Cache) EvictExpiredkeys(expirationDate time.Time) {
 func (c *Cache) expireKey(key string) {
 	delete(*c.cache, key)
 	// TODO(ian): We need to also remove the the key from the binary heap.
+}
+
+func (c *Cache) DisconnectPeer(peerIPPort string) string {
+	outString := "Peer not found in peer list."
+	for _, peer := range c.PeerList.Peers {
+		if peer.IPPort != peerIPPort {
+			continue
+		}
+
+		if peer != nil && peer.Status == dht.Connected {
+			peer.Disconnect()
+			outString = "Peer has been disconnected."
+		}
+
+		// TODO(ian): Connect a backup node after one node has forced itself to be evicted.
+	}
+
+	return outString
+}
+
+func (c *Cache) AddPeer(peerIPPort string) {
+	c.PeerList.AddPeer(peerIPPort)
+}
+
+func (c *Cache) ListPeers(requestHash string) string {
+	count := 0
+	outString := fmt.Sprintf("%s:FULFILLED ", requestHash)
+
+	for _, peer := range c.PeerList.Peers {
+		if peer == nil {
+			continue
+		}
+
+		if count == 0 {
+			outString = fmt.Sprintf(
+				"%s%s",
+				outString,
+				peer.IPPort,
+			)
+
+		} else {
+			outString = fmt.Sprintf(
+				"%s,%s",
+				outString,
+				peer.IPPort,
+			)
+
+		}
+	}
+
+	for _, peer := range c.PeerList.BackupPeers {
+		if peer == nil {
+			continue
+		}
+
+		outString = fmt.Sprintf(
+			"%s,%s",
+			outString,
+			peer.IPPort,
+		)
+	}
+
+	return fmt.Sprintf(
+		"%s\n",
+		outString,
+	)
 }

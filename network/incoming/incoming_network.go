@@ -6,7 +6,6 @@ import (
 	"github.com/GrappigPanda/Olivia/bloomfilter"
 	"github.com/GrappigPanda/Olivia/cache"
 	"github.com/GrappigPanda/Olivia/config"
-	"github.com/GrappigPanda/Olivia/dht"
 	"github.com/GrappigPanda/Olivia/network/message_handler"
 	"github.com/GrappigPanda/Olivia/parser"
 	"log"
@@ -19,8 +18,6 @@ type ConnectionCtx struct {
 	Parser      *parser.Parser
 	Cache       *cache.Cache
 	Bloomfilter bloomfilter.BloomFilter
-	MessageBus  *message_handler.MessageHandler
-	PeerList    *dht.PeerList
 }
 
 // StartNetworkRouter initializes everything necessary for our incoming network
@@ -28,7 +25,6 @@ type ConnectionCtx struct {
 func StartNetworkRouter(
 	mh *message_handler.MessageHandler,
 	cache *cache.Cache,
-	peerList *dht.PeerList,
 	config *config.Cfg,
 ) chan struct{} {
 	stopchan := make(chan struct{})
@@ -49,8 +45,6 @@ func StartNetworkRouter(
 			parser.NewParser(mh),
 			cache,
 			bf,
-			mh,
-			peerList,
 		}
 
 		log.Println("Starting connection router!")

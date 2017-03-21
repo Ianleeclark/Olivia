@@ -7,11 +7,11 @@ import (
 )
 
 func TestNewCache(t *testing.T) {
-	_ = NewCache()
+	_ = NewCache(nil, nil)
 }
 
 func TestSetGet(t *testing.T) {
-	cache := NewCache()
+	cache := NewCache(nil, nil)
 
 	key := "TestKey"
 	cache.Set(key, "1024")
@@ -34,7 +34,7 @@ func TestSetGet(t *testing.T) {
 }
 
 func TestCache_SetExpiration(t *testing.T) {
-	cache := NewCache()
+	cache := NewCache(nil, nil)
 
 	key := "TestKey"
 	testValue := "1024"

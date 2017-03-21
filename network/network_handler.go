@@ -115,7 +115,7 @@ func StartIncomingNetwork(
 		)
 	}
 
-	networkRouterStopChan := incomingNetwork.StartNetworkRouter(mh, cache, cache.PeerList, config)
+	networkRouterStopChan := incomingNetwork.StartNetworkRouter(mh, cache, config)
 	// TODO(ian): Clean up this for statement, it's technical debt.
 	for {
 		select {
