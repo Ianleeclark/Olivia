@@ -26,24 +26,27 @@ type Cache struct {
 func NewCache(mh *message_handler.MessageHandler, config *config.Cfg) *Cache {
 	cacheMap := make(map[string]string)
 	cache := &Cache{
-		PeerList:   dht.NewPeerList(mh, *config),
+		PeerList:   nil,
 		MessageBus: mh,
 		cache:      &cacheMap,
 		binHeap:    binheap.NewHeapReallocate(100),
 	}
 
-	for index, peerIP := range config.RemotePeers {
-		peer := dht.NewPeerByIP(peerIP, mh, *config)
-		cache.PeerList.Peers[index] = peer
-		(*cache.PeerList.PeerMap)[peerIP] = true
-	}
+	if config != nil {
+		cache.PeerList = dht.NewPeerList(mh, *config)
+		for index, peerIP := range config.RemotePeers {
+			peer := dht.NewPeerByIP(peerIP, mh, *config)
+			cache.PeerList.Peers[index] = peer
+			(*cache.PeerList.PeerMap)[peerIP] = true
+		}
 
-	err := cache.PeerList.ConnectAllPeers()
-	if err != nil {
-		for err != nil {
-			log.Println("Sleeping for 60 seconds and attempting to reconnect")
-			time.Sleep(time.Second * 60)
-			err = cache.PeerList.ConnectAllPeers()
+		err := cache.PeerList.ConnectAllPeers()
+		if err != nil {
+			for err != nil {
+				log.Println("Sleeping for 60 seconds and attempting to reconnect")
+				time.Sleep(time.Second * 60)
+				err = cache.PeerList.ConnectAllPeers()
+			}
 		}
 	}
 
@@ -55,34 +58,41 @@ func NewCache(mh *message_handler.MessageHandler, config *config.Cfg) *Cache {
 // reading doesn't lock the cache.
 func (c *Cache) Get(key string) (string, error) {
 	if value, ok := (*c.cache)[key]; !ok {
-		responseChannel := make(chan string)
-		for _, peer := range c.PeerList.Peers {
-			// TODO(ian): Pull out the dht.Timeout and dht.Disconnected to an `isConnectable` function.
-			if peer == nil || peer.Status == dht.Timeout || peer.Status == dht.Disconnected {
-				continue
-			}
-
-			peer.SendRequest(
-				fmt.Sprintf("GET %s", key),
-				responseChannel,
-				c.MessageBus,
-			)
-
-			value := <-responseChannel
-			if value != "" {
-				splitString := strings.Split(value, " ")
-				splitString = strings.Split(splitString[1], ":")
-				if len(splitString) > 1 {
-					return fmt.Sprintf("%s:%s", key, splitString[1]), nil
-				} else {
-					return fmt.Sprintf("%s:%s", key, ""), nil
-				}
-			}
+		if c.PeerList != nil && len(c.PeerList.Peers) > 0 {
+			return c.getFromRemotePeers(key)
 		}
-		return "", fmt.Errorf("Key not found in cache")
 	} else {
 		return value, nil
 	}
+	return "", fmt.Errorf("Key not found in cache")
+}
+
+func (c *Cache) getFromRemotePeers(key string) (string, error) {
+	responseChannel := make(chan string)
+	for _, peer := range c.PeerList.Peers {
+		// TODO(ian): Pull out the dht.Timeout and dht.Disconnected to an `isConnectable` function.
+		if peer == nil || peer.Status == dht.Timeout || peer.Status == dht.Disconnected {
+			continue
+		}
+
+		peer.SendRequest(
+			fmt.Sprintf("GET %s", key),
+			responseChannel,
+			c.MessageBus,
+		)
+
+		value := <-responseChannel
+		if value != "" {
+			splitString := strings.Split(value, " ")
+			splitString = strings.Split(splitString[1], ":")
+			if len(splitString) > 1 {
+				return fmt.Sprintf("%s:%s", key, splitString[1]), nil
+			} else {
+				return fmt.Sprintf("%s:%s", key, ""), nil
+			}
+		}
+	}
+	return "", fmt.Errorf("Key not found in cache")
 }
 
 // copyCache handles creating a copy of the cache
