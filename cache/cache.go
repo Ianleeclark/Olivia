@@ -10,7 +10,7 @@ import (
 // TODO(ian): Replace this with something else
 // Cache is actually just a map[string]string. Don't tell anyone.
 type Cache struct {
-	Cache   *map[string]string
+	cache   *map[string]string
 	binHeap *binheap.Heap
 	sync.Mutex
 }
@@ -19,7 +19,7 @@ type Cache struct {
 func NewCache() *Cache {
 	cacheMap := make(map[string]string)
 	return &Cache{
-		Cache:   &cacheMap,
+		cache:   &cacheMap,
 		binHeap: binheap.NewHeapReallocate(100),
 	}
 }
@@ -28,7 +28,7 @@ func NewCache() *Cache {
 // from the ReadCache which is for copy-on-write optimizations so that
 // reading doesn't lock the cache.
 func (c *Cache) Get(key string) (string, error) {
-	if value, ok := (*c.Cache)[key]; !ok {
+	if value, ok := (*c.cache)[key]; !ok {
 		return "", fmt.Errorf("Key not found in cache")
 	} else {
 		return value, nil
@@ -38,8 +38,8 @@ func (c *Cache) Get(key string) (string, error) {
 // copyCache handles creating a copy of the cache
 func (c *Cache) copyCache() {
 	c.Lock()
-	for k, v := range *c.Cache {
-		(*c.Cache)[k] = v
+	for k, v := range *c.cache {
+		(*c.cache)[k] = v
 	}
 	c.Unlock()
 }
@@ -48,7 +48,7 @@ func (c *Cache) copyCache() {
 // ReadCache.
 func (c *Cache) Set(key string, value string) error {
 	c.Lock()
-	(*c.Cache)[key] = value
+	(*c.cache)[key] = value
 	c.Unlock()
 
 	c.copyCache()
@@ -99,6 +99,6 @@ func (c *Cache) EvictExpiredkeys(expirationDate time.Time) {
 }
 
 func (c *Cache) expireKey(key string) {
-	delete(*c.Cache, key)
+	delete(*c.cache, key)
 	// TODO(ian): We need to also remove the the key from the binary heap.
 }

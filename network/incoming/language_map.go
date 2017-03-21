@@ -29,8 +29,8 @@ func (ctx *ConnectionCtx) ExecuteCommand(requestData parser.CommandData) string 
 			index := 0
 			responseChannel := make(chan string)
 			for k := range args {
-				val, ok := (*ctx.Cache.Cache)[k]
-				if ok {
+				val, err := ctx.Cache.Get(k)
+				if err == nil {
 					retVals[index] = fmt.Sprintf("%s:%s", k, val)
 					index++
 				} else {
@@ -68,7 +68,7 @@ func (ctx *ConnectionCtx) ExecuteCommand(requestData parser.CommandData) string 
 
 			index := 0
 			for k, v := range args {
-				(*ctx.Cache.Cache)[k] = v
+				ctx.Cache.Set(k, v)
 
 				retVals[index] = fmt.Sprintf("%s:%s", k, v)
 				index++
