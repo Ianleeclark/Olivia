@@ -5,14 +5,6 @@
 Olivia is essentially a distributed hash table that I built to test out some
 weird ideas I've had about Go and distributed programming that I've had.
 
-## Is it production ready?
-I'd definitely consider this **not** production ready. I typically approach
-personal projects in two phases: the initial naive phase, where I implement
-things in the most natural (for me) way; and the improvement phase, where I
-exchange naive solutions for more optimal solutions. I'm heavily entrenched
-into the naive phase, so while I'm getting to the optimal solution phase, I'm
-not there yet.
-
 ## What is Olivia
 Olivia is essentially just a distributed hash table with added goodies.
 From early on, I wanted to use bloomfilters to enhance lookup speed
@@ -38,7 +30,7 @@ Real quick and easy steps to run a node:
 ```
   1. git clone https://github.com/GrappigPanda/Olivia
   2. cd Olivia
-  3. build/install_deps.sh
+  3. go get ./...
   4. go build
   5. ./Olivia
 ```

@@ -6,7 +6,6 @@ import (
 	"github.com/GrappigPanda/Olivia/dht"
 	"github.com/GrappigPanda/Olivia/network/incoming"
 	"github.com/GrappigPanda/Olivia/network/message_handler"
-	"log"
 	"time"
 ) // executeRepeatedly Allows repeated calls to any function which doesn't accept
 // arguments. Allows for remote stopping of the execution and passing back
@@ -105,35 +104,18 @@ func StartIncomingNetwork(
 	config *config.Cfg,
 	mainStopChan chan struct{},
 ) {
-	peerList := dht.NewPeerList(mh, *config)
-
 	// BaseNode==True signifies that we're not expecting to connect to any
 	// remote nodes on connection, so if it's false, we'll skip that step and
 	// just wait for incoming connections.
 	if !config.BaseNode {
-		for index, peerIP := range config.RemotePeers {
-			peer := dht.NewPeerByIP(peerIP, mh, *config)
-			peerList.Peers[index] = peer
-			(*peerList.PeerMap)[peerIP] = true
-		}
-
-		err := peerList.ConnectAllPeers()
-		if err != nil {
-			for err != nil {
-				log.Println("Sleeping for 60 seconds and attempting to reconnect")
-				time.Sleep(time.Second * 60)
-				err = peerList.ConnectAllPeers()
-			}
-		}
-
 		Heartbeat(
 			time.Duration(config.HeartbeatInterval)*time.Millisecond,
 			time.Duration(config.HeartbeatLoop)*time.Second,
-			peerList,
+			cache.PeerList,
 		)
 	}
 
-	networkRouterStopChan := incomingNetwork.StartNetworkRouter(mh, cache, peerList, config)
+	networkRouterStopChan := incomingNetwork.StartNetworkRouter(mh, cache, config)
 	// TODO(ian): Clean up this for statement, it's technical debt.
 	for {
 		select {

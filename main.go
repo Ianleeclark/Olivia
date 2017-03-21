@@ -10,9 +10,10 @@ import (
 func Init() {
 	config := config.ReadConfig()
 
-	internalCache := cache.NewCache()
-
 	messageHandler := message_handler.NewMessageHandler()
+
+	internalCache := cache.NewCache(messageHandler, config)
+
 	networkHandler.StartIncomingNetwork(
 		messageHandler,
 		internalCache,

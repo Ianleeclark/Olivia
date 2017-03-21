@@ -3,7 +3,6 @@ package incomingNetwork
 import (
 	"bytes"
 	"fmt"
-	"github.com/GrappigPanda/Olivia/dht"
 	"github.com/GrappigPanda/Olivia/parser"
 	"log"
 	"strconv"
@@ -27,36 +26,11 @@ func (ctx *ConnectionCtx) ExecuteCommand(requestData parser.CommandData) string 
 			retVals := make([]string, len(args))
 
 			index := 0
-			responseChannel := make(chan string)
 			for k := range args {
-				val, ok := (*ctx.Cache.Cache)[k]
-				if ok {
+				val, err := ctx.Cache.Get(k)
+				if err == nil {
 					retVals[index] = fmt.Sprintf("%s:%s", k, val)
 					index++
-				} else {
-					for _, peer := range ctx.PeerList.Peers {
-						if peer == nil || peer.Status == dht.Timeout || peer.Status == dht.Disconnected {
-							continue
-						}
-
-						peer.SendRequest(
-							fmt.Sprintf("GET %s", k),
-							responseChannel,
-							ctx.MessageBus,
-						)
-
-						value := <-responseChannel
-						if value != "" {
-							splitString := strings.Split(value, " ")
-							splitString = strings.Split(splitString[1], ":")
-							if len(splitString) > 1 {
-								retVals[index] = fmt.Sprintf("%s:%s", k, splitString[1])
-							} else {
-								retVals[index] = fmt.Sprintf("%s:%s", k, "")
-							}
-							index++
-						}
-					}
 				}
 			}
 
@@ -68,7 +42,7 @@ func (ctx *ConnectionCtx) ExecuteCommand(requestData parser.CommandData) string 
 
 			index := 0
 			for k, v := range args {
-				(*ctx.Cache.Cache)[k] = v
+				ctx.Cache.Set(k, v)
 
 				retVals[index] = fmt.Sprintf("%s:%s", k, v)
 				index++
@@ -163,7 +137,7 @@ func (ctx *ConnectionCtx) handleRequest(requestData parser.CommandData) string {
 		}
 	case "CONNECT":
 		{
-			(*ctx.PeerList).AddPeer((*requestData.Conn).RemoteAddr().String())
+			ctx.Cache.AddPeer((*requestData.Conn).RemoteAddr().String())
 			return createResponse(
 				requestData.Command,
 				[]string{ctx.Bloomfilter.Serialize()},
@@ -172,67 +146,11 @@ func (ctx *ConnectionCtx) handleRequest(requestData parser.CommandData) string {
 		}
 	case "PEERS":
 		{
-			count := 0
-			outString := fmt.Sprintf("%s:FULFILLED ", requestData.Hash)
-
-			for _, peer := range ctx.PeerList.Peers {
-				if peer == nil {
-					continue
-				}
-
-				if count == 0 {
-					outString = fmt.Sprintf(
-						"%s%s",
-						outString,
-						peer.IPPort,
-					)
-
-				} else {
-					outString = fmt.Sprintf(
-						"%s,%s",
-						outString,
-						peer.IPPort,
-					)
-
-				}
-			}
-
-			for _, peer := range ctx.PeerList.BackupPeers {
-				if peer == nil {
-					continue
-				}
-
-				outString = fmt.Sprintf(
-					"%s,%s",
-					outString,
-					peer.IPPort,
-				)
-			}
-
-			outString = fmt.Sprintf(
-				"%s\n",
-				outString,
-			)
-
-			return outString
+			return ctx.Cache.ListPeers(requestData.Hash)
 		}
 	case "DISCONNECT":
 		{
-			outString := "Peer not found in peer list."
-			for _, peer := range ctx.PeerList.Peers {
-				if peer.IPPort != (*requestData.Conn).RemoteAddr().String() {
-					continue
-				}
-
-				if peer != nil && peer.Status == dht.Connected {
-					peer.Disconnect()
-					outString = "Peer has been disconnected."
-				}
-
-				// TODO(ian): Connect a backup node after one node has forced itself to be evicted.
-			}
-
-			return outString
+			return ctx.Cache.DisconnectPeer((*requestData.Conn).RemoteAddr().String())
 		}
 	}
 

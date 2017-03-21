@@ -13,6 +13,7 @@ type Cfg struct {
 	BaseNode          bool
 	RemotePeers       []string
 	ListenPort        int
+	IsTesting         bool
 }
 
 // ReadConfig handles opening a file and creating a config object for use
@@ -44,5 +45,6 @@ func ReadConfig() *Cfg {
 		viper.GetBool("basenode"),
 		viper.GetStringSlice("remotepeers"),
 		viper.GetInt("listenport"),
+		false,
 	}
 }
