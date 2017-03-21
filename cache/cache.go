@@ -2,7 +2,11 @@ package cache
 
 import (
 	"fmt"
+	"github.com/GrappigPanda/Olivia/config"
+	"github.com/GrappigPanda/Olivia/dht"
+	"github.com/GrappigPanda/Olivia/network/message_handler"
 	binheap "github.com/GrappigPanda/Olivia/shared"
+	"log"
 	"sync"
 	"time"
 )
@@ -10,18 +14,37 @@ import (
 // TODO(ian): Replace this with something else
 // Cache is actually just a map[string]string. Don't tell anyone.
 type Cache struct {
-	cache   *map[string]string
-	binHeap *binheap.Heap
+	PeerList *dht.PeerList
+	cache    *map[string]string
+	binHeap  *binheap.Heap
 	sync.Mutex
 }
 
 // NewCache creates a new cache and internal ReadCache.
-func NewCache() *Cache {
+func NewCache(mh *message_handler.MessageHandler, config *config.Cfg) *Cache {
 	cacheMap := make(map[string]string)
-	return &Cache{
-		cache:   &cacheMap,
-		binHeap: binheap.NewHeapReallocate(100),
+	cache := &Cache{
+		PeerList: dht.NewPeerList(mh, *config),
+		cache:    &cacheMap,
+		binHeap:  binheap.NewHeapReallocate(100),
 	}
+
+	for index, peerIP := range config.RemotePeers {
+		peer := dht.NewPeerByIP(peerIP, mh, *config)
+		cache.PeerList.Peers[index] = peer
+		(*cache.PeerList.PeerMap)[peerIP] = true
+	}
+
+	err := cache.PeerList.ConnectAllPeers()
+	if err != nil {
+		for err != nil {
+			log.Println("Sleeping for 60 seconds and attempting to reconnect")
+			time.Sleep(time.Second * 60)
+			err = cache.PeerList.ConnectAllPeers()
+		}
+	}
+
+	return cache
 }
 
 // Get handles retrieving a value by its key from the internal cache. It reads
