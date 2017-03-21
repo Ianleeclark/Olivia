@@ -41,7 +41,7 @@ func NewCache(mh *message_handler.MessageHandler, config *config.Cfg) *Cache {
 		}
 
 		err := cache.PeerList.ConnectAllPeers()
-		if err != nil {
+		if err != nil && !config.IsTesting {
 			for err != nil {
 				log.Println("Sleeping for 60 seconds and attempting to reconnect")
 				time.Sleep(time.Second * 60)

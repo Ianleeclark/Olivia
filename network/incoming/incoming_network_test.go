@@ -98,6 +98,7 @@ func TestGetKeyFromRemoteNode(t *testing.T) {
 
 func TestMain(m *testing.M) {
 	mh := message_handler.NewMessageHandler()
+	CONFIG.IsTesting = true
 	cache := cache.NewCache(mh, CONFIG)
 	config := config.ReadConfig()
 	stopchan := StartNetworkRouter(mh, cache, config)
