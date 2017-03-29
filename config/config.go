@@ -9,7 +9,7 @@ import (
 type Cfg struct {
 	HeartbeatInterval int
 	HeartbeatLoop     int
-	BloomfilterSize   int
+	BloomfilterSize   uint
 	BaseNode          bool
 	RemotePeers       []string
 	ListenPort        int
@@ -41,7 +41,7 @@ func ReadConfig() *Cfg {
 	return &Cfg{
 		viper.Get("heartbeatinterval").(int),
 		viper.Get("heartbeatloop").(int),
-		viper.Get("bfsize").(int),
+		uint(viper.Get("bfsize").(int)),
 		viper.GetBool("basenode"),
 		viper.GetStringSlice("remotepeers"),
 		viper.GetInt("listenport"),

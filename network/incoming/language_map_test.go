@@ -3,17 +3,13 @@ package incomingNetwork
 import (
 	"github.com/GrappigPanda/Olivia/bloomfilter"
 	"github.com/GrappigPanda/Olivia/cache"
-	"github.com/GrappigPanda/Olivia/network/message_handler"
 	"github.com/GrappigPanda/Olivia/parser"
 	"testing"
 )
 
-var MESSAGEBUS = message_handler.NewMessageHandler()
-
 var CTX = &ConnectionCtx{
 	nil,
 	cache.NewCache(nil, nil),
-	bloomfilter.NewByFailRate(1000, 0.01),
 }
 
 func TestExecuteGetAllSucceed(t *testing.T) {
@@ -90,7 +86,6 @@ func TestRequestBloomFilter(t *testing.T) {
 	ctx := &ConnectionCtx{
 		nil,
 		nil,
-		bf,
 	}
 
 	command := parser.CommandData{"hash", "REQUEST", map[string]string{"bloomfilter": ""}, make(map[string]string), nil}
