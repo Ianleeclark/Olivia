@@ -10,15 +10,15 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"github.com/GrappigPanda/Olivia/bloomfilter"
 )
 
-// TODO(ian): Replace this with something else
-// Cache is actually just a map[string]string. Don't tell anyone.
 type Cache struct {
 	PeerList   *dht.PeerList
 	MessageBus *message_handler.MessageHandler
 	cache      *map[string]string
 	binHeap    *binheap.Heap
+	bloomFilter bloomfilter.BloomFilter
 	sync.Mutex
 }
 
@@ -30,6 +30,7 @@ func NewCache(mh *message_handler.MessageHandler, config *config.Cfg) *Cache {
 		MessageBus: mh,
 		cache:      &cacheMap,
 		binHeap:    binheap.NewHeapReallocate(100),
+		bloomFilter: bloomfilter.NewByFailRate(1000, 0.01),
 	}
 
 	if config != nil {
@@ -40,11 +41,11 @@ func NewCache(mh *message_handler.MessageHandler, config *config.Cfg) *Cache {
 			(*cache.PeerList.PeerMap)[peerIP] = true
 		}
 
-		err := cache.PeerList.ConnectAllPeers()
-		if err != nil && !config.IsTesting {
+		if !config.IsTesting && !config.BaseNode {
+			err := cache.PeerList.ConnectAllPeers()
 			for err != nil {
 				log.Println("Sleeping for 60 seconds and attempting to reconnect")
-				time.Sleep(time.Second * 60)
+				time.Sleep(time.Second * 2)
 				err = cache.PeerList.ConnectAllPeers()
 			}
 		}
@@ -109,6 +110,7 @@ func (c *Cache) copyCache() {
 func (c *Cache) Set(key string, value string) error {
 	c.Lock()
 	(*c.cache)[key] = value
+	c.bloomFilter.AddKey([]byte(key))
 	c.Unlock()
 
 	c.copyCache()
@@ -227,4 +229,8 @@ func (c *Cache) ListPeers(requestHash string) string {
 		"%s\n",
 		outString,
 	)
+}
+
+func (c *Cache) GetBloomFilter() bloomfilter.BloomFilter {
+	return c.bloomFilter
 }

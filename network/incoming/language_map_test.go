@@ -3,17 +3,13 @@ package incomingNetwork
 import (
 	"github.com/GrappigPanda/Olivia/bloomfilter"
 	"github.com/GrappigPanda/Olivia/cache"
-	"github.com/GrappigPanda/Olivia/network/message_handler"
 	"github.com/GrappigPanda/Olivia/parser"
 	"testing"
 )
 
-var MESSAGEBUS = message_handler.NewMessageHandler()
-
 var CTX = &ConnectionCtx{
 	nil,
 	cache.NewCache(nil, nil),
-	bloomfilter.NewByFailRate(1000, 0.01),
 }
 
 func TestExecuteGetAllSucceed(t *testing.T) {
@@ -87,10 +83,16 @@ func TestRequestBloomFilter(t *testing.T) {
 	bf.AddKey([]byte("key3"))
 	bf.AddKey([]byte("key4"))
 
+	testCache := cache.NewCache(nil, CONFIG)
+	testCache.Set("key1", "value1")
+	testCache.Set("keyalksdjfl", "value1")
+	testCache.Set("key2", "value2")
+	testCache.Set("key3", "value2")
+	testCache.Set("key4", "value3")
+
 	ctx := &ConnectionCtx{
 		nil,
-		nil,
-		bf,
+		testCache,
 	}
 
 	command := parser.CommandData{"hash", "REQUEST", map[string]string{"bloomfilter": ""}, make(map[string]string), nil}
@@ -102,7 +104,7 @@ func TestRequestBloomFilter(t *testing.T) {
 	requestData, _ := parser.NewParser(nil).Parse(newBfStr, nil)
 
 	var bfToParse string
-	for k, _ := range requestData.Args {
+	for k := range requestData.Args {
 		bfToParse = k
 		break
 	}

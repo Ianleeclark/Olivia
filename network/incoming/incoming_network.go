@@ -3,7 +3,6 @@ package incomingNetwork
 import (
 	"bufio"
 	"fmt"
-	"github.com/GrappigPanda/Olivia/bloomfilter"
 	"github.com/GrappigPanda/Olivia/cache"
 	"github.com/GrappigPanda/Olivia/config"
 	"github.com/GrappigPanda/Olivia/network/message_handler"
@@ -17,7 +16,6 @@ import (
 type ConnectionCtx struct {
 	Parser      *parser.Parser
 	Cache       *cache.Cache
-	Bloomfilter bloomfilter.BloomFilter
 }
 
 // StartNetworkRouter initializes everything necessary for our incoming network
@@ -39,12 +37,9 @@ func StartNetworkRouter(
 		}
 		defer listen.Close()
 
-		bf := bloomfilter.NewByFailRate(1000, 0.01)
-
 		ctx := &ConnectionCtx{
 			parser.NewParser(mh),
 			cache,
-			bf,
 		}
 
 		log.Println("Starting connection router!")
