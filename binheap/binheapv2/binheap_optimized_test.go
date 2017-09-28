@@ -1,7 +1,8 @@
-package shared
+package binheapv2
 
 import (
 	"fmt"
+	. "github.com/GrappigPanda/Olivia/binheap"
 	"testing"
 	"time"
 )
@@ -27,16 +28,15 @@ func TestNewNode(t *testing.T) {
 	}
 }
 
-func TestNewHeap(t *testing.T) {
-	expectedReturn := Heap{
-		index: 0,
-		Tree:  make([]*Node, 10),
+func TestNewBinheap(t *testing.T) {
+	expectedReturn := BinheapOptimized{
+		Tree: make([]*Node, 10),
 	}
 
-	retVal := NewHeap(10)
+	retVal := NewBinheapOptimized(10)
 
-	if expectedReturn.index != retVal.index {
-		t.Errorf("Expected %v, got %v", expectedReturn.index, retVal.index)
+	if expectedReturn.maxIndex != retVal.maxIndex {
+		t.Errorf("Expected %v, got %v", expectedReturn.maxIndex, retVal.maxIndex)
 	}
 
 	if len(expectedReturn.Tree) != len(retVal.Tree) {
@@ -45,7 +45,7 @@ func TestNewHeap(t *testing.T) {
 }
 
 func TestHeapInsertThenReallocate(t *testing.T) {
-	testHeap := NewHeapReallocate(1)
+	testHeap := NewBinheapOptimizedReallocate(1)
 	testNode := NewNode("TestHeapInsertThenReallocate", time.Now().UTC())
 	time.Sleep(5 * time.Millisecond)
 	testNode2 := NewNode("TestHeapInsertThenReallocate2", time.Now().UTC())
@@ -61,7 +61,7 @@ func TestHeapInsertThenReallocate(t *testing.T) {
 }
 
 func TestInsertAndMinNode(t *testing.T) {
-	testHeap := NewHeap(10)
+	testHeap := NewBinheapOptimized(10)
 	testNode := NewNode("TestHeapInsert", time.Now().UTC())
 
 	testHeap.Insert(testNode)
@@ -75,7 +75,7 @@ func TestInsertAndMinNode(t *testing.T) {
 }
 
 func TestMinNodeFailNoRootNode(t *testing.T) {
-	testHeap := NewHeap(1)
+	testHeap := NewBinheapOptimized(1)
 
 	if testHeap.MinNode() != nil {
 		t.Errorf("Expected nil, got %v with a heap of %v",
@@ -86,7 +86,7 @@ func TestMinNodeFailNoRootNode(t *testing.T) {
 }
 
 func TestSwap(t *testing.T) {
-	testHeap := NewHeap(5)
+	testHeap := NewBinheapOptimized(5)
 	testNode := NewNode("Testswap", time.Now().UTC())
 	time.Sleep(5 * time.Millisecond)
 	testNode2 := NewNode("Testswap2", time.Now().UTC())
@@ -110,7 +110,7 @@ func TestSwap(t *testing.T) {
 }
 
 func TestPercolateUp(t *testing.T) {
-	testHeap := NewHeap(25)
+	testHeap := NewBinheapOptimized(25)
 
 	originalNode := NewNode("Least expiration time", time.Now().UTC())
 	time.Sleep(50 * time.Millisecond)
@@ -133,7 +133,7 @@ func TestPercolateUp(t *testing.T) {
 }
 
 func TestIsEmpty(t *testing.T) {
-	testHeap := NewHeap(10)
+	testHeap := NewBinheapOptimized(10)
 
 	if testHeap.IsEmpty() != true {
 		t.Errorf("Expected an empty heap, got %v", testHeap)
@@ -141,7 +141,7 @@ func TestIsEmpty(t *testing.T) {
 }
 
 func TestIsEmptyHasNode(t *testing.T) {
-	testHeap := NewHeapReallocate(1)
+	testHeap := NewBinheapOptimizedReallocate(1)
 	testNode := NewNode("Testswap", time.Now().UTC())
 
 	testHeap.Insert(testNode)
@@ -152,7 +152,7 @@ func TestIsEmptyHasNode(t *testing.T) {
 }
 
 func TestPercolateDown(t *testing.T) {
-	testHeap := NewHeapReallocate(25)
+	testHeap := NewBinheapOptimizedReallocate(25)
 
 	for i := 0; i < 5; i++ {
 		testNode := NewNode(fmt.Sprintf("Node-%v", i), time.Now().UTC())
@@ -184,7 +184,7 @@ func TestPercolateDown(t *testing.T) {
 }
 
 func TestKeyLookup(t *testing.T) {
-	testHeap := NewHeap(5)
+	testHeap := NewBinheapOptimized(5)
 	testNode1 := NewNode("TestNode1", time.Now().UTC())
 	testNode2 := NewNode("TestNode2", time.Now().UTC())
 	testNode3 := NewNode("TestNode3", time.Now().UTC())
@@ -211,7 +211,7 @@ func TestKeyLookup(t *testing.T) {
 }
 
 func TestKeyLookupIndexesProperly(t *testing.T) {
-	testHeap := NewHeap(25)
+	testHeap := NewBinheapOptimized(25)
 
 	keyValues := make([]string, 24)
 	for i := 0; i < 24; i++ {
@@ -241,7 +241,7 @@ func TestKeyLookupIndexesProperly(t *testing.T) {
 }
 
 func TestKeyLookupReadjustsOnEviction(t *testing.T) {
-	testHeap := NewHeap(25)
+	testHeap := NewBinheapOptimized(25)
 
 	keyValues := make([]string, 24)
 	for i := 0; i < 24; i++ {
@@ -273,7 +273,7 @@ func TestKeyLookupReadjustsOnEviction(t *testing.T) {
 }
 
 func TestKeyLookupReadjustsOnInsertion(t *testing.T) {
-	testHeap := NewHeap(25)
+	testHeap := NewBinheapOptimized(25)
 
 	originalNode := NewNode("OriginalNode", time.Now().UTC())
 	time.Sleep(50 * time.Millisecond)
@@ -308,7 +308,7 @@ func TestKeyLookupReadjustsOnInsertion(t *testing.T) {
 }
 
 func TestKeyUpdateTimeoutDoesntBlowUpEverything(t *testing.T) {
-	testHeap := NewHeapReallocate(25)
+	testHeap := NewBinheapOptimizedReallocate(25)
 
 	keyValues := make([]string, 25)
 	for i := 0; i < 25; i++ {
@@ -341,7 +341,7 @@ func TestKeyUpdateTimeoutDoesntBlowUpEverything(t *testing.T) {
 }
 
 func TestCopy(t *testing.T) {
-	testHeap := NewHeap(10)
+	testHeap := NewBinheapOptimized(10)
 
 	keyValues := make([]string, 10)
 	for i := 0; i < 10; i++ {
@@ -357,41 +357,6 @@ func TestCopy(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		if copyHeap.Tree[i] != testHeap.Tree[i] {
 			t.Errorf("Expected %v, got %v", testHeap.Tree[i], copyHeap.Tree[i])
-		}
-	}
-}
-
-func TestSwapTrees(t *testing.T) {
-	testHeap := NewHeap(11)
-
-	keyValues := make([]string, 10)
-	for i := 0; i < 10; i++ {
-		keyName := fmt.Sprintf("Node-%v", i)
-		testNode := NewNode(keyName, time.Now().UTC())
-		keyValues[i] = keyName
-		testHeap.Insert(testNode)
-		time.Sleep(5 * time.Millisecond)
-	}
-
-	copyHeap := testHeap.Copy()
-
-	for i := 0; i < 10; i++ {
-		if copyHeap.Tree[i] != testHeap.Tree[i] {
-			t.Errorf("Expected %v, got %v", testHeap.Tree[i], copyHeap.Tree[i])
-		}
-	}
-
-	testHeap.swapTrees(&copyHeap)
-
-	for i := 0; i < 10; i++ {
-		if copyHeap.Tree[i] != testHeap.Tree[i] {
-			t.Errorf("Expected %v, got %v", testHeap.Tree[i], copyHeap.Tree[i])
-		}
-	}
-
-	for k, _ := range testHeap.keyLookup {
-		if testHeap.keyLookup[k] != copyHeap.keyLookup[k] {
-			t.Errorf("[Key Lookup] Expected %v,  got %v", testHeap.keyLookup[k], copyHeap.keyLookup[k])
 		}
 	}
 }

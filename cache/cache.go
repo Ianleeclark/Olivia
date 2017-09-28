@@ -2,22 +2,23 @@ package cache
 
 import (
 	"fmt"
+	"github.com/GrappigPanda/Olivia/binheap"
+	"github.com/GrappigPanda/Olivia/binheap/binheapv1"
+	"github.com/GrappigPanda/Olivia/bloomfilter"
 	"github.com/GrappigPanda/Olivia/config"
 	"github.com/GrappigPanda/Olivia/dht"
 	"github.com/GrappigPanda/Olivia/network/message_handler"
-	binheap "github.com/GrappigPanda/Olivia/shared"
 	"log"
 	"strings"
 	"sync"
 	"time"
-	"github.com/GrappigPanda/Olivia/bloomfilter"
 )
 
 type Cache struct {
-	PeerList   *dht.PeerList
-	MessageBus *message_handler.MessageHandler
-	cache      *map[string]string
-	binHeap    *binheap.Heap
+	PeerList    *dht.PeerList
+	MessageBus  *message_handler.MessageHandler
+	cache       *map[string]string
+	binHeap     *binheapv1.Heap
 	bloomFilter bloomfilter.BloomFilter
 	sync.Mutex
 }
@@ -26,10 +27,10 @@ type Cache struct {
 func NewCache(mh *message_handler.MessageHandler, config *config.Cfg) *Cache {
 	cacheMap := make(map[string]string)
 	cache := &Cache{
-		PeerList:   nil,
-		MessageBus: mh,
-		cache:      &cacheMap,
-		binHeap:    binheap.NewHeapReallocate(100),
+		PeerList:    nil,
+		MessageBus:  mh,
+		cache:       &cacheMap,
+		binHeap:     binheapv1.NewHeapReallocate(100),
 		bloomFilter: bloomfilter.NewByFailRate(1000, 0.01),
 	}
 

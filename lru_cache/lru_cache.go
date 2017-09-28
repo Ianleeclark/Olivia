@@ -1,7 +1,8 @@
 package olilib_lru
 
 import (
-	"github.com/GrappigPanda/Olivia/shared"
+	"github.com/GrappigPanda/Olivia/binheap"
+	"github.com/GrappigPanda/Olivia/binheap/binheapv1"
 	"sync"
 	"time"
 )
@@ -16,7 +17,7 @@ var MAXINT64 = int64(1<<63 - 1)
 type LRUCacheString struct {
 	KeyCount    int
 	Keys        map[string]string
-	KeyTimeouts shared.BinHeap
+	KeyTimeouts binheap.LRUStorage
 	Mutex       *sync.Mutex
 }
 
@@ -26,7 +27,7 @@ func NewString(maxEntries int) *LRUCacheString {
 	return &LRUCacheString{
 		KeyCount:    maxEntries,
 		Keys:        make(map[string]string),
-		KeyTimeouts: shared.NewHeap(maxEntries),
+		KeyTimeouts: binheapv1.NewHeap(maxEntries),
 		Mutex:       &sync.Mutex{},
 	}
 }
@@ -61,7 +62,7 @@ func (l *LRUCacheString) Add(key string, value string) (string, bool) {
 // addNewKeyTimeout handles adding a key into our priority queue for later
 // eviction.
 func (l *LRUCacheString) addNewKeyTimeout(key string) {
-	l.KeyTimeouts.Insert(shared.NewNode(key, getCurrentUnixTime()))
+	l.KeyTimeouts.Insert(binheap.NewNode(key, getCurrentUnixTime()))
 }
 
 // Get Retrieves a key from the LRU cache and increases its priority.

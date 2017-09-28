@@ -1,7 +1,8 @@
 package olilib_lru
 
 import (
-	binheap "github.com/GrappigPanda/Olivia/shared"
+	"github.com/GrappigPanda/Olivia/binheap"
+	"github.com/GrappigPanda/Olivia/binheap/binheapv1"
 	"sync"
 	"time"
 )
@@ -13,7 +14,7 @@ import (
 type LRUCacheInt32Array struct {
 	KeyCount    int
 	Keys        map[string][]uint32
-	KeyTimeouts binheap.BinHeap
+	KeyTimeouts binheap.LRUStorage
 	Mutex       *sync.Mutex
 }
 
@@ -23,7 +24,7 @@ func NewInt32Array(maxEntries int) *LRUCacheInt32Array {
 	return &LRUCacheInt32Array{
 		KeyCount:    maxEntries,
 		Keys:        make(map[string][]uint32),
-		KeyTimeouts: binheap.NewHeap(maxEntries),
+		KeyTimeouts: binheapv1.NewHeap(maxEntries),
 		Mutex:       &sync.Mutex{},
 	}
 }

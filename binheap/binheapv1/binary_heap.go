@@ -1,48 +1,23 @@
-package shared
+package binheapv1
 
 import (
 	"fmt"
+	"github.com/GrappigPanda/Olivia/binheap"
 	"sync"
 	"time"
 )
 
-// HeapAllocationStrategy is a type definition used for enum values in handling
-// heap reallocation.
-type HeapAllocationStrategy int
-
-const (
-	Maintain HeapAllocationStrategy = iota
-	Realloc
-)
-
-// Node represents each binary heap node.
-type Node struct {
-	Key     string
-	Timeout time.Time
-}
-
-// Heap represents our binary heap object.
 type Heap struct {
-	Tree          []*Node
+	Tree          []*binheap.Node
 	currentSize   int
 	index         int
-	allocStrategy HeapAllocationStrategy
+	allocStrategy binheap.HeapAllocationStrategy
 	keyLookup     map[string]int
 	sync.Mutex
 }
 
 // keyLookup helps our LRU cache find nodes quicker than traversing the
 // entire binary heap. Allows o(1) lookup rather than o(n)
-
-// NewNode Allocates a new Node. It is not placed in the binary heap at
-// allocation. Rather, the caller is expected to later Insert the newly created
-// node into the binary heap.
-func NewNode(key string, Timeout time.Time) *Node {
-	return &Node{
-		Key:     key,
-		Timeout: Timeout,
-	}
-}
 
 // NewHeap handles initializing a new Heap object. The default strategy for
 // reallocation is to `Maintain` which means that whenever there is an attempt
@@ -51,7 +26,7 @@ func NewNode(key string, Timeout time.Time) *Node {
 func NewHeap(maxSize int) *Heap {
 	return &Heap{
 		index:     0,
-		Tree:      make([]*Node, maxSize),
+		Tree:      make([]*binheap.Node, maxSize),
 		keyLookup: make(map[string]int),
 	}
 }
@@ -61,9 +36,9 @@ func NewHeap(maxSize int) *Heap {
 func NewHeapReallocate(maxSize int) *Heap {
 	return &Heap{
 		index:         0,
-		Tree:          make([]*Node, maxSize),
+		Tree:          make([]*binheap.Node, maxSize),
 		currentSize:   0,
-		allocStrategy: Realloc,
+		allocStrategy: binheap.Realloc,
 		keyLookup:     make(map[string]int),
 	}
 }
@@ -88,9 +63,9 @@ func (h *Heap) Copy() Heap {
 	return *newHeap
 }
 
-// MinNode returns the root node. In this implementation, we opted for a
+// Minbinheap.Node returns the root node. In this implementation, we opted for a
 // minimum binary heap instead of a generic implementation.
-func (h *Heap) MinNode() *Node {
+func (h *Heap) MinNode() *binheap.Node {
 	if h.currentSize == 0 {
 		return nil
 	}
@@ -99,21 +74,21 @@ func (h *Heap) MinNode() *Node {
 }
 
 // Insert handles placing a new node into the heap. If the allocation strategy
-// is set to `Maintain`, then and only then will `Insert` return a *Node.
-// Moreover, a *Node is only returned if the binary heap is full and can no
+// is set to `Maintain`, then and only then will `Insert` return a *binheap.Node.
+// Moreover, a *binheap.Node is only returned if the binary heap is full and can no
 // longer place new nodes into it.
-func (h *Heap) Insert(node *Node) *Node {
+func (h *Heap) Insert(node *binheap.Node) *binheap.Node {
 	if h.index >= len(h.Tree) {
 		// If we run into the bounds of our heap, we need to either
 		// reallocate (if that's what we're wanting to do, or
 		// maintain the size and
-		if h.allocStrategy == Realloc {
+		if h.allocStrategy == binheap.Realloc {
 			// The default behavior is to expand the heap by
 			// 0.5 times.
 			h.ReAllocate(h.index + len(h.Tree)/2)
 		} else {
 			// Otherwise, if we're maintaining, we want to evict
-			// the root node (The Min Node).
+			// the root node (The Min binheap.Node).
 			return h.EvictMinNode()
 		}
 	}
@@ -131,10 +106,10 @@ func (h *Heap) Insert(node *Node) *Node {
 	return nil
 }
 
-// EvictMinNode takes the root node (index 0) and removes it from the binary
+// EvictMinbinheap.Node takes the root node (index 0) and removes it from the binary
 // heap. It then reorganizes the binary heap so that everything stays in order
 // correctly.
-func (h *Heap) EvictMinNode() *Node {
+func (h *Heap) EvictMinNode() *binheap.Node {
 	if h.index == 0 {
 		return nil
 	}
@@ -154,7 +129,7 @@ func (h *Heap) EvictMinNode() *Node {
 }
 
 // Peek handles looking at the index of the tree.
-func (h *Heap) Peek(index int) (*Node, error) {
+func (h *Heap) Peek(index int) (*binheap.Node, error) {
 	if index >= h.currentSize {
 		return nil, fmt.Errorf("Index greater than size of heap.")
 	}
@@ -172,11 +147,11 @@ func (h *Heap) ReAllocate(maxSize int) {
 	h.Lock()
 	defer h.Unlock()
 
-	h.Tree = append(h.Tree, make([]*Node, maxSize)...)
+	h.Tree = append(h.Tree, make([]*binheap.Node, maxSize)...)
 }
 
-// UpdateNodeTimeout allows changing of the keys Timeout in the
-func (h *Heap) UpdateNodeTimeout(key string) *Node {
+// Updatebinheap.NodeTimeout allows changing of the keys Timeout in the
+func (h *Heap) UpdateNodeTimeout(key string) *binheap.Node {
 	nodeIndex, ok := h.keyLookup[key]
 	if !ok {
 		return nil
@@ -200,9 +175,9 @@ func (h *Heap) UpdateNodeTimeout(key string) *Node {
 
 }
 
-// Get handles retrieving a Node by its key. Not extensively used, but it was a
+// Get handles retrieving a binheap.Node by its key. Not extensively used, but it was a
 // nice-to-have.
-func (h *Heap) Get(key string) (*Node, bool) {
+func (h *Heap) Get(key string) (*binheap.Node, bool) {
 	if index, ok := h.keyLookup[key]; ok {
 		return h.Tree[index], ok
 	} else {
@@ -326,4 +301,8 @@ func (h *Heap) compareTwoTimes(i int, j int) bool {
 	} else {
 		return false
 	}
+}
+
+func (h *Heap) CurrentSize() int {
+	return h.currentSize
 }
