@@ -360,3 +360,35 @@ func TestCopy(t *testing.T) {
 		}
 	}
 }
+
+func TestSafeIndexIncrement(t *testing.T) {
+	retval := safeIndex(100, 5, INCREMENT)
+
+	if retval != 6 {
+		t.Errorf("Expected %v, got %v", 6, retval)
+	}
+}
+
+func TestSafeIndexDecrement(t *testing.T) {
+	retval := safeIndex(100, 5, DECREMENT)
+
+	if retval != 4 {
+		t.Errorf("Expected %v, got %v", 4, retval)
+	}
+}
+
+func TestSafeIndexDecrementToZero(t *testing.T) {
+	retval := safeIndex(100, 1, DECREMENT)
+
+	if retval != 0 {
+		t.Errorf("Expected %v, got %v", 0, retval)
+	}
+}
+
+func TestSafeIndexIncrementOffZero(t *testing.T) {
+	retval := safeIndex(100, 0, INCREMENT)
+
+	if retval != 1 {
+		t.Errorf("Expected %v, got %v", 1, retval)
+	}
+}

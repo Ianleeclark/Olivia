@@ -92,12 +92,14 @@ func (d *BinheapOptimized) Insert(newNode *Node) *Node {
 }
 
 func (d *BinheapOptimized) EvictMinNode() *Node {
+	d.Lock()
 	minNode := d.Tree[d.maxIndex]
 
 	d.Tree[d.maxIndex] = nil
 	d.maxIndex++
 	delete(d.keyLookup, minNode.Key)
 
+	d.Unlock()
 	return minNode
 }
 
@@ -125,6 +127,7 @@ func (d *BinheapOptimized) ReAllocate(maxSize int) {
 
 // UpdateNodeTimeout allows changing of the keys Timeout in the
 func (d *BinheapOptimized) UpdateNodeTimeout(key string) *Node {
+	d.Lock()
 	nodeIndex, ok := d.keyLookup[key]
 	if !ok {
 		return nil
@@ -141,8 +144,9 @@ func (d *BinheapOptimized) UpdateNodeTimeout(key string) *Node {
 	}
 
 	node, _ := d.Get(key)
-	return node
 
+	d.Unlock()
+	return node
 }
 
 // Get handles retrieving a Node by its key. Not extensively used, but it was a
