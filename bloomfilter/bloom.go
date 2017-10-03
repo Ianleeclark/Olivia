@@ -14,6 +14,7 @@ type BloomFilter interface {
 	HasKey(key []byte) (bool, []uint)
 	Serialize() string
 	GetMaxSize() uint
+	GetStorage() Bitset
 }
 
 type SimpleBloomFilter struct {
@@ -21,7 +22,7 @@ type SimpleBloomFilter struct {
 	maxSize uint
 	// Total number of hashing functions
 	HashFunctions uint
-	Filter        Bitset
+	filter        Bitset
 	HashCache     *lru.LRUCacheInt32Array
 }
 
@@ -56,7 +57,7 @@ func (bf *SimpleBloomFilter) AddKey(key []byte) (bool, []uint) {
 	}
 
 	for _, index := range hashIndexes {
-		bf.Filter.Add(index)
+		bf.filter.Add(index)
 	}
 
 	return true, hashIndexes
@@ -67,7 +68,7 @@ func (bf *SimpleBloomFilter) HasKey(key []byte) (bool, []uint) {
 	hashIndexes := bf.hashKey(key)
 
 	for _, element := range hashIndexes {
-		if bf.Filter.Contains(element) {
+		if bf.filter.Contains(element) {
 			continue
 		} else {
 			return false, nil
@@ -80,7 +81,7 @@ func (bf *SimpleBloomFilter) HasKey(key []byte) (bool, []uint) {
 // ConvertToString handles conversion of a bloom filter to a string. Moreover,
 // it enforces RLE encoding, so that fewer bytes are transferred per request.
 func (bf *SimpleBloomFilter) Serialize() string {
-	return Encode(bf.Filter.ToString())
+	return Encode(bf.filter.ToString())
 }
 
 // ConvertStringToBF Decodes the RLE'd bloom filter and then converts it to
@@ -89,7 +90,7 @@ func Deserialize(inputString string, maxSize uint) (*SimpleBloomFilter, error) {
 	bf := NewByFailRate(maxSize, 0.01)
 
 	sz := fmt.Sprintf("\"%s=\"", Decode(inputString))
-	bf.Filter.FromString(sz)
+	bf.filter.FromString(sz)
 
 	return bf, nil
 }
@@ -137,4 +138,8 @@ func (bf *SimpleBloomFilter) hashKey(key []byte) []uint {
 	}
 
 	return hashes
+}
+
+func (bf *SimpleBloomFilter) GetStorage() Bitset {
+	return bf.filter
 }
