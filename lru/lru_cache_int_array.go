@@ -1,4 +1,4 @@
-package olilib_lru
+package lru
 
 import (
 	binheap "github.com/GrappigPanda/Olivia/shared"

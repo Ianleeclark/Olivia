@@ -2,9 +2,9 @@ package bloomfilter
 
 import (
 	"fmt"
-	"github.com/GrappigPanda/Olivia/lru_cache"
-	"github.com/spaolacci/murmur3"
+	"github.com/GrappigPanda/Olivia/lru"
 	"github.com/mtchavez/jenkins"
+	"github.com/spaolacci/murmur3"
 	"hash/fnv"
 	"math"
 )
@@ -16,14 +16,13 @@ type BloomFilter interface {
 	GetMaxSize() uint
 }
 
-
 type SimpleBloomFilter struct {
 	// The maximum size for the bloom filter
 	maxSize uint
 	// Total number of hashing functions
 	HashFunctions uint
 	Filter        Bitset
-	HashCache     *olilib_lru.LRUCacheInt32Array
+	HashCache     *lru.LRUCacheInt32Array
 }
 
 // New Returns a pointer to a newly allocated `SimpleBloomFilter` object
@@ -32,7 +31,7 @@ func NewSimpleBF(maxSize uint, hashFuns uint) *SimpleBloomFilter {
 		maxSize,
 		hashFuns,
 		NewWFBitset(maxSize),
-		olilib_lru.NewInt32Array(int((float64(maxSize) * float64(0.1)))),
+		lru.NewInt32Array(int((float64(maxSize) * float64(0.1)))),
 	}
 }
 
@@ -109,23 +108,23 @@ func estimateBounds(items uint, probability float64) (uint, uint) {
 
 // calculateHash Takes in a string and calculates the 64bit hash value.
 func calculateHash(key []byte, offSet int) uint {
-    switch offSet {
-    // By Default/for offset 1 we'll just use FNV
-    default:
-        hasher := fnv.New32()
-        hasher.Write(key)
-        return uint(hasher.Sum32())
-    case 1:
-        hasher := murmur3.New32()
-        hasher.Write(key)
-        return uint(hasher.Sum32())
-    case 2:
-        hasher := jenkins.New()
-        hasher.Write(key)
-        return uint(hasher.Sum32())
-    }
+	switch offSet {
+	// By Default/for offset 1 we'll just use FNV
+	default:
+		hasher := fnv.New32()
+		hasher.Write(key)
+		return uint(hasher.Sum32())
+	case 1:
+		hasher := murmur3.New32()
+		hasher.Write(key)
+		return uint(hasher.Sum32())
+	case 2:
+		hasher := jenkins.New()
+		hasher.Write(key)
+		return uint(hasher.Sum32())
+	}
 
-    return 0;
+	return 0
 }
 
 // hashKey Takes a string in as an argument and hashes it several times to
