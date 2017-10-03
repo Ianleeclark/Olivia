@@ -1,18 +1,9 @@
-# Size of bloom filters. 
-# Default: 1000 
-BFSize: 1000
 # BaseNode signifies that, upon start, the node will not attempt to connect to
 # any other remote nodes. Essentially one node will be spun up and then others
 # may attempt to connect to this base node. The default is set to True if the
 # config file doesn to load correctly.
 # Default: true
 BaseNode: true
-# Rate at which we send pings to important remote nodes. 
-# Default: 1000 (in milliseconds)
-HeartbeatInterval: 1000
-# Default rate at which we send pings to any other nodes. 
-# Default: 30 (in seconds)
-HeartbeatCycle: 30
 # Port we listen for incoming connections on.
 # Default: 5454
 ListenPort: 5454
