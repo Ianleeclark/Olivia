@@ -57,6 +57,8 @@ func (c *Cache) getRemoteBloomFilters(interval time.Duration) {
 					go peer.GetBloomFilter()
 				}
 			}
+
+			c.bloomfilterSearch.Recalculate(*c.PeerList)
 		},
 		nil,
 		nil,
