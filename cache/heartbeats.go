@@ -35,9 +35,11 @@ func (c *Cache) heartbeatRemoteNodes(interval time.Duration) {
 	c.executeRepeatedly(
 		interval,
 		func() {
-			for _, peer := range c.PeerList.Peers {
-				if peer != nil {
-					go peer.TestConnection()
+			if c.PeerList != nil {
+				for _, peer := range c.PeerList.Peers {
+					if peer != nil {
+						go peer.TestConnection()
+					}
 				}
 			}
 		},
@@ -52,9 +54,11 @@ func (c *Cache) getRemoteBloomFilters(interval time.Duration) {
 	c.executeRepeatedly(
 		interval,
 		func() {
-			for _, peer := range c.PeerList.Peers {
-				if peer != nil {
-					go peer.GetBloomFilter()
+			if c.PeerList != nil {
+				for _, peer := range c.PeerList.Peers {
+					if peer != nil {
+						go peer.GetBloomFilter()
+					}
 				}
 			}
 
@@ -74,10 +78,6 @@ func (c *Cache) getRemoteBloomFilters(interval time.Duration) {
 // pre-emptively select any keys which will expire the following second.
 // Adjusting the heartbeatinterval may have strange, unintended side effects.
 func (c *Cache) Heartbeat() {
-	go c.heartbeatRemoteNodes(
-		time.Duration(200) * time.Millisecond,
-	)
-	go c.getRemoteBloomFilters(
-		time.Duration(30) * time.Second,
-	)
+	go c.heartbeatRemoteNodes(time.Duration(200) * time.Millisecond)
+	go c.getRemoteBloomFilters(time.Duration(30) * time.Second)
 }

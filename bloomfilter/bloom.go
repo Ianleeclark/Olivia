@@ -15,6 +15,7 @@ type BloomFilter interface {
 	Serialize() string
 	GetMaxSize() uint
 	GetStorage() Bitset
+	Compare(interface{}) bool
 }
 
 type SimpleBloomFilter struct {
@@ -140,6 +141,12 @@ func (bf *SimpleBloomFilter) hashKey(key []byte) []uint {
 	return hashes
 }
 
+// GetStorage handles returning the underlying bloomfilter bitset.
 func (bf *SimpleBloomFilter) GetStorage() Bitset {
 	return bf.filter
+}
+
+// Compare returns if the two bloomfilters are equal
+func (bf *SimpleBloomFilter) Compare(remote interface{}) bool {
+	return bf.filter.Compare(remote.(*SimpleBloomFilter).GetStorage())
 }

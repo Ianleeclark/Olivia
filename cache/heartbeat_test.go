@@ -1,15 +1,17 @@
-package networkHandler
+package cache
 
 import (
 	"testing"
 	"time"
 )
 
+var CACHE = NewCache(nil, nil)
+
 func TestExecuteRepeatedly(t *testing.T) {
 	countChan := make(chan int)
 	killChan := make(chan bool)
 
-	go executeRepeatedly(
+	go CACHE.executeRepeatedly(
 		5*time.Millisecond,
 		func() { return },
 		killChan,
