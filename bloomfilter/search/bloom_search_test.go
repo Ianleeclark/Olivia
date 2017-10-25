@@ -37,22 +37,6 @@ func TestGetIndexTooLarge(t *testing.T) {
 	}
 }
 
-func TestNewBFSearchFullBF(t *testing.T) {
-
-}
-
-func TestNewBFSearchEmptyBF(t *testing.T) {
-
-}
-
-func TestRecalculateResetsBFSearchArray(t *testing.T) {
-
-}
-
-func TestNewSearchFromNilBloomfilterDoesntDieOnRecalculation(t *testing.T) {
-
-}
-
 func (b *Search) fillIndexWithPeers(i int) {
 	peers := make([]*dht.Peer, 2)
 	for i := 0; i < 2; i++ {
