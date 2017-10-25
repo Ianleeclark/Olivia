@@ -41,19 +41,31 @@ func (b *Search) Get(bitIndex uint) []*dht.Peer {
 }
 
 func calculateSearchArray(peerList dht.PeerList) *Search {
-	bfSize := peerList.Peers[0].BloomFilter.GetMaxSize()
-
 	var bfNodes []*bloomfilterNode
+
+	if peerList.Peers[0] == nil || len(peerList.Peers) == 0 {
+		return &Search{
+			nodes: bfNodes,
+		}
+	}
+
+	peerBF := peerList.Peers[0].BloomFilter
+	bfSize := uint(0)
+	if peerBF != nil {
+		bfSize = peerBF.GetMaxSize()
+	}
 
 	for i := uint(0); i <= bfSize; i++ {
 		var nodes []*dht.Peer
 
 		for _, peer := range peerList.Peers {
-			bf := peer.BloomFilter
-			bitset := bf.GetStorage()
+			if peer != nil {
+				bf := peer.BloomFilter
+				bitset := bf.GetStorage()
 
-			if bitset.IsSet(i) {
-				nodes = append(nodes, peer)
+				if bitset.IsSet(i) {
+					nodes = append(nodes, peer)
+				}
 			}
 		}
 
