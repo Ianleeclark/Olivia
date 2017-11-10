@@ -161,7 +161,7 @@ func TestPercolateDown(t *testing.T) {
 	}
 
 	for i := 0; i < 5; i++ {
-		expectedReturn := fmt.Sprintf("Node-%v", i)
+		expectedReturn := fmt.Sprintf("Node-%d", i)
 
 		if testHeap.MinNode().Key != expectedReturn {
 			t.Errorf("Expected %v, got %v with a heap of %v",

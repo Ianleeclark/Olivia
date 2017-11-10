@@ -3,6 +3,7 @@ package binheapv2
 import (
 	"fmt"
 	. "github.com/GrappigPanda/Olivia/binheap"
+	"math"
 	"sync"
 	"time"
 )
@@ -80,7 +81,16 @@ func (d *BinheapOptimized) Insert(newNode *Node) *Node {
 			d.Tree[safeIndex(cap(d.Tree), d.maxIndex, DECREMENT)] = newNode
 			d.minIndex--
 		} else {
-			d.Tree[safeIndex(cap(d.Tree), d.maxIndex, INCREMENT)] = newNode
+			safeidx := safeIndex(cap(d.Tree), d.maxIndex, INCREMENT)
+			if safeidx == cap(d.Tree) {
+				if cap(d.Tree) < 10 {
+					d.reAllocateLockless(10)
+				} else {
+					d.reAllocateLockless(int(math.Ceil(float64(cap(d.Tree)) * 1.5)))
+				}
+			}
+
+			d.Tree[safeidx] = newNode
 			d.maxIndex++
 		}
 	} else {
@@ -120,9 +130,14 @@ func (d *BinheapOptimized) ReAllocate(maxSize int) {
 	d.Lock()
 
 	// TODO(ian): If `maxSize` decreases, we should do something!
-	d.Tree = append(d.Tree, make([]*Node, maxSize)...)
+	d.reAllocateLockless(maxSize)
 
 	d.Unlock()
+}
+
+// reAllocateLockless Handles increasing the size of the underlying binary heap without a lock. Be careful!
+func (d *BinheapOptimized) reAllocateLockless(maxSize int) {
+	d.Tree = append(d.Tree, make([]*Node, maxSize)...)
 }
 
 // UpdateNodeTimeout allows changing of the keys Timeout in the
