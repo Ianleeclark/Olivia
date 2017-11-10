@@ -16,6 +16,7 @@ type BloomFilter interface {
 	GetMaxSize() uint
 	GetStorage() Bitset
 	Compare(interface{}) bool
+	HashKey([]byte) []uint
 }
 
 type SimpleBloomFilter struct {
@@ -54,7 +55,7 @@ func (bf *SimpleBloomFilter) GetMaxSize() uint {
 func (bf *SimpleBloomFilter) AddKey(key []byte) (bool, []uint) {
 	hasKey, hashIndexes := bf.HasKey(key)
 	if !hasKey {
-		hashIndexes = bf.hashKey(key)
+		hashIndexes = bf.HashKey(key)
 	}
 
 	for _, index := range hashIndexes {
@@ -66,7 +67,7 @@ func (bf *SimpleBloomFilter) AddKey(key []byte) (bool, []uint) {
 
 // HasKey verifies if a key is or isn't in the bloom filter.
 func (bf *SimpleBloomFilter) HasKey(key []byte) (bool, []uint) {
-	hashIndexes := bf.hashKey(key)
+	hashIndexes := bf.HashKey(key)
 
 	for _, element := range hashIndexes {
 		if bf.filter.Contains(element) {
@@ -129,9 +130,9 @@ func calculateHash(key []byte, offSet int) uint {
 	return 0
 }
 
-// hashKey Takes a string in as an argument and hashes it several times to
+// HashKey Takes a string in as an argument and hashes it several times to
 // create usable indexes for the bloom filter.
-func (bf *SimpleBloomFilter) hashKey(key []byte) []uint {
+func (bf *SimpleBloomFilter) HashKey(key []byte) []uint {
 	hashes := make([]uint, bf.HashFunctions)
 
 	for index := range hashes {

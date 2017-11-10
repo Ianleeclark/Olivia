@@ -75,7 +75,14 @@ func (c *Cache) Get(key string) (string, error) {
 
 func (c *Cache) getFromRemotePeers(key string) (string, error) {
 	responseChannel := make(chan string)
-	for _, peer := range c.PeerList.Peers {
+
+	if c.bloomfilterSearch == nil {
+		return "", fmt.Errorf("bloomfilterSearch is uninitialized")
+	}
+	indicies := c.bloomFilter.HashKey(key)
+	foundPeers := c.bloomfilterSearch.GetFromIndices(indicies)
+
+	for _, peer := range foundPeers {
 		// TODO(ian): Pull out the dht.Timeout and dht.Disconnected to an `isConnectable` function.
 		if peer == nil || peer.Status == dht.Timeout || peer.Status == dht.Disconnected {
 			continue
