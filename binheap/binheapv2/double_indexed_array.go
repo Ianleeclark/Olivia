@@ -91,7 +91,7 @@ func (d *BinheapOptimized) EvictMinNode() *Node {
 	minNode := d.Tree[d.maxIndex]
 
 	d.Tree[d.maxIndex] = nil
-	d.maxIndex++
+	d.maxIndex = safeIndex(cap(d.Tree), d.maxIndex, INCREMENT)
 	delete(d.keyLookup, minNode.Key)
 
 	d.Unlock()
@@ -106,8 +106,14 @@ func (d *BinheapOptimized) Peek(index int) (*Node, error) {
 	return d.Tree[index], nil
 }
 
+// IsEmpty checks to see if the binheap is empty.
 func (d *BinheapOptimized) IsEmpty() bool {
 	return d.maxIndex == d.minIndex && d.Tree[d.maxIndex] == nil
+}
+
+// IsFull checks to see if the binheap is full.
+func (d *BinheapOptimized) IsFull() bool {
+	return len(d.Tree) == cap(d.Tree)
 }
 
 // ReAllocate Handles increasing the size of the underlying binary heap.
@@ -135,10 +141,12 @@ func (d *BinheapOptimized) UpdateNodeTimeout(key string) *Node {
 
 	d.Tree[nodeIndex].Timeout = time.Now().UTC()
 
-	if nodeIndex+1 < d.CurrentSize() {
-		if d.compareTwoTimes(nodeIndex, nodeIndex+1) {
+	nextNodeIndex := safeIndex(cap(d.Tree), nodeIndex, INCREMENT)
+
+	if nextNodeIndex < d.CurrentSize() {
+		if d.compareTwoTimes(nodeIndex, nextNodeIndex) {
 			d.percolateDown(nodeIndex)
-		} else if d.compareTwoTimes(nodeIndex-1, nodeIndex) {
+		} else if d.compareTwoTimes(safeIndex(cap(d.Tree), nodeIndex, DECREMENT), nodeIndex) {
 			d.percolateUp(nodeIndex)
 		}
 	}
