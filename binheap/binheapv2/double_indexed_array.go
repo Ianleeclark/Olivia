@@ -77,22 +77,7 @@ func (d *BinheapOptimized) Insert(newNode *Node) *Node {
 		d.maxIndex = 0
 		d.minIndex = 0
 	} else if d.maxIndex == d.minIndex && !d.IsEmpty() {
-		if compareTimeouts(d.Tree[d.maxIndex].Timeout, newNode.Timeout) {
-			d.Tree[safeIndex(cap(d.Tree), d.maxIndex, DECREMENT)] = newNode
-			d.minIndex--
-		} else {
-			safeidx := safeIndex(cap(d.Tree), d.maxIndex, INCREMENT)
-			if safeidx == cap(d.Tree) {
-				if cap(d.Tree) < 10 {
-					d.reAllocateLockless(10)
-				} else {
-					d.reAllocateLockless(int(math.Ceil(float64(cap(d.Tree)) * 1.5)))
-				}
-			}
-
-			d.Tree[safeidx] = newNode
-			d.maxIndex++
-		}
+		d.insertNodeAboveOrBelowSingleNode(newNode)
 	} else {
 		// TODO(ian): Need to handle percolations.
 	}
@@ -287,6 +272,25 @@ func (d *BinheapOptimized) swapTwoNodes(i int, j int) {
 	}
 
 	d.Tree[j], d.Tree[i] = d.Tree[i], d.Tree[j]
+}
+
+func (d *BinheapOptimized) insertNodeAboveOrBelowSingleNode(newNode *Node) {
+	if compareTimeouts(d.Tree[d.maxIndex].Timeout, newNode.Timeout) {
+		d.Tree[safeIndex(cap(d.Tree), d.maxIndex, DECREMENT)] = newNode
+		d.minIndex--
+	} else {
+		safeidx := safeIndex(cap(d.Tree), d.maxIndex, INCREMENT)
+		if safeidx == cap(d.Tree) {
+			if cap(d.Tree) < 10 {
+				d.reAllocateLockless(10)
+			} else {
+				d.reAllocateLockless(int(math.Ceil(float64(cap(d.Tree)) * 1.5)))
+			}
+		}
+
+		d.Tree[safeidx] = newNode
+		d.maxIndex++
+	}
 }
 
 func compareTimeouts(time1 time.Time, time2 time.Time) bool {
