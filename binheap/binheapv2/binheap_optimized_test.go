@@ -109,7 +109,7 @@ func TestSwap(t *testing.T) {
 	}
 }
 
-func TestPercolateUp(t *testing.T) {
+func TestPercolateRight(t *testing.T) {
 	testHeap := NewBinheapOptimized(25)
 
 	originalNode := NewNode("Least expiration time", time.Now().UTC())
@@ -151,7 +151,7 @@ func TestIsEmptyHasNode(t *testing.T) {
 	}
 }
 
-func TestPercolateDown(t *testing.T) {
+func TestPercolateLeft(t *testing.T) {
 	testHeap := NewBinheapOptimizedReallocate(25)
 
 	for i := 0; i < 5; i++ {
@@ -166,16 +166,6 @@ func TestPercolateDown(t *testing.T) {
 		if testHeap.MinNode().Key != expectedReturn {
 			t.Errorf("Expected %v, got %v with a heap of %v",
 				testHeap.MinNode().Key,
-				expectedReturn,
-				testHeap.Tree,
-			)
-		}
-
-		retVal := testHeap.EvictMinNode()
-
-		if retVal.Key != expectedReturn {
-			t.Errorf("[After Evict] Expected %v, got %v with a heap of %v",
-				retVal.Key,
 				expectedReturn,
 				testHeap.Tree,
 			)
