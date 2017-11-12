@@ -40,6 +40,26 @@ func (b *Search) Get(bitIndex uint) []*dht.Peer {
 	return nil
 }
 
+func (b *Search) GetFromIndices(bitIndex []uint) []*dht.Peer {
+	for _, index := range bitIndex {
+		if bitIndex > uint(len(b.nodes)) {
+			return nil
+		}
+
+		foundNodes := b.nodes[bitIndex]
+
+		if foundNode != nil {
+			return foundNode.refs
+		}
+	}
+
+	return nil
+}
+
+func unionPeerList(peerList1, peerList2 []*dht.Peer) {
+
+}
+
 func calculateSearchArray(peerList dht.PeerList) *Search {
 	var bfNodes []*bloomfilterNode
 
