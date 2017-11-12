@@ -2,14 +2,14 @@ package parser
 
 import (
 	"fmt"
-	"github.com/GrappigPanda/Olivia/lru_cache"
+	"github.com/GrappigPanda/Olivia/lru"
 	"github.com/GrappigPanda/Olivia/network/message_handler"
 	"net"
 	"strings"
 )
 
 type Parser struct {
-	LRUCache     *olilib_lru.LRUCacheString
+	LRUCache     *lru.LRUCacheString
 	MessageStore *message_handler.MessageHandler
 }
 
@@ -26,7 +26,7 @@ type CommandData struct {
 // cache).
 func NewParser(mh *message_handler.MessageHandler) *Parser {
 	return &Parser{
-		LRUCache: olilib_lru.NewString(25),
+		LRUCache: lru.NewString(25),
 	}
 }
 

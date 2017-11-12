@@ -1,4 +1,4 @@
-package olilib_lru
+package lru
 
 import (
 	binheap "github.com/GrappigPanda/Olivia/shared"
@@ -7,12 +7,12 @@ import (
 	"time"
 )
 
-var TESTLRU = NewString(10)
+var TESTLRUINT32 = NewInt32Array(10)
 
-func TestNew(t *testing.T) {
-	expectedReturn := &LRUCacheString{
+func TestNewInt32(t *testing.T) {
+	expectedReturn := &LRUCacheInt32Array{
 		10,
-		make(map[string]string, 10),
+		make(map[string][]uint32, 10),
 		binheap.NewHeap(10),
 		&sync.Mutex{},
 	}
@@ -24,11 +24,15 @@ func TestNew(t *testing.T) {
 	}
 }
 
-func TestAdd(t *testing.T) {
-	key, err := TESTLRU.Add("Key", "Value")
+func TestAddInt32(t *testing.T) {
+	expectedReturn := []uint32{3, 5, 1}
 
-	if key != "Key" {
-		t.Fatalf("Failed adding a key to the LRU cache")
+	value, err := TESTLRUINT32.Add("Key", expectedReturn)
+
+	for i := range value {
+		if value[i] != expectedReturn[i] {
+			t.Fatalf("Failed adding a key to the LRU cache")
+		}
 	}
 
 	if err != false {
@@ -36,30 +40,32 @@ func TestAdd(t *testing.T) {
 	}
 }
 
-func TestAddPreExistingKey(t *testing.T) {
-	key, err := TESTLRU.Add("Key", "Value")
+func TestAddPreExistingKeyInt32(t *testing.T) {
+	expectedReturn := []uint32{4, 7, 9}
+	_, ok := TESTLRUINT32.Add("Key", expectedReturn)
 
-	if key != "Value" {
-		t.Fatalf("Did not receive the value from the LRU cache.")
-	}
-
-	if err != true {
-		t.Fatalf("Failed to add pre-existing key.")
+	if ok != true {
+		t.Fatalf("Failed to add pre-existing key. Keys: %v",
+			TESTLRUINT32.Keys,
+		)
 	}
 }
 
-func TestAddRemoveOldest(t *testing.T) {
-	testLRU := NewString(3)
-	testLRU.Add("Key1", "value1")
+func TestAddRemoveOldestInt32(t *testing.T) {
+	testLRU := NewInt32Array(10)
+	testLRU.Add("Key1", []uint32{1, 2, 3})
 	time.Sleep(time.Nanosecond * 1)
-	testLRU.Add("Key2", "value2")
-	testLRU.Add("Key3", "value3")
+	testLRU.Add("Key2", []uint32{1, 2, 3})
+	testLRU.Add("Key3", []uint32{1, 2, 3})
 
 	expectedKeys := []string{"Key1", "Key2", "Key3"}
 
 	for i := range expectedKeys {
 		if _, ok := testLRU.Keys[expectedKeys[i]]; !ok {
-			t.Fatalf("Key %v not found in the test LRU (Keys)", expectedKeys[i])
+			t.Fatalf("Key %v not found in the test LRU (%v)",
+				expectedKeys[i],
+				testLRU.Keys,
+			)
 		}
 
 		if _, ok := testLRU.KeyTimeouts.Get(expectedKeys[i]); !ok {
@@ -67,7 +73,7 @@ func TestAddRemoveOldest(t *testing.T) {
 		}
 	}
 
-	testLRU.Add("Key4", "value4")
+	testLRU.Add("Key4", []uint32{12, 13, 14})
 
 	expectedKeys = []string{"Key4", "Key2", "Key3"}
 
@@ -83,9 +89,10 @@ func TestAddRemoveOldest(t *testing.T) {
 
 }
 
-func TestGet(t *testing.T) {
-	testLRU := NewString(5)
-	testLRU.Add("Key1", "value1")
+func TestGetInt32(t *testing.T) {
+	expectedReturn := []uint32{5, 7, 9}
+	testLRU := NewInt32Array(5)
+	testLRU.Add("Key1", expectedReturn)
 
 	node, _ := testLRU.KeyTimeouts.Get("Key1")
 	originalTime := node.Timeout
@@ -96,8 +103,10 @@ func TestGet(t *testing.T) {
 		t.Fatalf("Key doesn't exist in the LRU Cache")
 	}
 
-	if "value1" != value {
-		t.Fatalf("Expected value1, got %v", value)
+	for i := range value {
+		if value[i] != expectedReturn[i] {
+			t.Fatalf("Failed adding a key to the LRU cache")
+		}
 	}
 
 	if node.Timeout == originalTime {
@@ -105,11 +114,12 @@ func TestGet(t *testing.T) {
 	}
 }
 
-func TestGetDoesntExist(t *testing.T) {
-	testLRU := NewString(5)
-	_, keyExists := testLRU.Get("Key1")
+func TestGetDoesntExistInt32(t *testing.T) {
+	testLRU := NewInt32Array(5)
+
+	_, keyExists := testLRU.Get("Key14")
 
 	if keyExists != false {
-		t.Fatalf("For whatever reason, the key exists")
+		t.Fatalf("Key exists somehow in the array")
 	}
 }

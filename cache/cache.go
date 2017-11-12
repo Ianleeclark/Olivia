@@ -2,6 +2,8 @@ package cache
 
 import (
 	"fmt"
+	"github.com/GrappigPanda/Olivia/bloomfilter"
+	"github.com/GrappigPanda/Olivia/bloomfilter/search"
 	"github.com/GrappigPanda/Olivia/config"
 	"github.com/GrappigPanda/Olivia/dht"
 	"github.com/GrappigPanda/Olivia/network/message_handler"
@@ -10,15 +12,15 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"github.com/GrappigPanda/Olivia/bloomfilter"
 )
 
 type Cache struct {
-	PeerList   *dht.PeerList
-	MessageBus *message_handler.MessageHandler
-	cache      *map[string]string
-	binHeap    *binheap.Heap
-	bloomFilter bloomfilter.BloomFilter
+	PeerList          *dht.PeerList
+	bloomfilterSearch *bfsearch.Search
+	MessageBus        *message_handler.MessageHandler
+	cache             *map[string]string
+	binHeap           *binheap.Heap
+	bloomFilter       bloomfilter.BloomFilter
 	sync.Mutex
 }
 
@@ -26,11 +28,12 @@ type Cache struct {
 func NewCache(mh *message_handler.MessageHandler, config *config.Cfg) *Cache {
 	cacheMap := make(map[string]string)
 	cache := &Cache{
-		PeerList:   nil,
-		MessageBus: mh,
-		cache:      &cacheMap,
-		binHeap:    binheap.NewHeapReallocate(100),
-		bloomFilter: bloomfilter.NewByFailRate(1000, 0.01),
+		PeerList:          nil,
+		bloomfilterSearch: nil,
+		MessageBus:        mh,
+		cache:             &cacheMap,
+		binHeap:           binheap.NewHeapReallocate(100),
+		bloomFilter:       bloomfilter.NewByFailRate(1000, 0.01),
 	}
 
 	if config != nil {
@@ -51,6 +54,8 @@ func NewCache(mh *message_handler.MessageHandler, config *config.Cfg) *Cache {
 		}
 	}
 
+	cache.Heartbeat()
+
 	return cache
 }
 
@@ -70,7 +75,14 @@ func (c *Cache) Get(key string) (string, error) {
 
 func (c *Cache) getFromRemotePeers(key string) (string, error) {
 	responseChannel := make(chan string)
-	for _, peer := range c.PeerList.Peers {
+
+	if c.bloomfilterSearch == nil {
+		return "", fmt.Errorf("bloomfilterSearch is uninitialized")
+	}
+	indices := c.bloomFilter.HashKey([]byte(key))
+	foundPeers := c.bloomfilterSearch.GetFromIndices(indices)
+
+	for _, peer := range foundPeers {
 		// TODO(ian): Pull out the dht.Timeout and dht.Disconnected to an `isConnectable` function.
 		if peer == nil || peer.Status == dht.Timeout || peer.Status == dht.Disconnected {
 			continue
@@ -185,6 +197,12 @@ func (c *Cache) DisconnectPeer(peerIPPort string) string {
 
 func (c *Cache) AddPeer(peerIPPort string) {
 	c.PeerList.AddPeer(peerIPPort)
+
+	if c.bloomfilterSearch == nil {
+		c.bloomfilterSearch = bfsearch.NewSearch(*c.PeerList)
+	} else {
+		c.bloomfilterSearch.Recalculate(*c.PeerList)
+	}
 }
 
 func (c *Cache) ListPeers(requestHash string) string {

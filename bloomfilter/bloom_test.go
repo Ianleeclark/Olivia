@@ -11,7 +11,7 @@ func TestNewBloomFilter(t *testing.T) {
 	expectedReturn := SimpleBloomFilter{
 		maxSize:       uint(CONFIG.BloomfilterSize),
 		HashFunctions: 3,
-		Filter:        NewWFBitset(10000),
+		filter:        NewWFBitset(10000),
 	}
 
 	result := NewSimpleBF(uint(CONFIG.BloomfilterSize), 3)
@@ -29,7 +29,7 @@ func TestNewBloomFilterByFailRate(t *testing.T) {
 	expectedReturn := SimpleBloomFilter{
 		maxSize:       9585,
 		HashFunctions: 3,
-		Filter:        NewWFBitset(10000),
+		filter:        NewWFBitset(10000),
 	}
 
 	result := NewByFailRate(uint(CONFIG.BloomfilterSize), 0.01)
@@ -80,7 +80,7 @@ func TestConvertToString(t *testing.T) {
 		t.Fatalf("%v", err)
 	}
 
-	if !new_bf.Filter.Compare(bf.Filter) {
+	if !new_bf.filter.Compare(bf.filter) {
 		t.Fatalf("Two bfs are not equal")
 	}
 }
@@ -106,7 +106,7 @@ func TestConvertWithContainedValues(t *testing.T) {
 		t.Fatalf("new_bf doesnt have key1!")
 	}
 
-	if !new_bf.Filter.Compare(bf.Filter) {
+	if !new_bf.filter.Compare(bf.filter) {
 		t.Fatalf("Two bfs are not equal")
 	}
 }
