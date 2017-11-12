@@ -9,6 +9,7 @@ import (
 	"github.com/GrappigPanda/Olivia/network/message_handler"
 	"github.com/GrappigPanda/Olivia/network/receiver"
 	"github.com/GrappigPanda/Olivia/parser"
+	"github.com/satori/go.uuid"
 	"log"
 	"net"
 	"sync"
@@ -36,6 +37,7 @@ type Peer struct {
 	IPPort       string
 	BloomFilter  bloomfilter.BloomFilter
 	MessageBus   *message_handler.MessageHandler
+	UniqueID     string
 	failureCount int
 	sync.Mutex
 }
@@ -51,6 +53,7 @@ func NewPeer(conn *net.Conn, mh *message_handler.MessageHandler, config *config.
 		IPPort:       ipPort,
 		BloomFilter:  bloomfilter.NewByFailRate(uint(config.BloomfilterSize), 0.01),
 		MessageBus:   mh,
+		UniqueID:     uuid.NewV1().String(),
 		failureCount: 0,
 	}
 }
@@ -63,6 +66,7 @@ func NewPeerByIP(ipPort string, mh *message_handler.MessageHandler, config confi
 		IPPort:       ipPort,
 		BloomFilter:  bloomfilter.NewByFailRate(uint(config.BloomfilterSize), 0.01),
 		MessageBus:   mh,
+		UniqueID:     uuid.NewV1().String(),
 		failureCount: 0,
 	}
 
