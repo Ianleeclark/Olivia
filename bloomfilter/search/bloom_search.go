@@ -42,22 +42,49 @@ func (b *Search) Get(bitIndex uint) []*dht.Peer {
 
 func (b *Search) GetFromIndices(bitIndex []uint) []*dht.Peer {
 	for _, index := range bitIndex {
-		if bitIndex > uint(len(b.nodes)) {
+		if index > uint(len(b.nodes)) {
 			return nil
 		}
 
-		foundNodes := b.nodes[bitIndex]
+		foundNodes := b.nodes[index]
 
-		if foundNode != nil {
-			return foundNode.refs
+		if foundNodes != nil {
+			return foundNodes.refs
 		}
 	}
 
 	return nil
 }
 
-func unionPeerList(peerList1, peerList2 []*dht.Peer) {
+func unionPeerLists(peerLists ...[]*dht.Peer) []*dht.Peer {
+	peerListRefCounter := make(map[string]int)
+	peerListAllPeers := make(map[string]*dht.Peer)
 
+	for _, peerList := range peerLists {
+		for _, peer := range peerList {
+			// NOTE: fill up our ref counter
+			if _, ok := peerListRefCounter[peer.UniqueID]; !ok {
+				peerListRefCounter[peer.UniqueID] = 0
+			} else {
+				peerListRefCounter[peer.UniqueID]++
+			}
+
+			// NOTE: Fill up our all peer list
+			if _, ok := peerListAllPeers[peer.UniqueID]; !ok {
+				peerListAllPeers[peer.UniqueID] = peer
+			}
+		}
+	}
+
+	// NOTE: If any peer is referenced len(peerLists) times, it means they are in all of our lists.
+	var unionedPeers []*dht.Peer
+	for peerId, refCount := range peerListRefCounter {
+		if refCount == len(peerLists) {
+			unionedPeers = append(unionedPeers, peerListAllPeers[peerId])
+		}
+	}
+
+	return unionedPeers
 }
 
 func calculateSearchArray(peerList dht.PeerList) *Search {
