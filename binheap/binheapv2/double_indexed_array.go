@@ -91,6 +91,11 @@ func (d *BinheapOptimized) Insert(newNode *Node) *Node {
 		if d.IsFull() {
 			// TODO(ian): Grab the newly freed index
 			// TODO(ian): Insert node here
+			if d.allocStrategy != Realloc {
+				d.evictMinNodeLockless()
+			} else {
+				d.reAllocateLockless()
+			}
 		} else {
 			// TODO(ian): Assign newNodeIndex here
 		}
@@ -159,17 +164,24 @@ func (d *BinheapOptimized) IsFull() bool {
 }
 
 // ReAllocate Handles increasing the size of the underlying binary heap.
-func (d *BinheapOptimized) ReAllocate(maxSize int) {
+func (d *BinheapOptimized) ReAllocate() {
 	d.Lock()
 
 	// TODO(ian): If `maxSize` decreases, we should do something!
-	d.reAllocateLockless(maxSize)
+	d.reAllocateLockless()
 
 	d.Unlock()
 }
 
 // reAllocateLockless Handles increasing the size of the underlying binary heap without a lock. Be careful!
-func (d *BinheapOptimized) reAllocateLockless(maxSize int) {
+func (d *BinheapOptimized) reAllocateLockless() {
+	var maxSize int = 0
+	if cap(d.Tree) < 10 {
+		maxSize = 10
+	} else {
+		maxSize = int(math.Ceil(float64(cap(d.Tree)) * 1.5))
+	}
+
 	d.Tree = append(d.Tree, make([]*Node, maxSize)...)
 }
 
@@ -261,14 +273,6 @@ func (d *BinheapOptimized) percolateLeft(newNodeIndex int) {
 func (d *BinheapOptimized) percolateRight(fromIndex int) {
 	d.Lock()
 
-	if d.maxIndex == d.minIndex && d.maxIndex == fromIndex {
-		return
-	}
-
-	for {
-		break
-	}
-
 	d.Unlock()
 }
 
@@ -297,11 +301,7 @@ func (d *BinheapOptimized) insertNodeAboveOrBelowSingleNode(newNode *Node) int {
 	} else {
 		if d.IsFull() {
 			if d.allocStrategy == Realloc {
-				if cap(d.Tree) < 10 {
-					d.reAllocateLockless(10)
-				} else {
-					d.reAllocateLockless(int(math.Ceil(float64(cap(d.Tree)) * 1.5)))
-				}
+				d.reAllocateLockless()
 			} else {
 				_, safeidx = d.evictMinNodeLockless()
 			}
