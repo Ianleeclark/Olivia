@@ -67,7 +67,7 @@ func (d *BinheapOptimized) Copy() *BinheapOptimized {
 }
 
 func (d *BinheapOptimized) MinNode() *Node {
-	return d.Tree[d.maxIndex]
+	return d.Tree[d.minIndex]
 }
 
 func (d *BinheapOptimized) Insert(newNode *Node) *Node {
@@ -89,18 +89,42 @@ func (d *BinheapOptimized) Insert(newNode *Node) *Node {
 	} else {
 		newlyInsertedIndex = 0
 		if d.IsFull() {
-			// TODO(ian): Grab the newly freed index
-			// TODO(ian): Insert node here
 			if d.allocStrategy != Realloc {
-				d.evictMinNodeLockless()
+				_, newlyInsertedIndex = d.evictMinNodeLockless()
 			} else {
 				d.reAllocateLockless()
+				newlyInsertedIndex = d.insertNodeAboveOrBelowSingleNode(newNode)
 			}
 		} else {
-			// TODO(ian): Assign newNodeIndex here
+			newlyInsertedIndex = d.insertNodeAboveOrBelowSingleNode(newNode)
 		}
 
-		// TODO(ian): Reassign newlyInsertedIndex to whatever the result of the percolation is
+		d.Tree[newlyInsertedIndex] = newNode
+
+		lowerIdx := safeIndex(cap(d.Tree), newlyInsertedIndex, DECREMENT)
+		upperIdx := safeIndex(cap(d.Tree), newlyInsertedIndex, INCREMENT)
+
+		if d.Tree[lowerIdx] != nil && d.Tree[upperIdx] != nil {
+			if d.compareTwoTimes(lowerIdx, newlyInsertedIndex) {
+				newlyInsertedIndex = d.percolateLeftLockless(newlyInsertedIndex)
+			} else if d.compareTwoTimes(newlyInsertedIndex, upperIdx) {
+				newlyInsertedIndex = d.percolateRightLockless(newlyInsertedIndex)
+			}
+		} else if d.Tree[lowerIdx] != nil {
+			if d.compareTwoTimes(lowerIdx, newlyInsertedIndex) {
+				newlyInsertedIndex = d.percolateLeftLockless(newlyInsertedIndex)
+			}
+		} else if d.Tree[upperIdx] != nil {
+			if d.compareTwoTimes(newlyInsertedIndex, upperIdx) {
+				newlyInsertedIndex = d.percolateRightLockless(newlyInsertedIndex)
+			}
+		}
+	}
+
+	if d.compareTwoTimes(d.minIndex, newlyInsertedIndex) {
+		d.minIndex = newlyInsertedIndex
+	} else if d.compareTwoTimes(newlyInsertedIndex, d.maxIndex) {
+		d.maxIndex = newlyInsertedIndex
 	}
 
 	d.keyLookup[newNode.Key] = newlyInsertedIndex
@@ -117,21 +141,13 @@ func (d *BinheapOptimized) EvictMinNode() (*Node, int) {
 }
 
 func (d *BinheapOptimized) evictMinNodeLockless() (*Node, int) {
-	minNode := d.Tree[d.maxIndex]
+	minNode := d.Tree[d.minIndex]
 
-	println(fmt.Sprintf("%v", d.keyLookup))
-	println(fmt.Sprintf("%v", d.Tree))
-	println(minNode == nil)
-	println(d.maxIndex)
-	println(d.minIndex)
-	println(d.Tree[d.maxIndex])
-	println(fmt.Sprintf("%v", minNode))
-
-	evictedIndex := d.maxIndex
+	evictedIndex := d.minIndex
 
 	delete(d.keyLookup, minNode.Key)
-	d.Tree[d.maxIndex] = nil
-	d.maxIndex = safeIndex(cap(d.Tree), d.maxIndex, INCREMENT)
+	d.Tree[d.minIndex] = nil
+	d.maxIndex = safeIndex(cap(d.Tree), d.minIndex, INCREMENT)
 
 	return minNode, evictedIndex
 }
@@ -167,7 +183,6 @@ func (d *BinheapOptimized) IsFull() bool {
 func (d *BinheapOptimized) ReAllocate() {
 	d.Lock()
 
-	// TODO(ian): If `maxSize` decreases, we should do something!
 	d.reAllocateLockless()
 
 	d.Unlock()
@@ -199,9 +214,9 @@ func (d *BinheapOptimized) UpdateNodeTimeout(key string) *Node {
 
 	if nextNodeIndex < d.CurrentSize() {
 		if d.compareTwoTimes(nodeIndex, nextNodeIndex) {
-			d.percolateRight(nodeIndex)
+			d.percolateRightLockless(nodeIndex)
 		} else {
-			d.percolateLeft(nodeIndex)
+			d.percolateLeftLockless(nodeIndex)
 		}
 	}
 
@@ -247,33 +262,44 @@ func (h *BinheapOptimized) compareTwoTimes(i int, j int) bool {
 // It's very unlikely this function actually ever does anything, as it's only
 // called by `Insert`, so newly inserted nodes don't typically have an
 // expiration time sooner than nodes already living in the heap.
-func (d *BinheapOptimized) percolateLeft(newNodeIndex int) {
-	d.Lock()
-
-	if d.maxIndex == d.minIndex && d.maxIndex == newNodeIndex {
-		return
+func (d *BinheapOptimized) percolateLeftLockless(percolatingNodeIndex int) int {
+	if d.maxIndex == d.minIndex && d.maxIndex == percolatingNodeIndex {
+		return percolatingNodeIndex
 	}
 
 	for {
-		leftIndex := safeIndex(cap(d.Tree), newNodeIndex, DECREMENT)
-		if compareTimeouts(d.Tree[newNodeIndex].Timeout, d.Tree[leftIndex].Timeout) {
-			d.swapTwoNodes(newNodeIndex, leftIndex)
+		leftIndex := safeIndex(cap(d.Tree), percolatingNodeIndex, DECREMENT)
+		if compareTimeouts(d.Tree[percolatingNodeIndex].Timeout, d.Tree[leftIndex].Timeout) {
+			d.swapTwoNodes(percolatingNodeIndex, leftIndex)
 		} else {
 			break
 		}
 
-		newNodeIndex = leftIndex
+		percolatingNodeIndex = leftIndex
 	}
 
-	d.Unlock()
+	return percolatingNodeIndex
 }
 
-// percolateRight handles moving a node starting at index `fromIndex` down into
+// percolateRight handles moving a node starting at index `percolatingNodeIndex` down into
 // its correct spot in the binary heap.
-func (d *BinheapOptimized) percolateRight(fromIndex int) {
-	d.Lock()
+func (d *BinheapOptimized) percolateRightLockless(percolatingNodeIndex int) int {
+	if d.maxIndex == d.minIndex && d.maxIndex == percolatingNodeIndex {
+		return percolatingNodeIndex
+	}
 
-	d.Unlock()
+	for {
+		rightIndex := safeIndex(cap(d.Tree), percolatingNodeIndex, INCREMENT)
+		if compareTimeouts(d.Tree[percolatingNodeIndex].Timeout, d.Tree[rightIndex].Timeout) {
+			d.swapTwoNodes(percolatingNodeIndex, rightIndex)
+		} else {
+			break
+		}
+
+		percolatingNodeIndex = rightIndex
+	}
+
+	return percolatingNodeIndex
 }
 
 // swapTwoNodes swaps j into i and vice versa. Moreover, it handles updating

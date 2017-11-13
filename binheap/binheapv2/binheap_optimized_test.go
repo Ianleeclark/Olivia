@@ -170,6 +170,16 @@ func TestPercolateLeft(t *testing.T) {
 				testHeap.Tree,
 			)
 		}
+
+		retVal, _ := testHeap.EvictMinNode()
+
+		if retVal.Key != expectedReturn {
+			t.Errorf("[After Evict] Expected %v, got %v with a heap of %v",
+				retVal.Key,
+				expectedReturn,
+				testHeap.Tree,
+			)
+		}
 	}
 }
 
