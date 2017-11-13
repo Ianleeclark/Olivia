@@ -71,46 +71,64 @@ func (d *BinheapOptimized) MinNode() *Node {
 }
 
 func (d *BinheapOptimized) Insert(newNode *Node) *Node {
+	var newlyInsertedIndex int
+
 	d.Lock()
 	if d.IsEmpty() {
 		d.Tree[0] = newNode
 		d.maxIndex = 0
 		d.minIndex = 0
-	} else if d.maxIndex == d.minIndex && !d.IsEmpty() {
-		if compareTimeouts(d.Tree[d.maxIndex].Timeout, newNode.Timeout) {
-			d.Tree[safeIndex(cap(d.Tree), d.maxIndex, DECREMENT)] = newNode
-			d.minIndex--
-		} else {
-			safeidx := safeIndex(cap(d.Tree), d.maxIndex, INCREMENT)
-			if safeidx == cap(d.Tree) {
-				if cap(d.Tree) < 10 {
-					d.reAllocateLockless(10)
-				} else {
-					d.reAllocateLockless(int(math.Ceil(float64(cap(d.Tree)) * 1.5)))
-				}
-			}
 
-			d.Tree[safeidx] = newNode
-			d.maxIndex++
+		newlyInsertedIndex = 0
+	} else if d.maxIndex == d.minIndex && !d.IsEmpty() {
+		if d.IsFull() {
+			newlyInsertedIndex = d.insertNodeAboveOrBelowSingleNode(newNode)
+		} else {
+			newlyInsertedIndex = d.insertNodeAboveOrBelowSingleNode(newNode)
 		}
 	} else {
-		// TODO(ian): Need to handle percolations.
+		newlyInsertedIndex = 0
+		if d.IsFull() {
+			// TODO(ian): Grab the newly freed index
+			// TODO(ian): Insert node here
+		} else {
+			// TODO(ian): Assign newNodeIndex here
+		}
+
+		// TODO(ian): Reassign newlyInsertedIndex to whatever the result of the percolation is
 	}
+
+	d.keyLookup[newNode.Key] = newlyInsertedIndex
 
 	d.Unlock()
 	return newNode
 }
 
-func (d *BinheapOptimized) EvictMinNode() *Node {
+func (d *BinheapOptimized) EvictMinNode() (*Node, int) {
 	d.Lock()
+	defer d.Unlock()
+
+	return d.evictMinNodeLockless()
+}
+
+func (d *BinheapOptimized) evictMinNodeLockless() (*Node, int) {
 	minNode := d.Tree[d.maxIndex]
 
-	d.Tree[d.maxIndex] = nil
-	d.maxIndex++
-	delete(d.keyLookup, minNode.Key)
+	println(fmt.Sprintf("%v", d.keyLookup))
+	println(fmt.Sprintf("%v", d.Tree))
+	println(minNode == nil)
+	println(d.maxIndex)
+	println(d.minIndex)
+	println(d.Tree[d.maxIndex])
+	println(fmt.Sprintf("%v", minNode))
 
-	d.Unlock()
-	return minNode
+	evictedIndex := d.maxIndex
+
+	delete(d.keyLookup, minNode.Key)
+	d.Tree[d.maxIndex] = nil
+	d.maxIndex = safeIndex(cap(d.Tree), d.maxIndex, INCREMENT)
+
+	return minNode, evictedIndex
 }
 
 // Peek handles looking at the index of the tree.
@@ -121,8 +139,23 @@ func (d *BinheapOptimized) Peek(index int) (*Node, error) {
 	return d.Tree[index], nil
 }
 
+// IsEmpty checks to see if the binheap is empty.
 func (d *BinheapOptimized) IsEmpty() bool {
 	return d.maxIndex == d.minIndex && d.Tree[d.maxIndex] == nil
+}
+
+// IsFull checks to see if the binheap is full.
+func (d *BinheapOptimized) IsFull() bool {
+	// TODO(ian): The easiest way to do this is safeindex either min or max index and see if that == minindex/maxindex.
+
+	count := 0
+	for i := 0; i < cap(d.Tree); i++ {
+		if d.Tree[i] != nil {
+			count++
+		}
+	}
+
+	return count == cap(d.Tree)
 }
 
 // ReAllocate Handles increasing the size of the underlying binary heap.
@@ -150,11 +183,13 @@ func (d *BinheapOptimized) UpdateNodeTimeout(key string) *Node {
 
 	d.Tree[nodeIndex].Timeout = time.Now().UTC()
 
-	if nodeIndex+1 < d.CurrentSize() {
-		if d.compareTwoTimes(nodeIndex, nodeIndex+1) {
-			d.percolateDown(nodeIndex)
-		} else if d.compareTwoTimes(nodeIndex-1, nodeIndex) {
-			d.percolateUp(nodeIndex)
+	nextNodeIndex := safeIndex(cap(d.Tree), nodeIndex, INCREMENT)
+
+	if nextNodeIndex < d.CurrentSize() {
+		if d.compareTwoTimes(nodeIndex, nextNodeIndex) {
+			d.percolateRight(nodeIndex)
+		} else {
+			d.percolateLeft(nodeIndex)
 		}
 	}
 
@@ -196,78 +231,42 @@ func (h *BinheapOptimized) compareTwoTimes(i int, j int) bool {
 	return compareTimeouts(h.Tree[i].Timeout, h.Tree[j].Timeout)
 }
 
-// percolateUp handles sorting a newly inserted node into its correct position.
+// percolateLeft handles sorting a newly inserted node into its correct position.
 // It's very unlikely this function actually ever does anything, as it's only
 // called by `Insert`, so newly inserted nodes don't typically have an
 // expiration time sooner than nodes already living in the heap.
-func (d *BinheapOptimized) percolateUp(newNodeIndex int) {
+func (d *BinheapOptimized) percolateLeft(newNodeIndex int) {
 	d.Lock()
 
-	if newNodeIndex == 0 {
+	if d.maxIndex == d.minIndex && d.maxIndex == newNodeIndex {
 		return
 	}
 
-	// Unlikely to ever do anyttmpHeap.ng.
 	for {
-		if newNodeIndex == 0 {
-			break
-		}
-
-		newlyInsertedNode := d.Tree[newNodeIndex]
-		preExistingNode := d.Tree[newNodeIndex-1]
-
-		if preExistingNode.Timeout.Sub(newlyInsertedNode.Timeout) > 0 {
-			d.swapTwoNodes(newNodeIndex, newNodeIndex-1)
-			newNodeIndex--
+		leftIndex := safeIndex(cap(d.Tree), newNodeIndex, DECREMENT)
+		if compareTimeouts(d.Tree[newNodeIndex].Timeout, d.Tree[leftIndex].Timeout) {
+			d.swapTwoNodes(newNodeIndex, leftIndex)
 		} else {
 			break
 		}
+
+		newNodeIndex = leftIndex
 	}
 
 	d.Unlock()
 }
 
-// percolateDown handles moving a node starting at index `fromIndex` down into
+// percolateRight handles moving a node starting at index `fromIndex` down into
 // its correct spot in the binary heap.
-func (d *BinheapOptimized) percolateDown(fromIndex int) {
+func (d *BinheapOptimized) percolateRight(fromIndex int) {
 	d.Lock()
-	if fromIndex == len(d.Tree)-1 {
+
+	if d.maxIndex == d.minIndex && d.maxIndex == fromIndex {
 		return
 	}
 
 	for {
-		if fromIndex == len(d.Tree)-1 {
-			break
-		}
-
-		// trackerNode is the node which we're currently tracking as it percolates
-		// down the binary heap.
-		trackerNode := d.Tree[fromIndex]
-
-		// If our tracker node is nil (meaning it was the slot of the recently
-		// evited min node) we want to automatically percolate it to the bottom of
-		// the binary heap.
-		if trackerNode == nil {
-			for i := 0; i < len(d.Tree)-1; i++ {
-				d.swapTwoNodes(i, i+1)
-			}
-			break
-		}
-
-		// preExistingNode is _any_ node which we're not currently tracking.
-		preExistingNode := d.Tree[fromIndex+1]
-		// NOTE: I'm not using `compareTwoTimes` here because I think it makes it
-		// more readable. I know this is an aggregious abuse of intermediary state
-		// or some other nonsense, but it makes it easier for me to read.
-
-		// Unlikely to ever do anything. But it asserts that the minimum
-		if trackerNode.Timeout.Sub(preExistingNode.Timeout) > 0 {
-			d.swapTwoNodes(fromIndex, fromIndex+1)
-			fromIndex++
-			continue
-		} else {
-			break
-		}
+		break
 	}
 
 	d.Unlock()
@@ -287,6 +286,34 @@ func (d *BinheapOptimized) swapTwoNodes(i int, j int) {
 	}
 
 	d.Tree[j], d.Tree[i] = d.Tree[i], d.Tree[j]
+}
+
+func (d *BinheapOptimized) insertNodeAboveOrBelowSingleNode(newNode *Node) int {
+	var safeidx int
+	if compareTimeouts(d.Tree[d.maxIndex].Timeout, newNode.Timeout) {
+		safeidx = safeIndex(cap(d.Tree), d.maxIndex, DECREMENT)
+		d.Tree[safeidx] = newNode
+		d.minIndex--
+	} else {
+		if d.IsFull() {
+			if d.allocStrategy == Realloc {
+				if cap(d.Tree) < 10 {
+					d.reAllocateLockless(10)
+				} else {
+					d.reAllocateLockless(int(math.Ceil(float64(cap(d.Tree)) * 1.5)))
+				}
+			} else {
+				_, safeidx = d.evictMinNodeLockless()
+			}
+		} else {
+			safeidx = safeIndex(cap(d.Tree), d.maxIndex, INCREMENT)
+		}
+
+		d.Tree[safeidx] = newNode
+		d.maxIndex++
+	}
+
+	return safeidx
 }
 
 func compareTimeouts(time1 time.Time, time2 time.Time) bool {
