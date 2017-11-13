@@ -119,7 +119,7 @@ func TestRequestBloomFilter(t *testing.T) {
 		t.Fatalf("newBloomfilter doesnt have key1!")
 	}
 
-	if !bf.Filter.Compare(newBloomfilter.Filter) {
+	if !bf.Compare(newBloomfilter) {
 		t.Fatalf("Two bfs are not equal")
 	}
 }
